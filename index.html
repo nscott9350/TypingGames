@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Type Blaster</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <div id="menu" class="overlay">
+    <h1>TYPE BLASTER</h1>
+    <p class="tagline">Asteroids for touch typists</p>
+    <ul class="howto">
+      <li>Type the <strong>first letter</strong> of a word to lock onto that asteroid</li>
+      <li>Each correct letter fires a shot &mdash; finish the word to destroy it</li>
+      <li>You must finish a locked word before targeting another</li>
+      <li>Don't let asteroids hit your ship</li>
+    </ul>
+    <p id="menu-diff" class="menu-diff"></p>
+    <p class="start-hint">Press any letter to start</p>
+    <button id="menu-settings" class="btn">Settings (Esc)</button>
+  </div>
+
+  <div id="gameover" class="overlay hidden">
+    <h1>GAME OVER</h1>
+    <div id="final-stats"></div>
+    <p class="start-hint">Press Enter to play again</p>
+    <button id="gameover-settings" class="btn">Settings (Esc)</button>
+  </div>
+
+  <div id="settings" class="overlay hidden">
+    <h1 id="settings-title">SETTINGS</h1>
+    <div class="settings-body">
+      <div class="setting-group">
+        <div class="setting-label">Difficulty</div>
+        <div class="diff-row">
+          <button class="diff-btn" data-diff="beginner">Beginner</button>
+          <button class="diff-btn" data-diff="easy">Easy</button>
+          <button class="diff-btn" data-diff="normal">Normal</button>
+          <button class="diff-btn" data-diff="hard">Hard</button>
+          <button class="diff-btn" data-diff="master">Master</button>
+        </div>
+      </div>
+      <div class="setting-group">
+        <div class="setting-label">
+          <span>Music</span>
+          <button id="music-toggle" class="toggle">ON</button>
+        </div>
+        <div class="slider-row">
+          <input type="range" id="music-vol" min="0" max="100" step="1">
+          <span id="music-vol-num" class="vol-num"></span>
+        </div>
+      </div>
+      <div class="setting-group">
+        <div class="setting-label"><span>Effects volume</span></div>
+        <div class="slider-row">
+          <input type="range" id="sfx-vol" min="0" max="100" step="1">
+          <span id="sfx-vol-num" class="vol-num"></span>
+        </div>
+      </div>
+    </div>
+    <button id="settings-back" class="btn">Back (Esc)</button>
+  </div>
+
+  <script src="words.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
