@@ -201,6 +201,12 @@ html, body {
   flex-wrap: wrap;
   gap: 0.6rem;
   justify-content: center;
+  align-items: center;
+}
+
+a.btn {
+  text-decoration: none;
+  display: inline-block;
 }
 
 .btn-danger {

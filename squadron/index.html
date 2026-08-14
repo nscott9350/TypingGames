@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Type Squadron</title>
+  <!-- Bump ?v= on every deploy: GitHub Pages caches assets for 10 minutes, and
+       a page that loads new HTML against a stale script would break. -->
+  <link rel="stylesheet" href="style.css?v=1">
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <div id="menu" class="overlay">
+    <h1>TYPE SQUADRON</h1>
+    <p class="tagline">Galaga for touch typists</p>
+    <ul class="howto">
+      <li>Swarms fly in and lock into formation &mdash; then they start diving</li>
+      <li>Type a word's <strong>first letter</strong> to target that ship</li>
+      <li>Every correct letter fires; finish the word to destroy it</li>
+      <li>Watch for the <strong>boss tractor beam</strong> &mdash; type fast to break free</li>
+    </ul>
+    <p id="menu-diff" class="menu-diff"></p>
+    <p id="menu-best" class="menu-best"></p>
+    <p class="start-hint">Press any letter to start</p>
+    <div class="btn-row">
+      <a class="btn" href="../">&larr; Arcade</a>
+      <button id="menu-settings" class="btn">Settings (Esc)</button>
+    </div>
+  </div>
+
+  <div id="gameover" class="overlay hidden">
+    <h1 id="gameover-title">GAME OVER</h1>
+    <div id="new-best" class="new-best hidden">NEW PERSONAL BEST</div>
+    <div id="final-stats"></div>
+    <div id="score-list" class="score-list"></div>
+    <p class="start-hint">Press Enter to play again</p>
+    <div class="btn-row">
+      <a class="btn" href="../">&larr; Arcade</a>
+      <button id="gameover-menu" class="btn">Main menu (M)</button>
+      <button id="gameover-settings" class="btn">Settings (Esc)</button>
+    </div>
+  </div>
+
+  <div id="settings" class="overlay hidden">
+    <h1 id="settings-title">SETTINGS</h1>
+    <div class="settings-body">
+      <div class="setting-group">
+        <div class="setting-label">Difficulty</div>
+        <div class="chip-row">
+          <button class="diff-btn chip" data-diff="beginner">Beginner</button>
+          <button class="diff-btn chip" data-diff="easy">Easy</button>
+          <button class="diff-btn chip" data-diff="normal">Normal</button>
+          <button class="diff-btn chip" data-diff="hard">Hard</button>
+          <button class="diff-btn chip" data-diff="master">Master</button>
+        </div>
+      </div>
+      <div class="setting-group">
+        <div class="setting-label">Word set</div>
+        <div class="chip-row">
+          <button class="set-btn chip" data-set="all">All words</button>
+          <button class="set-btn chip" data-set="common">Common</button>
+          <button class="set-btn chip" data-set="homerow">Home row</button>
+          <button class="set-btn chip" data-set="left">Left hand</button>
+          <button class="set-btn chip" data-set="right">Right hand</button>
+        </div>
+        <p class="hint">Squadron size adapts to the set &mdash; every ship on screen
+          gets a different starting letter, so a target is never ambiguous.</p>
+      </div>
+      <div class="setting-group">
+        <div class="setting-label">
+          <span>Music</span>
+          <button id="music-toggle" class="toggle">ON</button>
+        </div>
+        <div class="slider-row">
+          <input type="range" id="music-vol" min="0" max="100" step="1">
+          <span id="music-vol-num" class="vol-num"></span>
+        </div>
+      </div>
+      <div class="setting-group">
+        <div class="setting-label"><span>Effects volume</span></div>
+        <div class="slider-row">
+          <input type="range" id="sfx-vol" min="0" max="100" step="1">
+          <span id="sfx-vol-num" class="vol-num"></span>
+        </div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button id="quit-btn" class="btn btn-danger hidden">Quit run (Q)</button>
+      <button id="settings-back" class="btn">Back (Esc)</button>
+    </div>
+  </div>
+
+  <script src="../shared/words.js?v=1"></script>
+  <script src="game.js?v=1"></script>
+</body>
+</html>

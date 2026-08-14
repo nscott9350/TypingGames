@@ -3,90 +3,103 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Type Blaster</title>
-  <!-- Bump ?v= on every deploy: GitHub Pages caches assets for 10 minutes, and
-       a page that loads new HTML against a stale script would break. -->
-  <link rel="stylesheet" href="style.css?v=3">
+  <title>Type Arcade</title>
+  <meta name="description" content="Arcade games that teach you to touch type.">
+  <link rel="stylesheet" href="hub.css?v=1">
 </head>
 <body>
-  <canvas id="game"></canvas>
+  <div class="stars" aria-hidden="true"></div>
 
-  <div id="menu" class="overlay">
-    <h1>TYPE BLASTER</h1>
-    <p class="tagline">Asteroids for touch typists</p>
-    <ul class="howto">
-      <li>Type the <strong>first letter</strong> of a word to lock onto that asteroid</li>
-      <li>Each correct letter fires a shot &mdash; finish the word to destroy it</li>
-      <li>You must finish a locked word before targeting another</li>
-      <li>Chain correct letters to raise your <strong>score multiplier</strong></li>
+  <header class="hero">
+    <h1>TYPE ARCADE</h1>
+    <p class="sub">Arcade games that teach you to touch type</p>
+    <p class="note">Keyboard only &mdash; no mouse, no aiming. The words are the controls.</p>
+  </header>
+
+  <main class="games">
+    <a class="card card-blaster" href="blaster/">
+      <div class="art" aria-hidden="true">
+        <svg viewBox="0 0 200 120" role="img">
+          <defs>
+            <radialGradient id="rock" cx="35%" cy="30%">
+              <stop offset="0%" stop-color="#7f95ad"/>
+              <stop offset="100%" stop-color="#1b2634"/>
+            </radialGradient>
+          </defs>
+          <circle cx="46" cy="34" r="21" fill="url(#rock)"/>
+          <circle cx="152" cy="44" r="15" fill="url(#rock)"/>
+          <circle cx="112" cy="20" r="11" fill="url(#rock)"/>
+          <path d="M100 96 L112 76 L100 82 L88 76 Z" fill="#7fd4ff"/>
+          <circle cx="100" cy="70" r="2.6" fill="#ffd97a"/>
+          <circle cx="92" cy="58" r="2" fill="#ffd97a" opacity=".7"/>
+          <circle cx="84" cy="47" r="1.6" fill="#ffd97a" opacity=".45"/>
+        </svg>
+      </div>
+      <div class="body">
+        <h2>Type Blaster</h2>
+        <p class="genre">Asteroids</p>
+        <p class="desc">Rocks drift in from every edge. Type a word's first letter to
+          lock on, then finish the word before it reaches you.</p>
+        <ul class="tags">
+          <li>360&deg; targeting</li>
+          <li>5 difficulties</li>
+          <li>Endless</li>
+        </ul>
+        <span class="play">Play &rarr;</span>
+      </div>
+    </a>
+
+    <a class="card card-squadron" href="squadron/">
+      <div class="art" aria-hidden="true">
+        <svg viewBox="0 0 200 120" role="img">
+          <g fill="#ff5fa2">
+            <ellipse cx="70" cy="26" rx="7" ry="9"/>
+            <ellipse cx="100" cy="26" rx="7" ry="9"/>
+            <ellipse cx="130" cy="26" rx="7" ry="9"/>
+          </g>
+          <g fill="#ffd166">
+            <ellipse cx="55" cy="52" rx="6" ry="8"/>
+            <ellipse cx="85" cy="52" rx="6" ry="8"/>
+            <ellipse cx="115" cy="52" rx="6" ry="8"/>
+            <ellipse cx="145" cy="52" rx="6" ry="8"/>
+          </g>
+          <path d="M100 100 L110 82 L100 87 L90 82 Z" fill="#ffd166" stroke="#2fb8ff" stroke-width="1.5"/>
+          <path d="M92 30 L108 30 L118 74 L82 74 Z" fill="#4ef0c0" opacity=".18"/>
+          <circle cx="100" cy="72" r="2.4" fill="#fff3d0"/>
+        </svg>
+      </div>
+      <div class="body">
+        <h2>Type Squadron <span class="badge">NEW</span></h2>
+        <p class="genre">Galaga</p>
+        <p class="desc">Colorful swarms fly into formation, then peel off to dive at you.
+          Break the boss tractor beam by typing your way free.</p>
+        <ul class="tags">
+          <li>Wave based</li>
+          <li>Dive attacks</li>
+          <li>Tractor beam</li>
+        </ul>
+        <span class="play">Play &rarr;</span>
+      </div>
+    </a>
+  </main>
+
+  <section class="drills">
+    <h3>Built for practice</h3>
+    <p>Both games share the same word sets, so you can drill a specific part of
+      the keyboard and then take it into either game.</p>
+    <ul>
+      <li><strong>Home row</strong> &mdash; anchor your fingers on asdf&nbsp;jkl;</li>
+      <li><strong>Left hand</strong> / <strong>Right hand</strong> &mdash; isolate one side</li>
+      <li><strong>Common words</strong> &mdash; the words you actually type most</li>
+      <li><strong>All words</strong> &mdash; the full mixed vocabulary</li>
     </ul>
-    <p id="menu-diff" class="menu-diff"></p>
-    <p id="menu-best" class="menu-best"></p>
-    <p class="start-hint">Press any letter to start</p>
-    <button id="menu-settings" class="btn">Settings (Esc)</button>
-  </div>
+    <p class="stat-note">Every run tracks WPM, accuracy and your best streak, and
+      keeps a top-ten table per difficulty.</p>
+  </section>
 
-  <div id="gameover" class="overlay hidden">
-    <h1 id="gameover-title">GAME OVER</h1>
-    <div id="new-best" class="new-best hidden">NEW PERSONAL BEST</div>
-    <div id="final-stats"></div>
-    <div id="score-list" class="score-list"></div>
-    <p class="start-hint">Press Enter to play again</p>
-    <div class="btn-row">
-      <button id="gameover-menu" class="btn">Main menu (M)</button>
-      <button id="gameover-settings" class="btn">Settings (Esc)</button>
-    </div>
-  </div>
-
-  <div id="settings" class="overlay hidden">
-    <h1 id="settings-title">SETTINGS</h1>
-    <div class="settings-body">
-      <div class="setting-group">
-        <div class="setting-label">Difficulty</div>
-        <div class="chip-row">
-          <button class="diff-btn chip" data-diff="beginner">Beginner</button>
-          <button class="diff-btn chip" data-diff="easy">Easy</button>
-          <button class="diff-btn chip" data-diff="normal">Normal</button>
-          <button class="diff-btn chip" data-diff="hard">Hard</button>
-          <button class="diff-btn chip" data-diff="master">Master</button>
-        </div>
-      </div>
-      <div class="setting-group">
-        <div class="setting-label">Word set</div>
-        <div class="chip-row">
-          <button class="set-btn chip" data-set="all">All words</button>
-          <button class="set-btn chip" data-set="common">Common</button>
-          <button class="set-btn chip" data-set="homerow">Home row</button>
-          <button class="set-btn chip" data-set="left">Left hand</button>
-          <button class="set-btn chip" data-set="right">Right hand</button>
-        </div>
-        <p class="hint">Home row and single-hand sets drill specific finger positions.</p>
-      </div>
-      <div class="setting-group">
-        <div class="setting-label">
-          <span>Music</span>
-          <button id="music-toggle" class="toggle">ON</button>
-        </div>
-        <div class="slider-row">
-          <input type="range" id="music-vol" min="0" max="100" step="1">
-          <span id="music-vol-num" class="vol-num"></span>
-        </div>
-      </div>
-      <div class="setting-group">
-        <div class="setting-label"><span>Effects volume</span></div>
-        <div class="slider-row">
-          <input type="range" id="sfx-vol" min="0" max="100" step="1">
-          <span id="sfx-vol-num" class="vol-num"></span>
-        </div>
-      </div>
-    </div>
-    <div class="btn-row">
-      <button id="quit-btn" class="btn btn-danger hidden">Quit run (Q)</button>
-      <button id="settings-back" class="btn">Back (Esc)</button>
-    </div>
-  </div>
-
-  <script src="words.js?v=3"></script>
-  <script src="game.js?v=3"></script>
+  <footer>
+    <p>Built with plain HTML, CSS and canvas &mdash; no frameworks, no tracking.</p>
+    <p><a href="https://github.com/nscott9350/TypingGames">Source on GitHub</a></p>
+  </footer>
 </body>
 </html>
