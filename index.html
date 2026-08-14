@@ -4,7 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Type Blaster</title>
-  <link rel="stylesheet" href="style.css">
+  <!-- Bump ?v= on every deploy: GitHub Pages caches assets for 10 minutes, and
+       a page that loads new HTML against a stale script would break. -->
+  <link rel="stylesheet" href="style.css?v=2">
 </head>
 <body>
   <canvas id="game"></canvas>
@@ -78,7 +80,7 @@
     <button id="settings-back" class="btn">Back (Esc)</button>
   </div>
 
-  <script src="words.js"></script>
-  <script src="game.js"></script>
+  <script src="words.js?v=2"></script>
+  <script src="game.js?v=2"></script>
 </body>
 </html>
