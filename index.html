@@ -6,7 +6,7 @@
   <title>Type Blaster</title>
   <!-- Bump ?v= on every deploy: GitHub Pages caches assets for 10 minutes, and
        a page that loads new HTML against a stale script would break. -->
-  <link rel="stylesheet" href="style.css?v=2">
+  <link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
   <canvas id="game"></canvas>
@@ -27,12 +27,15 @@
   </div>
 
   <div id="gameover" class="overlay hidden">
-    <h1>GAME OVER</h1>
+    <h1 id="gameover-title">GAME OVER</h1>
     <div id="new-best" class="new-best hidden">NEW PERSONAL BEST</div>
     <div id="final-stats"></div>
     <div id="score-list" class="score-list"></div>
     <p class="start-hint">Press Enter to play again</p>
-    <button id="gameover-settings" class="btn">Settings (Esc)</button>
+    <div class="btn-row">
+      <button id="gameover-menu" class="btn">Main menu (M)</button>
+      <button id="gameover-settings" class="btn">Settings (Esc)</button>
+    </div>
   </div>
 
   <div id="settings" class="overlay hidden">
@@ -77,10 +80,13 @@
         </div>
       </div>
     </div>
-    <button id="settings-back" class="btn">Back (Esc)</button>
+    <div class="btn-row">
+      <button id="quit-btn" class="btn btn-danger hidden">Quit run (Q)</button>
+      <button id="settings-back" class="btn">Back (Esc)</button>
+    </div>
   </div>
 
-  <script src="words.js?v=2"></script>
-  <script src="game.js?v=2"></script>
+  <script src="words.js?v=3"></script>
+  <script src="game.js?v=3"></script>
 </body>
 </html>

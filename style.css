@@ -196,6 +196,36 @@ html, body {
   box-shadow: 0 0 18px rgba(127, 212, 255, 0.25);
 }
 
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: center;
+}
+
+.btn-danger {
+  color: #ff9b8a;
+  background: rgba(255, 120, 100, 0.06);
+  border-color: rgba(255, 120, 100, 0.45);
+}
+
+.btn-danger:hover {
+  background: rgba(255, 120, 100, 0.16);
+  box-shadow: 0 0 18px rgba(255, 120, 100, 0.22);
+}
+
+/* Second press confirms — guards against ending a good run by accident */
+.btn-danger.armed {
+  color: #05070f;
+  background: #ff9b8a;
+  border-color: #ff9b8a;
+  font-weight: bold;
+}
+
+.btn-danger.hidden {
+  display: none;
+}
+
 .settings-body {
   display: flex;
   flex-direction: column;

@@ -13,6 +13,8 @@ const menuDiffEl = document.getElementById("menu-diff");
 const menuBestEl = document.getElementById("menu-best");
 const scoreListEl = document.getElementById("score-list");
 const newBestEl = document.getElementById("new-best");
+const gameoverTitleEl = document.getElementById("gameover-title");
+const quitBtn = document.getElementById("quit-btn");
 
 const MONO = "ui-monospace, 'SF Mono', Menlo, Consolas, 'Courier New', monospace";
 
@@ -557,6 +559,9 @@ function openSettings(from) {
   gameoverEl.classList.add("hidden");
   if (from === "playing") state = "paused";
   settingsTitleEl.textContent = from === "playing" ? "PAUSED" : "SETTINGS";
+  // Quitting only means something while a run is in progress
+  quitBtn.classList.toggle("hidden", from !== "playing");
+  disarmQuit();
   syncSettingsUI();
   settingsEl.classList.remove("hidden");
 }
@@ -564,10 +569,54 @@ function openSettings(from) {
 function closeSettings() {
   settingsOpen = false;
   settingsEl.classList.add("hidden");
+  disarmQuit();
   if (document.activeElement) document.activeElement.blur();
   if (settingsFrom === "playing") state = "playing";
   else if (settingsFrom === "menu") menuEl.classList.remove("hidden");
   else if (settingsFrom === "gameover") gameoverEl.classList.remove("hidden");
+}
+
+// ---- Quitting a run ----
+let quitArmed = false;
+let quitTimer = null;
+
+function disarmQuit() {
+  quitArmed = false;
+  clearTimeout(quitTimer);
+  quitBtn.textContent = "Quit run (Q)";
+  quitBtn.classList.remove("armed");
+}
+
+// First press arms, second confirms. A stray keypress shouldn't end a run
+// the player has been building for minutes.
+function requestQuit() {
+  if (!quitArmed) {
+    quitArmed = true;
+    quitBtn.textContent = "Press again to confirm";
+    quitBtn.classList.add("armed");
+    quitTimer = setTimeout(disarmQuit, 4000);
+    return;
+  }
+  disarmQuit();
+  settingsOpen = false;
+  settingsEl.classList.add("hidden");
+  if (document.activeElement) document.activeElement.blur();
+  endGame("quit");
+}
+
+function returnToMenu() {
+  state = "menu";
+  asteroids = [];
+  bullets = [];
+  particles = [];
+  shockwaves = [];
+  lockTarget = null;
+  settingsOpen = false;
+  disarmQuit();
+  settingsEl.classList.add("hidden");
+  gameoverEl.classList.add("hidden");
+  menuEl.classList.remove("hidden");
+  syncSettingsUI(); // refresh the best-score line with anything just recorded
 }
 
 // ---- Input ----
@@ -577,6 +626,9 @@ window.addEventListener("keydown", (e) => {
 
   if (settingsOpen) {
     if (e.key === "Escape") closeSettings();
+    // Q only quits from the pause screen, where a run is actually running.
+    // It is never a gameplay key here, so it cannot collide with typing.
+    else if (settingsFrom === "playing" && e.key.toLowerCase() === "q") requestQuit();
     return;
   }
   if (state === "menu") {
@@ -587,6 +639,7 @@ window.addEventListener("keydown", (e) => {
   if (state === "gameover") {
     if (e.key === "Enter") startGame();
     else if (e.key === "Escape") openSettings("gameover");
+    else if (e.key.toLowerCase() === "m") returnToMenu();
     return;
   }
   if (state === "playing" && e.key === "Escape") { openSettings("playing"); return; }
@@ -824,7 +877,7 @@ function startGame() {
   gameoverEl.classList.add("hidden");
 }
 
-function endGame() {
+function endGame(reason = "dead") {
   state = "gameover";
   const minutes = Math.max(elapsed / 60, 1 / 60);
   const wpm = Math.round((typedCorrect / 5) / minutes);
@@ -840,7 +893,11 @@ function endGame() {
     wordSet: settings.wordSet,
     date: Date.now(),
   };
-  const rank = recordScore(entry);
+  // A run where nothing was typed is not a result worth keeping in the table
+  const worthRecording = typedCorrect > 0;
+  const rank = worthRecording ? recordScore(entry) : -1;
+
+  gameoverTitleEl.textContent = reason === "quit" ? "RUN ENDED" : "GAME OVER";
 
   finalStatsEl.innerHTML = `
     <span class="label">Score</span><span class="value">${score}</span>
@@ -852,7 +909,7 @@ function endGame() {
   `;
 
   newBestEl.classList.toggle("hidden", rank !== 0);
-  renderScoreList(entry);
+  renderScoreList(worthRecording ? entry : null);
   gameoverEl.classList.remove("hidden");
 }
 
@@ -1359,6 +1416,8 @@ sfxVolEl.addEventListener("input", () => {
 document.getElementById("settings-back").addEventListener("click", closeSettings);
 document.getElementById("menu-settings").addEventListener("click", () => openSettings("menu"));
 document.getElementById("gameover-settings").addEventListener("click", () => openSettings("gameover"));
+document.getElementById("gameover-menu").addEventListener("click", returnToMenu);
+quitBtn.addEventListener("click", requestQuit);
 
 // Browsers only allow audio after a user gesture; clicks count too.
 window.addEventListener("pointerdown", () => {
