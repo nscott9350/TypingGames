@@ -91,11 +91,25 @@ const DIFFICULTY_LEVELS = {
 const currentLevel = () => DIFFICULTY_LEVELS[settings.difficulty] || DIFFICULTY_LEVELS.normal;
 const currentWordSet = () => WORD_SETS[settings.wordSet] || WORD_SETS.all;
 
+// ---- Palette ----
+// Fully saturated neon against a near-black ground. Electric colour is a
+// contrast effect as much as a hue one: the darker and less tinted the
+// background, the more these read as emitting light rather than reflecting it.
+const NEON = {
+  cyan: "#00E5FF",
+  magenta: "#FF1F8F",
+  yellow: "#FFE600",
+  lime: "#7CFF3D",
+  violet: "#B026FF",
+  white: "#FFFFFF",
+};
+
 // ---- Enemy types ----
+// `hot` is the near-white heart of the body, `glow` the colour it bleeds.
 const TYPES = {
-  bee:       { r: 15, pts: 60,  body: "#ffd166", accent: "#ff8c42", glow: "#ffb347" },
-  butterfly: { r: 17, pts: 100, body: "#ff5fa2", accent: "#c04df9", glow: "#ff6ec7" },
-  boss:      { r: 22, pts: 250, body: "#4ef0c0", accent: "#2fb8ff", glow: "#5ef7d6" },
+  bee:       { r: 15, pts: 60,  hot: "#FFFBCC", body: "#FFE600", accent: "#FF8A00", glow: "#FFE84D" },
+  butterfly: { r: 17, pts: 100, hot: "#FFD6F2", body: "#FF1F8F", accent: "#B026FF", glow: "#FF4FC3" },
+  boss:      { r: 22, pts: 250, hot: "#CFFFF4", body: "#00FFC8", accent: "#00C2FF", glow: "#3DFFDD" },
 };
 
 let W = 0, H = 0;
@@ -111,9 +125,12 @@ function glowSprite(color) {
   c = document.createElement("canvas");
   c.width = c.height = size;
   const g = c.getContext("2d");
+  // A tight, bright core with a fast falloff reads as an LED. A wide, gentle
+  // falloff reads as fog, which is what made everything look washed out.
   const grad = g.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
   grad.addColorStop(0, color);
-  grad.addColorStop(0.4, hexA(color, 0.45));
+  grad.addColorStop(0.16, hexA(color, 0.9));
+  grad.addColorStop(0.42, hexA(color, 0.28));
   grad.addColorStop(1, hexA(color, 0));
   g.fillStyle = grad;
   g.fillRect(0, 0, size, size);
@@ -140,27 +157,31 @@ function buildBackground() {
   bgCanvas.height = Math.max(1, H);
   const g = bgCanvas.getContext("2d");
 
+  // Near-black ground. The previous mid-purple wash lifted every dark pixel
+  // and greyed the neon out; saturation only reads as "electric" when the
+  // surrounding value is genuinely low.
   const base = g.createLinearGradient(0, 0, W * 0.3, H);
-  base.addColorStop(0, "#1b0d33");
-  base.addColorStop(0.5, "#120a24");
-  base.addColorStop(1, "#0d0620");
+  base.addColorStop(0, "#0a0418");
+  base.addColorStop(0.5, "#050110");
+  base.addColorStop(1, "#08020f");
   g.fillStyle = base;
   g.fillRect(0, 0, W, H);
 
+  // Tighter, more saturated pools of colour instead of broad haze
   const clouds = [
-    { c: "255, 95, 162", n: 3 },
-    { c: "120, 70, 240", n: 3 },
-    { c: "47, 184, 255", n: 3 },
-    { c: "78, 240, 192", n: 2 },
+    { c: "255, 31, 143", n: 3 },
+    { c: "176, 38, 255", n: 3 },
+    { c: "0, 229, 255", n: 3 },
+    { c: "124, 255, 61", n: 1 },
   ];
   for (const { c, n } of clouds) {
     for (let i = 0; i < n; i++) {
       const x = Math.random() * W;
       const y = Math.random() * H;
-      const r = (150 + Math.random() * 300) * (Math.max(W, H) / 1200);
+      const r = (110 + Math.random() * 210) * (Math.max(W, H) / 1200);
       const grad = g.createRadialGradient(x, y, 0, x, y, r);
-      grad.addColorStop(0, `rgba(${c}, 0.16)`);
-      grad.addColorStop(0.5, `rgba(${c}, 0.06)`);
+      grad.addColorStop(0, `rgba(${c}, 0.2)`);
+      grad.addColorStop(0.35, `rgba(${c}, 0.07)`);
       grad.addColorStop(1, `rgba(${c}, 0)`);
       g.fillStyle = grad;
       g.fillRect(x - r, y - r, r * 2, r * 2);
@@ -171,9 +192,9 @@ function buildBackground() {
 // Stars scroll downward: a vertical shooter reads better with vertical drift.
 function makeStars() {
   const specs = [
-    { count: (W * H) / 9000,  size: [0.4, 1.0], alpha: [0.25, 0.5],  speed: 12, tint: "220, 210, 255" },
-    { count: (W * H) / 16000, size: [0.8, 1.7], alpha: [0.4, 0.8],   speed: 34, tint: "255, 225, 245" },
-    { count: (W * H) / 34000, size: [1.3, 2.6], alpha: [0.6, 1.0],   speed: 68, tint: "200, 245, 255" },
+    { count: (W * H) / 9000,  size: [0.4, 1.0], alpha: [0.35, 0.65], speed: 12, tint: "200, 190, 255" },
+    { count: (W * H) / 16000, size: [0.8, 1.7], alpha: [0.55, 0.95], speed: 34, tint: "255, 190, 235" },
+    { count: (W * H) / 34000, size: [1.3, 2.6], alpha: [0.8, 1.0],   speed: 68, tint: "120, 240, 255" },
   ];
   starLayers = specs.map(s => {
     const arr = [];
@@ -692,7 +713,7 @@ function bumpStreak() {
   if (m > multiplier) {
     multiplier = m;
     sfx.levelUp();
-    shockwave(player.x, player.y, 100, "#4ef0c0", 2);
+    shockwave(player.x, player.y, 100, NEON.lime, 2);
   }
 }
 
@@ -751,8 +772,8 @@ function freeFromCapture() {
   player.spin = 0;
   capture = null;
   sfx.rescue();
-  shockwave(player.x, player.y, 180, "#ffd166", 4);
-  burst(player.x, player.y, 20, ["#ffd166", "#ff5fa2", "#ffffff"], 34);
+  shockwave(player.x, player.y, 180, NEON.yellow, 4);
+  burst(player.x, player.y, 20, [NEON.yellow, NEON.magenta, "#ffffff"], 34);
 }
 
 function loseLife() {
@@ -762,8 +783,8 @@ function loseLife() {
   invuln = INVULN_TIME;
   shake = 16;
   flash = 0.5;
-  burst(player.x, player.y, 20, ["#2fb8ff", "#ffffff", "#ff5fa2"], 32);
-  shockwave(player.x, player.y, 170, "#2fb8ff", 4);
+  burst(player.x, player.y, 20, [NEON.cyan, "#ffffff", NEON.magenta], 32);
+  shockwave(player.x, player.y, 170, NEON.cyan, 4);
   sfx.playerHit();
   if (lives <= 0) endGame("dead");
 }
@@ -803,7 +824,7 @@ function update(dt) {
       vx: (Math.random() - 0.5) * 30, vy: 90 + Math.random() * 70,
       life: 0.16 + Math.random() * 0.2, maxLife: 0.36,
       r: 1.2 + Math.random() * 1.8,
-      color: Math.random() < 0.5 ? "#ffd166" : "#2fb8ff",
+      color: Math.random() < 0.5 ? NEON.yellow : NEON.cyan,
       drag: 2.4,
     });
   }
@@ -970,7 +991,7 @@ function updateBullets(dt) {
       bullets.splice(i, 1);
       t.hitsLanded++;
       t.hitFlash = 1;
-      burst(b.x, b.y, 6, ["#ffffff", "#ffd166"], 7, 0.5);
+      burst(b.x, b.y, 6, ["#ffffff", NEON.yellow], 7, 0.5);
       sfx.hit();
       if (t.dying && t.hitsLanded >= t.word.length) {
         const idx = enemies.indexOf(t);
@@ -1128,9 +1149,11 @@ function drawStars(dt) {
 }
 
 function drawVignette() {
-  const g = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.38, W / 2, H / 2, Math.max(W, H) * 0.75);
+  // Lighter than before, and neutral black rather than purple: a tinted
+  // vignette dulls the saturated colours it falls across.
+  const g = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.45, W / 2, H / 2, Math.max(W, H) * 0.78);
   g.addColorStop(0, "rgba(0,0,0,0)");
-  g.addColorStop(1, "rgba(6, 2, 16, 0.6)");
+  g.addColorStop(1, "rgba(0, 0, 0, 0.42)");
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, W, H);
 }
@@ -1161,9 +1184,9 @@ function drawBeam(t) {
   ctx.save();
   ctx.globalCompositeOperation = "lighter";
   const g = ctx.createLinearGradient(0, b.y, 0, endY);
-  g.addColorStop(0, "rgba(78, 240, 192, 0.55)");
-  g.addColorStop(0.6, "rgba(47, 184, 255, 0.25)");
-  g.addColorStop(1, "rgba(192, 77, 249, 0.06)");
+  g.addColorStop(0, "rgba(0, 255, 200, 0.72)");
+  g.addColorStop(0.6, "rgba(0, 229, 255, 0.34)");
+  g.addColorStop(1, "rgba(176, 38, 255, 0.1)");
   ctx.fillStyle = g;
   ctx.beginPath();
   ctx.moveTo(b.x - topW, b.y);
@@ -1198,7 +1221,10 @@ function drawEnemies(t) {
 
     ctx.save();
     ctx.globalCompositeOperation = "lighter";
-    drawGlow(e.x, e.y, e.r * 2.4, locked ? "#ffffff" : T.glow, locked ? 0.4 : 0.22);
+    // Two passes: a wide soft halo plus a tight hot core, so ships look lit
+    // from within rather than merely tinted.
+    drawGlow(e.x, e.y, e.r * 2.8, T.glow, locked ? 0.5 : 0.34);
+    drawGlow(e.x, e.y, e.r * 1.15, locked ? "#ffffff" : T.body, locked ? 0.75 : 0.42);
     ctx.restore();
 
     ctx.save();
@@ -1219,7 +1245,7 @@ function drawShip(e, T, t) {
   const flap = 0.75 + Math.abs(Math.sin(e.wing * 7)) * 0.5;
 
   // Wings
-  ctx.fillStyle = hexA(T.accent, 0.92);
+  ctx.fillStyle = T.accent;
   for (const side of [-1, 1]) {
     ctx.save();
     ctx.scale(side * flap, 1);
@@ -1242,18 +1268,23 @@ function drawShip(e, T, t) {
     ctx.restore();
   }
 
-  // Body
+  // Body: mostly saturated hue with only a small hot highlight, then a bright
+  // rim in the glow colour. Grading straight into white desaturates the whole
+  // shape and is what made these look pastel.
   const g = ctx.createLinearGradient(0, -r, 0, r);
-  g.addColorStop(0, "#ffffff");
-  g.addColorStop(0.35, T.body);
+  g.addColorStop(0, T.hot);
+  g.addColorStop(0.28, T.body);
   g.addColorStop(1, T.accent);
   ctx.fillStyle = g;
   ctx.beginPath();
   ctx.ellipse(0, 0, r * 0.5, r * 0.85, 0, 0, Math.PI * 2);
   ctx.fill();
+  ctx.strokeStyle = T.glow;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
 
   if (e.type === "bee") {
-    ctx.fillStyle = "rgba(40, 15, 60, 0.55)";
+    ctx.fillStyle = "rgba(10, 2, 20, 0.7)";
     for (const y of [-r * 0.18, r * 0.22]) {
       ctx.fillRect(-r * 0.42, y, r * 0.84, r * 0.16);
     }
@@ -1321,25 +1352,27 @@ function drawWordLabel(e, locked, T) {
   const padX = 8, padY = 5;
   const bx = startX - padX, by = ly - fs - padY + 2;
   const bw = totalW + padX * 2, bh = fs + padY * 2;
-  ctx.fillStyle = locked ? "rgba(24, 6, 40, 0.88)" : "rgba(14, 6, 28, 0.72)";
+  // Near-opaque black plate: it both keeps the word legible over the glow and
+  // gives the neon border something dark to sit against.
+  ctx.fillStyle = locked ? "rgba(6, 0, 14, 0.92)" : "rgba(4, 0, 10, 0.85)";
   roundRect(bx, by, bw, bh, 6);
   ctx.fill();
-  ctx.strokeStyle = locked ? "rgba(255, 255, 255, 0.85)" : hexA(T.glow, 0.35);
-  ctx.lineWidth = 1;
+  ctx.strokeStyle = locked ? "#FFFFFF" : hexA(T.glow, 0.75);
+  ctx.lineWidth = locked ? 1.6 : 1.2;
   roundRect(bx, by, bw, bh, 6);
   ctx.stroke();
 
   ctx.textAlign = "left";
   let x = startX;
   if (done) {
-    ctx.fillStyle = "#4ef0c0";
+    ctx.fillStyle = NEON.lime;
     ctx.fillText(done, x, ly);
     x += ctx.measureText(done).width;
   }
   if (next) {
     const nw = ctx.measureText(next).width;
     if (locked) {
-      ctx.fillStyle = "rgba(255, 209, 102, 0.35)";
+      ctx.fillStyle = "rgba(255, 230, 0, 0.35)";
       roundRect(x - 2, ly - fs + 1, nw + 4, fs + 4, 3);
       ctx.fill();
     }
@@ -1348,7 +1381,7 @@ function drawWordLabel(e, locked, T) {
     x += nw;
   }
   if (rest) {
-    ctx.fillStyle = locked ? "rgba(255,255,255,0.8)" : hexA(T.body, 0.85);
+    ctx.fillStyle = locked ? "#FFFFFF" : T.body;
     ctx.fillText(rest, x, ly);
   }
 }
@@ -1369,9 +1402,10 @@ function drawPlayer(t) {
 
   ctx.save();
   ctx.globalCompositeOperation = "lighter";
-  drawGlow(player.x, player.y + PLAYER_R * 0.7, 15 + Math.random() * 4, "#2fb8ff", 0.5);
+  drawGlow(player.x, player.y + PLAYER_R * 0.75, 17 + Math.random() * 5, NEON.cyan, 0.8);
+  drawGlow(player.x, player.y, PLAYER_R * 1.6, NEON.yellow, 0.35);
   if (player.muzzle > 0) {
-    drawGlow(player.x, player.y - PLAYER_R, 26 * (player.muzzle / 0.1), "#ffd166", 0.9);
+    drawGlow(player.x, player.y - PLAYER_R, 30 * (player.muzzle / 0.1), NEON.yellow, 1);
   }
   ctx.restore();
 
@@ -1387,16 +1421,16 @@ function drawPlayer(t) {
   hull.closePath();
 
   const g = ctx.createLinearGradient(0, -PLAYER_R, 0, PLAYER_R);
-  g.addColorStop(0, "#fff6d8");
-  g.addColorStop(0.45, "#ffd166");
-  g.addColorStop(1, "#ff5fa2");
+  g.addColorStop(0, "#FFFBCC");
+  g.addColorStop(0.3, NEON.yellow);
+  g.addColorStop(1, NEON.magenta);
   ctx.fillStyle = g;
   ctx.fill(hull);
-  ctx.strokeStyle = "#2fb8ff";
-  ctx.lineWidth = 1.8;
+  ctx.strokeStyle = NEON.cyan;
+  ctx.lineWidth = 2;
   ctx.stroke(hull);
 
-  ctx.fillStyle = "rgba(220, 250, 255, 0.95)";
+  ctx.fillStyle = "#FFFFFF";
   ctx.beginPath();
   ctx.ellipse(0, -PLAYER_R * 0.2, PLAYER_R * 0.2, PLAYER_R * 0.3, 0, 0, Math.PI * 2);
   ctx.fill();
@@ -1422,12 +1456,12 @@ function drawBullets() {
     for (let i = 0; i < b.trail.length; i++) {
       const p = b.trail[i];
       const k = (i + 1) / b.trail.length;
-      drawGlow(p.x, p.y, 5 * k, "#ffd166", 0.2 * k);
+      drawGlow(p.x, p.y, 6 * k, NEON.yellow, 0.32 * k);
     }
-    drawGlow(b.x, b.y, 11, "#fff3d0", 0.85);
+    drawGlow(b.x, b.y, 14, NEON.yellow, 1);
     ctx.fillStyle = "#ffffff";
     ctx.beginPath();
-    ctx.arc(b.x, b.y, 2.4, 0, Math.PI * 2);
+    ctx.arc(b.x, b.y, 2.8, 0, Math.PI * 2);
     ctx.fill();
   }
   ctx.restore();
@@ -1437,10 +1471,10 @@ function drawEnemyBullets() {
   ctx.save();
   ctx.globalCompositeOperation = "lighter";
   for (const b of enemyBullets) {
-    drawGlow(b.x, b.y, 12, b.color, 0.8);
+    drawGlow(b.x, b.y, 15, b.color, 1);
     ctx.fillStyle = "#ffffff";
     ctx.beginPath();
-    ctx.arc(b.x, b.y, 2.6, 0, Math.PI * 2);
+    ctx.arc(b.x, b.y, 3, 0, Math.PI * 2);
     ctx.fill();
   }
   ctx.restore();
@@ -1463,7 +1497,7 @@ function drawRescuePrompt(t) {
 
   ctx.font = `bold 13px ${MONO}`;
   ctx.textAlign = "center";
-  ctx.fillStyle = `rgba(255, 120, 160, ${0.7 + 0.3 * Math.sin(t * 10)})`;
+  ctx.fillStyle = `rgba(255, 31, 143, ${0.7 + 0.3 * Math.sin(t * 10)})`;
   ctx.fillText("CAPTURED — TYPE TO BREAK FREE", cx, cy - 48);
 
   const fs = 34;
@@ -1475,7 +1509,7 @@ function drawRescuePrompt(t) {
   ctx.fillStyle = "rgba(18, 6, 34, 0.9)";
   roundRect(startX - 18, cy - fs - 4, totalW + 36, fs + 22, 10);
   ctx.fill();
-  ctx.strokeStyle = `rgba(255, 209, 102, ${0.5 + 0.5 * Math.sin(t * 8)})`;
+  ctx.strokeStyle = `rgba(255, 230, 0, ${0.5 + 0.5 * Math.sin(t * 8)})`;
   ctx.lineWidth = 2;
   roundRect(startX - 18, cy - fs - 4, totalW + 36, fs + 22, 10);
   ctx.stroke();
@@ -1485,10 +1519,10 @@ function drawRescuePrompt(t) {
   const done = word.slice(0, capture.typed);
   const next = word.slice(capture.typed, capture.typed + 1);
   const rest = word.slice(capture.typed + 1);
-  if (done) { ctx.fillStyle = "#4ef0c0"; ctx.fillText(done, x, cy); x += ctx.measureText(done).width; }
+  if (done) { ctx.fillStyle = NEON.lime; ctx.fillText(done, x, cy); x += ctx.measureText(done).width; }
   if (next) {
     const nw = ctx.measureText(next).width;
-    ctx.fillStyle = "rgba(255, 209, 102, 0.35)";
+    ctx.fillStyle = "rgba(255, 230, 0, 0.35)";
     roundRect(x - 3, cy - fs + 2, nw + 6, fs + 6, 4);
     ctx.fill();
     ctx.fillStyle = "#ffffff";
@@ -1504,7 +1538,7 @@ function drawRescuePrompt(t) {
   roundRect(bx, by, barW, barH, 4);
   ctx.fill();
   const left = Math.max(0, capture.timer / L.rescue);
-  ctx.fillStyle = urgency > 0.7 ? "#ff5f6d" : urgency > 0.4 ? "#ffd166" : "#4ef0c0";
+  ctx.fillStyle = urgency > 0.7 ? "#FF3355" : urgency > 0.4 ? NEON.yellow : NEON.lime;
   roundRect(bx, by, Math.max(3, barW * left), barH, 4);
   ctx.fill();
   ctx.textAlign = "left";
@@ -1519,9 +1553,9 @@ function drawBanner() {
   ctx.textAlign = "center";
   ctx.font = `bold 46px ${MONO}`;
   const g = ctx.createLinearGradient(W / 2 - 200, 0, W / 2 + 200, 0);
-  g.addColorStop(0, "#ffd166");
-  g.addColorStop(0.5, "#ff5fa2");
-  g.addColorStop(1, "#2fb8ff");
+  g.addColorStop(0, NEON.yellow);
+  g.addColorStop(0.5, NEON.magenta);
+  g.addColorStop(1, NEON.cyan);
   ctx.fillStyle = g;
   ctx.fillText(banner.text, W / 2, H * 0.42);
   ctx.font = `14px ${MONO}`;
@@ -1535,7 +1569,7 @@ function drawHUD() {
   const pad = 20;
   ctx.font = `600 12px ${MONO}`;
   ctx.textAlign = "left";
-  ctx.fillStyle = "rgba(169, 154, 200, 0.9)";
+  ctx.fillStyle = "rgba(190, 175, 235, 0.9)";
   ctx.fillText("SCORE", pad, 26);
   ctx.font = `bold 30px ${MONO}`;
   ctx.fillStyle = "#ffffff";
@@ -1544,28 +1578,28 @@ function drawHUD() {
   if (multiplier > 1 || streak > 0) {
     const my = 68;
     ctx.font = `bold 14px ${MONO}`;
-    ctx.fillStyle = multiplier > 1 ? "#4ef0c0" : "rgba(169, 154, 200, 0.9)";
+    ctx.fillStyle = multiplier > 1 ? NEON.lime : "rgba(190, 175, 235, 0.9)";
     ctx.fillText(`x${multiplier}`, pad, my + 12);
     const barX = pad + 34, barW = 96, barH = 6, barY = my + 4;
     const into = multiplier >= MAX_MULT ? 1 : (streak % STREAK_PER_MULT) / STREAK_PER_MULT;
-    ctx.fillStyle = "rgba(169, 154, 200, 0.25)";
+    ctx.fillStyle = "rgba(190, 175, 235, 0.25)";
     roundRect(barX, barY, barW, barH, 3);
     ctx.fill();
-    ctx.fillStyle = multiplier > 1 ? "#4ef0c0" : "#ff5fa2";
+    ctx.fillStyle = multiplier > 1 ? NEON.lime : NEON.magenta;
     roundRect(barX, barY, Math.max(2, barW * into), barH, 3);
     ctx.fill();
     ctx.font = `11px ${MONO}`;
-    ctx.fillStyle = "rgba(169, 154, 200, 0.8)";
+    ctx.fillStyle = "rgba(190, 175, 235, 0.8)";
     ctx.fillText(`${streak} streak`, barX + barW + 10, my + 11);
   }
 
   // Wave, centred
   ctx.textAlign = "center";
   ctx.font = `600 12px ${MONO}`;
-  ctx.fillStyle = "rgba(169, 154, 200, 0.9)";
+  ctx.fillStyle = "rgba(190, 175, 235, 0.9)";
   ctx.fillText("WAVE", W / 2, 26);
   ctx.font = `bold 22px ${MONO}`;
-  ctx.fillStyle = "#ffd166";
+  ctx.fillStyle = NEON.yellow;
   ctx.fillText(String(Math.max(1, wave)), W / 2, 50);
 
   // Lives
@@ -1573,7 +1607,7 @@ function drawHUD() {
     ctx.save();
     ctx.translate(W - pad - 12 - i * 28, 30);
     ctx.scale(0.75, 0.75);
-    ctx.fillStyle = "#ffd166";
+    ctx.fillStyle = NEON.yellow;
     ctx.beginPath();
     ctx.moveTo(0, -14);
     ctx.lineTo(11, 10);
@@ -1590,13 +1624,13 @@ function drawHUD() {
   const acc = total ? Math.round((typedCorrect / total) * 100) : 100;
   ctx.textAlign = "left";
   ctx.font = `13px ${MONO}`;
-  ctx.fillStyle = "rgba(200, 188, 230, 0.85)";
+  ctx.fillStyle = "rgba(215, 205, 250, 0.85)";
   ctx.fillText(
     `WPM ${wpm}    ACC ${acc}%    ${currentLevel().label}    ${currentWordSet().label.toUpperCase()}`,
     pad, H - 20
   );
   ctx.textAlign = "right";
-  ctx.fillStyle = "rgba(169, 154, 200, 0.6)";
+  ctx.fillStyle = "rgba(190, 175, 235, 0.6)";
   ctx.fillText("ESC  pause / settings", W - pad, H - 20);
   ctx.textAlign = "left";
 }

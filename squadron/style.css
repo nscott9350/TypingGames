@@ -6,14 +6,14 @@
 
 :root {
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Courier New", monospace;
-  --hot: #ff5fa2;
-  --violet: #c04df9;
-  --gold: #ffd166;
-  --mint: #4ef0c0;
-  --sky: #2fb8ff;
-  --dim: #a99ac8;
-  --text: #f0e9ff;
-  --bg: #120a24;
+  --hot: #FF1F8F;
+  --violet: #B026FF;
+  --gold: #FFE600;
+  --mint: #00FFC8;
+  --sky: #00E5FF;
+  --dim: #B9A8E8;
+  --text: #F5F0FF;
+  --bg: #050110;
 }
 
 html, body {
@@ -39,7 +39,7 @@ html, body {
   align-items: center;
   justify-content: center;
   gap: 1.1rem;
-  background: radial-gradient(ellipse at center, rgba(30, 12, 56, 0.86) 0%, rgba(12, 5, 26, 0.95) 70%);
+  background: radial-gradient(ellipse at center, rgba(10, 2, 26, 0.9) 0%, rgba(3, 0, 10, 0.96) 70%);
   backdrop-filter: blur(3px);
   text-align: center;
   padding: 2rem 1.5rem;
@@ -54,11 +54,11 @@ html, body {
   font-size: clamp(1.9rem, 5.2vw, 3.4rem);
   letter-spacing: 0.26em;
   font-weight: 700;
-  background: linear-gradient(90deg, #ffd166 0%, #ff5fa2 45%, #c04df9 75%, #2fb8ff 100%);
+  background: linear-gradient(90deg, #FFE600 0%, #FF1F8F 45%, #B026FF 75%, #00E5FF 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  filter: drop-shadow(0 0 22px rgba(255, 95, 162, 0.45));
+  filter: drop-shadow(0 0 22px rgba(255, 31, 143, 0.45));
 }
 
 .tagline {
@@ -74,7 +74,7 @@ html, body {
   flex-direction: column;
   gap: 0.5rem;
   font-size: 0.95rem;
-  color: #d8cdf0;
+  color: #E6DBFF;
   line-height: 1.5;
 }
 
@@ -111,11 +111,11 @@ html, body {
   font-size: 0.95rem;
   font-weight: bold;
   letter-spacing: 0.25em;
-  color: #1a0b2e;
+  color: #05010F;
   background: linear-gradient(90deg, var(--gold), var(--hot));
   padding: 0.35rem 1rem;
   border-radius: 999px;
-  box-shadow: 0 0 26px rgba(255, 95, 162, 0.5);
+  box-shadow: 0 0 26px rgba(255, 31, 143, 0.5);
 }
 
 .new-best.hidden {
@@ -147,7 +147,7 @@ html, body {
   color: var(--dim);
   margin-bottom: 0.5rem;
   padding-bottom: 0.4rem;
-  border-bottom: 1px solid rgba(169, 154, 200, 0.25);
+  border-bottom: 1px solid rgba(185, 168, 232, 0.25);
 }
 
 .score-list ol {
@@ -169,8 +169,8 @@ html, body {
 }
 
 .score-list li.me {
-  background: rgba(255, 95, 162, 0.16);
-  box-shadow: inset 0 0 0 1px rgba(255, 95, 162, 0.4);
+  background: rgba(255, 31, 143, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(255, 31, 143, 0.4);
 }
 
 .score-list .rank { color: var(--dim); }
@@ -183,8 +183,8 @@ html, body {
   font-size: 0.95rem;
   letter-spacing: 0.12em;
   color: var(--sky);
-  background: rgba(47, 184, 255, 0.07);
-  border: 1px solid rgba(47, 184, 255, 0.45);
+  background: rgba(0, 229, 255, 0.07);
+  border: 1px solid rgba(0, 229, 255, 0.45);
   border-radius: 5px;
   padding: 0.55rem 1.4rem;
   cursor: pointer;
@@ -192,9 +192,9 @@ html, body {
 }
 
 .btn:hover {
-  background: rgba(47, 184, 255, 0.18);
+  background: rgba(0, 229, 255, 0.18);
   color: #ffffff;
-  box-shadow: 0 0 18px rgba(47, 184, 255, 0.3);
+  box-shadow: 0 0 18px rgba(0, 229, 255, 0.3);
 }
 
 a.btn {
@@ -211,21 +211,21 @@ a.btn {
 }
 
 .btn-danger {
-  color: #ff8fa8;
-  background: rgba(255, 95, 130, 0.07);
-  border-color: rgba(255, 95, 130, 0.45);
+  color: #FF4D6D;
+  background: rgba(255, 45, 110, 0.07);
+  border-color: rgba(255, 45, 110, 0.45);
 }
 
 .btn-danger:hover {
-  background: rgba(255, 95, 130, 0.18);
-  box-shadow: 0 0 18px rgba(255, 95, 130, 0.25);
+  background: rgba(255, 45, 110, 0.18);
+  box-shadow: 0 0 18px rgba(255, 45, 110, 0.25);
 }
 
 /* Second press confirms — guards against ending a good run by accident */
 .btn-danger.armed {
-  color: #1a0b2e;
-  background: #ff8fa8;
-  border-color: #ff8fa8;
+  color: #05010F;
+  background: #FF4D6D;
+  border-color: #FF4D6D;
   font-weight: bold;
 }
 
@@ -258,7 +258,7 @@ a.btn {
 
 .hint {
   font-size: 0.75rem;
-  color: rgba(169, 154, 200, 0.75);
+  color: rgba(185, 168, 232, 0.75);
   text-align: left;
   line-height: 1.45;
 }
@@ -274,7 +274,7 @@ a.btn {
   font-size: 0.85rem;
   color: var(--dim);
   background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(169, 154, 200, 0.35);
+  border: 1px solid rgba(185, 168, 232, 0.35);
   border-radius: 999px;
   padding: 0.4rem 0.85rem;
   cursor: pointer;
@@ -283,15 +283,15 @@ a.btn {
 
 .chip:hover {
   color: #ffffff;
-  border-color: rgba(78, 240, 192, 0.7);
+  border-color: rgba(0, 255, 200, 0.7);
 }
 
 .chip.selected {
-  color: #12061f;
+  color: #05010F;
   background: linear-gradient(90deg, var(--mint), var(--sky));
   border-color: transparent;
   font-weight: bold;
-  box-shadow: 0 0 18px rgba(78, 240, 192, 0.35);
+  box-shadow: 0 0 18px rgba(0, 255, 200, 0.35);
 }
 
 .toggle {
@@ -300,7 +300,7 @@ a.btn {
   font-weight: bold;
   letter-spacing: 0.12em;
   min-width: 4rem;
-  color: #12061f;
+  color: #05010F;
   background: var(--mint);
   border: none;
   border-radius: 999px;
@@ -310,7 +310,7 @@ a.btn {
 
 .toggle.off {
   color: var(--dim);
-  background: rgba(169, 154, 200, 0.2);
+  background: rgba(185, 168, 232, 0.2);
 }
 
 .slider-row {
