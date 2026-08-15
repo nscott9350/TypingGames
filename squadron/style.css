@@ -6,11 +6,11 @@
 
 :root {
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Courier New", monospace;
-  --hot: #FF1F8F;
-  --violet: #B026FF;
-  --gold: #FFE600;
-  --mint: #00FFC8;
-  --sky: #00E5FF;
+  --hot: #FF0090;
+  --violet: #9D00FF;
+  --gold: #FFD400;
+  --mint: #7CFF3D;
+  --sky: #00D0FF;
   --dim: #B9A8E8;
   --text: #F5F0FF;
   --bg: #050110;
@@ -54,11 +54,11 @@ html, body {
   font-size: clamp(1.9rem, 5.2vw, 3.4rem);
   letter-spacing: 0.26em;
   font-weight: 700;
-  background: linear-gradient(90deg, #FFE600 0%, #FF1F8F 45%, #B026FF 75%, #00E5FF 100%);
+  background: linear-gradient(90deg, #FFD400 0%, #FF0090 45%, #9D00FF 75%, #00D0FF 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  filter: drop-shadow(0 0 22px rgba(255, 31, 143, 0.45));
+  filter: drop-shadow(0 0 22px rgba(255, 0, 144, 0.45));
 }
 
 .tagline {
@@ -115,7 +115,7 @@ html, body {
   background: linear-gradient(90deg, var(--gold), var(--hot));
   padding: 0.35rem 1rem;
   border-radius: 999px;
-  box-shadow: 0 0 26px rgba(255, 31, 143, 0.5);
+  box-shadow: 0 0 26px rgba(255, 0, 144, 0.5);
 }
 
 .new-best.hidden {
@@ -169,8 +169,8 @@ html, body {
 }
 
 .score-list li.me {
-  background: rgba(255, 31, 143, 0.16);
-  box-shadow: inset 0 0 0 1px rgba(255, 31, 143, 0.4);
+  background: rgba(255, 0, 144, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(255, 0, 144, 0.4);
 }
 
 .score-list .rank { color: var(--dim); }
@@ -183,8 +183,8 @@ html, body {
   font-size: 0.95rem;
   letter-spacing: 0.12em;
   color: var(--sky);
-  background: rgba(0, 229, 255, 0.07);
-  border: 1px solid rgba(0, 229, 255, 0.45);
+  background: rgba(0, 208, 255, 0.07);
+  border: 1px solid rgba(0, 208, 255, 0.45);
   border-radius: 5px;
   padding: 0.55rem 1.4rem;
   cursor: pointer;
@@ -192,9 +192,9 @@ html, body {
 }
 
 .btn:hover {
-  background: rgba(0, 229, 255, 0.18);
+  background: rgba(0, 208, 255, 0.18);
   color: #ffffff;
-  box-shadow: 0 0 18px rgba(0, 229, 255, 0.3);
+  box-shadow: 0 0 18px rgba(0, 208, 255, 0.3);
 }
 
 a.btn {
@@ -283,7 +283,7 @@ a.btn {
 
 .chip:hover {
   color: #ffffff;
-  border-color: rgba(0, 255, 200, 0.7);
+  border-color: rgba(124, 255, 61, 0.7);
 }
 
 .chip.selected {
@@ -291,7 +291,7 @@ a.btn {
   background: linear-gradient(90deg, var(--mint), var(--sky));
   border-color: transparent;
   font-weight: bold;
-  box-shadow: 0 0 18px rgba(0, 255, 200, 0.35);
+  box-shadow: 0 0 18px rgba(124, 255, 61, 0.35);
 }
 
 .toggle {

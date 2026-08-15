@@ -95,21 +95,29 @@ const currentWordSet = () => WORD_SETS[settings.wordSet] || WORD_SETS.all;
 // Fully saturated neon against a near-black ground. Electric colour is a
 // contrast effect as much as a hue one: the darker and less tinted the
 // background, the more these read as emitting light rather than reflecting it.
+// Each entry sits squarely on its own hue rather than between two, so blue
+// reads as blue instead of drifting into cyan, and purple as purple instead
+// of into magenta.
 const NEON = {
-  cyan: "#00E5FF",
-  magenta: "#FF1F8F",
-  yellow: "#FFE600",
+  blue: "#1E5BFF",
+  cyan: "#00D0FF",
+  purple: "#9D00FF",
+  magenta: "#FF0090",
+  orange: "#FF6A00",
+  yellow: "#FFD400",
   lime: "#7CFF3D",
-  violet: "#B026FF",
   white: "#FFFFFF",
 };
 
 // ---- Enemy types ----
-// `hot` is the near-white heart of the body, `glow` the colour it bleeds.
+// Every ship is built from two neighbouring pure hues — body and wings — and
+// `hot` is a LIGHT TINT OF ITS OWN HUE, never a near-white. Grading a highlight
+// toward white pulls the saturation out of the top of the shape, which is what
+// stops a yellow from looking properly yellow.
 const TYPES = {
-  bee:       { r: 15, pts: 60,  hot: "#FFFBCC", body: "#FFE600", accent: "#FF8A00", glow: "#FFE84D" },
-  butterfly: { r: 17, pts: 100, hot: "#FFD6F2", body: "#FF1F8F", accent: "#B026FF", glow: "#FF4FC3" },
-  boss:      { r: 22, pts: 250, hot: "#CFFFF4", body: "#00FFC8", accent: "#00C2FF", glow: "#3DFFDD" },
+  bee:       { r: 15, pts: 60,  hot: "#FFEE55", body: "#FFD400", accent: "#FF6A00", glow: "#FFA800" },
+  butterfly: { r: 17, pts: 100, hot: "#FF6EC7", body: "#FF0090", accent: "#9D00FF", glow: "#FF2DB0" },
+  boss:      { r: 22, pts: 250, hot: "#6FE9FF", body: "#00D0FF", accent: "#1E5BFF", glow: "#00A8FF" },
 };
 
 let W = 0, H = 0;
@@ -772,8 +780,8 @@ function freeFromCapture() {
   player.spin = 0;
   capture = null;
   sfx.rescue();
-  shockwave(player.x, player.y, 180, NEON.yellow, 4);
-  burst(player.x, player.y, 20, [NEON.yellow, NEON.magenta, "#ffffff"], 34);
+  shockwave(player.x, player.y, 180, NEON.lime, 4);
+  burst(player.x, player.y, 20, [NEON.lime, NEON.yellow, "#ffffff"], 34);
 }
 
 function loseLife() {
@@ -783,8 +791,8 @@ function loseLife() {
   invuln = INVULN_TIME;
   shake = 16;
   flash = 0.5;
-  burst(player.x, player.y, 20, [NEON.cyan, "#ffffff", NEON.magenta], 32);
-  shockwave(player.x, player.y, 170, NEON.cyan, 4);
+  burst(player.x, player.y, 20, [NEON.orange, "#ffffff", "#FF3355"], 32);
+  shockwave(player.x, player.y, 170, NEON.orange, 4);
   sfx.playerHit();
   if (lives <= 0) endGame("dead");
 }
@@ -824,7 +832,7 @@ function update(dt) {
       vx: (Math.random() - 0.5) * 30, vy: 90 + Math.random() * 70,
       life: 0.16 + Math.random() * 0.2, maxLife: 0.36,
       r: 1.2 + Math.random() * 1.8,
-      color: Math.random() < 0.5 ? NEON.yellow : NEON.cyan,
+      color: Math.random() < 0.5 ? NEON.lime : "#D6FFA8",
       drag: 2.4,
     });
   }
@@ -991,7 +999,7 @@ function updateBullets(dt) {
       bullets.splice(i, 1);
       t.hitsLanded++;
       t.hitFlash = 1;
-      burst(b.x, b.y, 6, ["#ffffff", NEON.yellow], 7, 0.5);
+      burst(b.x, b.y, 6, ["#ffffff", NEON.lime], 7, 0.5);
       sfx.hit();
       if (t.dying && t.hitsLanded >= t.word.length) {
         const idx = enemies.indexOf(t);
@@ -1183,10 +1191,11 @@ function drawBeam(t) {
 
   ctx.save();
   ctx.globalCompositeOperation = "lighter";
+  // Cyan into blue: the beam belongs to the boss, so it stays in its hues.
   const g = ctx.createLinearGradient(0, b.y, 0, endY);
-  g.addColorStop(0, "rgba(0, 255, 200, 0.72)");
-  g.addColorStop(0.6, "rgba(0, 229, 255, 0.34)");
-  g.addColorStop(1, "rgba(176, 38, 255, 0.1)");
+  g.addColorStop(0, "rgba(0, 208, 255, 0.75)");
+  g.addColorStop(0.6, "rgba(30, 91, 255, 0.36)");
+  g.addColorStop(1, "rgba(30, 91, 255, 0.08)");
   ctx.fillStyle = g;
   ctx.beginPath();
   ctx.moveTo(b.x - topW, b.y);
@@ -1221,10 +1230,13 @@ function drawEnemies(t) {
 
     ctx.save();
     ctx.globalCompositeOperation = "lighter";
-    // Two passes: a wide soft halo plus a tight hot core, so ships look lit
-    // from within rather than merely tinted.
-    drawGlow(e.x, e.y, e.r * 2.8, T.glow, locked ? 0.5 : 0.34);
-    drawGlow(e.x, e.y, e.r * 1.15, locked ? "#ffffff" : T.body, locked ? 0.75 : 0.42);
+    // Both passes stay inside the ship's own hue. Additive blending sums
+    // channels, so a white core would drive R, G and B toward 255 together
+    // and bleach the hue out of the brightest part of the sprite. Same-hue
+    // layers saturate the channels that are already lit and leave the empty
+    // ones dark, which is what keeps the colour identifiably itself.
+    drawGlow(e.x, e.y, e.r * 2.9, T.glow, locked ? 0.46 : 0.3);
+    drawGlow(e.x, e.y, e.r * 1.5, T.body, locked ? 0.55 : 0.36);
     ctx.restore();
 
     ctx.save();
@@ -1402,10 +1414,10 @@ function drawPlayer(t) {
 
   ctx.save();
   ctx.globalCompositeOperation = "lighter";
-  drawGlow(player.x, player.y + PLAYER_R * 0.75, 17 + Math.random() * 5, NEON.cyan, 0.8);
-  drawGlow(player.x, player.y, PLAYER_R * 1.6, NEON.yellow, 0.35);
+  drawGlow(player.x, player.y + PLAYER_R * 0.75, 17 + Math.random() * 5, NEON.lime, 0.85);
+  drawGlow(player.x, player.y, PLAYER_R * 1.6, NEON.lime, 0.3);
   if (player.muzzle > 0) {
-    drawGlow(player.x, player.y - PLAYER_R, 30 * (player.muzzle / 0.1), NEON.yellow, 1);
+    drawGlow(player.x, player.y - PLAYER_R, 30 * (player.muzzle / 0.1), NEON.lime, 1);
   }
   ctx.restore();
 
@@ -1420,13 +1432,15 @@ function drawPlayer(t) {
   hull.lineTo(-PLAYER_R * 0.85, PLAYER_R * 0.75);
   hull.closePath();
 
+  // Lime is deliberately a hue no enemy uses, so the player never reads as
+  // one of the swarm at a glance.
   const g = ctx.createLinearGradient(0, -PLAYER_R, 0, PLAYER_R);
-  g.addColorStop(0, "#FFFBCC");
-  g.addColorStop(0.3, NEON.yellow);
-  g.addColorStop(1, NEON.magenta);
+  g.addColorStop(0, "#D6FFA8");
+  g.addColorStop(0.3, NEON.lime);
+  g.addColorStop(1, "#22B14C");
   ctx.fillStyle = g;
   ctx.fill(hull);
-  ctx.strokeStyle = NEON.cyan;
+  ctx.strokeStyle = "#FFFFFF";
   ctx.lineWidth = 2;
   ctx.stroke(hull);
 
@@ -1456,9 +1470,9 @@ function drawBullets() {
     for (let i = 0; i < b.trail.length; i++) {
       const p = b.trail[i];
       const k = (i + 1) / b.trail.length;
-      drawGlow(p.x, p.y, 6 * k, NEON.yellow, 0.32 * k);
+      drawGlow(p.x, p.y, 6 * k, NEON.lime, 0.32 * k);
     }
-    drawGlow(b.x, b.y, 14, NEON.yellow, 1);
+    drawGlow(b.x, b.y, 14, NEON.lime, 1);
     ctx.fillStyle = "#ffffff";
     ctx.beginPath();
     ctx.arc(b.x, b.y, 2.8, 0, Math.PI * 2);
@@ -1607,7 +1621,7 @@ function drawHUD() {
     ctx.save();
     ctx.translate(W - pad - 12 - i * 28, 30);
     ctx.scale(0.75, 0.75);
-    ctx.fillStyle = NEON.yellow;
+    ctx.fillStyle = NEON.lime;
     ctx.beginPath();
     ctx.moveTo(0, -14);
     ctx.lineTo(11, 10);
