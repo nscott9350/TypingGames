@@ -31,7 +31,7 @@ const MAX_MULT = 5;
 const JUKE_TIME = 0.16;      // how long the sideways burst lasts
 const JUKE_DIST = 140;       // px covered by one juke
 const JUKE_IFRAMES = 0.5;    // untouchable window it buys
-const JUKE_COOLDOWN = 2.2;   // long enough that it stays a decision
+const JUKE_COOLDOWN = 2.2;   // default; levels without assists recharge faster
 const ENTRY_GROUP = 4;          // ships per entry flight
 const BEAM_CHARGE = 1.7;        // seconds before a tractor beam catches
 
@@ -85,15 +85,17 @@ function recordScore(entry) {
 // ---- Difficulty ----
 // Ranges run from wave 1 to wave 8; `beamWave` is the first wave on which a
 // boss may fire a tractor beam, and `rescue` is how long you get to escape it.
-// `grace` is how long a correct keystroke keeps the ship untouchable. Typing
-// well is the player's only defence, so on the lower levels landing shots
-// should protect you; the top levels earn their name by removing that.
+// Two defensive assists, both scaled by difficulty:
+//   `autoEvade` — the ship steers itself around shots and divers
+//   `grace`     — a correct keystroke buys this many seconds of immunity
+// The lower levels hand both to the player. The top levels withdraw them, so
+// staying alive there means using the space-bar juke yourself.
 const DIFFICULTY_LEVELS = {
-  beginner: { label: "BEGINNER", cols: [4, 5], rows: [2, 2], entry: 2.0, dive: [7.0, 5.0], bullet: 120, fire: 0.25, beamWave: 99, rescue: 6.0, grace: 0.80 },
-  easy:     { label: "EASY",     cols: [4, 6], rows: [2, 3], entry: 1.8, dive: [6.0, 4.0], bullet: 145, fire: 0.40, beamWave: 5,  rescue: 5.5, grace: 0.55 },
-  normal:   { label: "NORMAL",   cols: [5, 7], rows: [2, 3], entry: 1.6, dive: [5.0, 3.0], bullet: 175, fire: 0.55, beamWave: 3,  rescue: 5.0, grace: 0.30 },
-  hard:     { label: "HARD",     cols: [6, 7], rows: [3, 3], entry: 1.4, dive: [4.0, 2.2], bullet: 205, fire: 0.70, beamWave: 2,  rescue: 4.5, grace: 0 },
-  master:   { label: "MASTER",   cols: [6, 8], rows: [3, 3], entry: 1.2, dive: [3.0, 1.6], bullet: 240, fire: 0.85, beamWave: 2,  rescue: 4.0, grace: 0 },
+  beginner: { label: "BEGINNER", cols: [4, 5], rows: [2, 2], entry: 2.0, dive: [7.0, 5.0], bullet: 120, fire: 0.25, beamWave: 99, rescue: 6.0, grace: 0.80, autoEvade: true },
+  easy:     { label: "EASY",     cols: [4, 6], rows: [2, 3], entry: 1.8, dive: [6.0, 4.0], bullet: 145, fire: 0.40, beamWave: 5,  rescue: 5.5, grace: 0.55, autoEvade: true },
+  normal:   { label: "NORMAL",   cols: [5, 7], rows: [2, 3], entry: 1.6, dive: [5.0, 3.0], bullet: 175, fire: 0.55, beamWave: 3,  rescue: 5.0, grace: 0.30, autoEvade: true },
+  hard:     { label: "HARD",     cols: [6, 7], rows: [3, 3], entry: 1.4, dive: [4.0, 2.2], bullet: 205, fire: 0.70, beamWave: 2,  rescue: 4.5, grace: 0, autoEvade: false, jukeCool: 1.9 },
+  master:   { label: "MASTER",   cols: [6, 8], rows: [3, 3], entry: 1.2, dive: [3.0, 1.6], bullet: 240, fire: 0.85, beamWave: 2,  rescue: 4.0, grace: 0, autoEvade: false, jukeCool: 1.7 },
 };
 const currentLevel = () => DIFFICULTY_LEVELS[settings.difficulty] || DIFFICULTY_LEVELS.normal;
 const currentWordSet = () => WORD_SETS[settings.wordSet] || WORD_SETS.all;
@@ -884,7 +886,8 @@ function update(dt) {
         aim = player.x;
       }
 
-      const evade = evasionOffset();
+      // From Hard up the ship stops dodging for you: that is what space is for
+      const evade = currentLevel().autoEvade ? evasionOffset() : 0;
       player.targetX = Math.max(margin, Math.min(W - margin, aim + evade));
       // Snap harder the more urgent the threat
       const agility = 6.5 + Math.min(10, Math.abs(evade) / 18);
@@ -983,7 +986,7 @@ function tryJuke() {
   juke.dir = jukeDirection();
   juke.t = JUKE_TIME;
   juke.iframes = JUKE_IFRAMES;
-  juke.cool = JUKE_COOLDOWN;
+  juke.cool = currentLevel().jukeCool || JUKE_COOLDOWN;
   sfx.juke();
   shockwave(player.x, player.y, 90, NEON.lime, 2);
   for (let i = 0; i < 12; i++) {
@@ -1783,7 +1786,7 @@ function drawHUD() {
     ctx.fillStyle = "rgba(190, 175, 235, 0.22)";
     roundRect(bx, by, bw, bh, 3);
     ctx.fill();
-    const fill = ready ? 1 : 1 - juke.cool / JUKE_COOLDOWN;
+    const fill = ready ? 1 : 1 - juke.cool / (currentLevel().jukeCool || JUKE_COOLDOWN);
     ctx.fillStyle = ready ? NEON.lime : "rgba(124, 255, 61, 0.45)";
     roundRect(bx, by, Math.max(2, bw * fill), bh, 3);
     ctx.fill();

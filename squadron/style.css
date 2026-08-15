@@ -263,6 +263,8 @@ a.btn {
   line-height: 1.45;
 }
 
+.hint strong { color: var(--gold); }
+
 .chip-row {
   display: flex;
   flex-wrap: wrap;

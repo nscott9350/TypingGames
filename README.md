@@ -39,6 +39,11 @@ else, so choosing what to shoot next is part of the game. Where two targets
 start with the same letter, the one closest to you wins. Chaining correct
 letters builds a score multiplier up to 5x; a mistake resets it.
 
+In Squadron the difficulty setting changes the rules, not just the numbers. Up
+to Normal the ship steers itself around danger and each correct letter briefly
+shields you. From **Hard** upward both assists are switched off and survival is
+down to timing your own space-bar jukes, which recharge faster to compensate.
+
 ## Practice word sets
 
 Both games share the same word sets, so you can drill one part of the keyboard
