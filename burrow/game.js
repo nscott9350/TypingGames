@@ -220,15 +220,52 @@ function normalAtDist(d) {
 }
 
 function resize() {
+  const prevW = stage.w;
   const dpr = window.devicePixelRatio || 1;
   W = window.innerWidth; H = window.innerHeight;
   canvas.width = W * dpr; canvas.height = H * dpr;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const prevX = stage.x, prevY = stage.y;
   layoutStage();
   LW = Math.max(2, stage.h * 0.005);
   R = Math.max(11, stage.h * 0.038);      // ant body radius, tuned to the art
   SPACING = R * SPACING_MUL;
   buildPath();
+  carryAcrossResize(prevW, prevX, prevY);
+}
+
+// Everything in flight is stored in pixels — the column as distance along the
+// path, berries and debris as screen coordinates — and resize rebuilds the path
+// at the new size. Left alone, the stored numbers mean something different
+// afterwards: an ant a third of the way along a 3000px path is suddenly half
+// way along a 2000px one, so the whole column jumps up the trail as the window
+// is dragged. Carrying the state across keeps every ant where it was, which is
+// what the player sees.
+//
+// One factor does for all of it. The stage is letterboxed to a fixed aspect
+// ratio and the route is expressed in fractions of it, so the path length
+// scales exactly with the stage width.
+function carryAcrossResize(prevW, prevX, prevY) {
+  if (!prevW || !stage.w || !chain) return;
+  const k = stage.w / prevW;
+  if (k === 1) return;
+
+  headDist *= k;
+  for (const m of chain) m.d *= k;
+
+  // Loose objects hold screen coordinates, so they travel with the stage as
+  // well as scale with it.
+  const move = (o) => {
+    o.x = stage.x + (o.x - prevX) * k;
+    o.y = stage.y + (o.y - prevY) * k;
+    if (o.dx !== undefined) { o.dx *= k; o.dy *= k; }
+    if (o.vx !== undefined) { o.vx *= k; o.vy *= k; }
+    if (o.r !== undefined) o.r *= k;
+  };
+  shots.forEach(move);
+  pops.forEach(move);
+  particles.forEach(move);
+  bursts.forEach(move);
 }
 window.addEventListener("resize", resize);
 
