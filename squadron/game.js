@@ -31,7 +31,12 @@ const MAX_MULT = 5;
 const JUKE_TIME = 0.16;      // how long the sideways burst lasts
 const JUKE_DIST = 140;       // px covered by one juke
 const JUKE_IFRAMES = 0.5;    // untouchable window it buys
-const JUKE_COOLDOWN = 2.2;   // default; levels without assists recharge faster
+const JUKE_CHARGES = 2;      // an attack run is usually two threats: the diver
+                             // and the shot trailing it about a second behind,
+                             // so one dodge can never cover both
+const JUKE_REFILL = 2.6;     // seconds to regain one charge (default)
+const JUKE_HOLD = 0.8;       // hold the dodged position instead of drifting
+                             // straight back into the shot that is still coming
 const ENTRY_GROUP = 4;          // ships per entry flight
 const BEAM_CHARGE = 1.7;        // seconds before a tractor beam catches
 
@@ -94,8 +99,8 @@ const DIFFICULTY_LEVELS = {
   beginner: { label: "BEGINNER", cols: [4, 5], rows: [2, 2], entry: 2.0, dive: [7.0, 5.0], bullet: 120, fire: 0.25, beamWave: 99, rescue: 6.0, grace: 0.80, autoEvade: true },
   easy:     { label: "EASY",     cols: [4, 6], rows: [2, 3], entry: 1.8, dive: [6.0, 4.0], bullet: 145, fire: 0.40, beamWave: 5,  rescue: 5.5, grace: 0.55, autoEvade: true },
   normal:   { label: "NORMAL",   cols: [5, 7], rows: [2, 3], entry: 1.6, dive: [5.0, 3.0], bullet: 175, fire: 0.55, beamWave: 3,  rescue: 5.0, grace: 0.30, autoEvade: true },
-  hard:     { label: "HARD",     cols: [6, 7], rows: [3, 3], entry: 1.4, dive: [4.0, 2.2], bullet: 205, fire: 0.70, beamWave: 2,  rescue: 4.5, grace: 0, autoEvade: false, jukeCool: 1.9 },
-  master:   { label: "MASTER",   cols: [6, 8], rows: [3, 3], entry: 1.2, dive: [3.0, 1.6], bullet: 240, fire: 0.85, beamWave: 2,  rescue: 4.0, grace: 0, autoEvade: false, jukeCool: 1.7 },
+  hard:     { label: "HARD",     cols: [6, 7], rows: [3, 3], entry: 1.4, dive: [4.0, 2.2], bullet: 205, fire: 0.70, beamWave: 2,  rescue: 4.5, grace: 0, autoEvade: false, jukeRefill: 2.2 },
+  master:   { label: "MASTER",   cols: [6, 8], rows: [3, 3], entry: 1.2, dive: [3.0, 1.6], bullet: 240, fire: 0.85, beamWave: 2,  rescue: 4.0, grace: 0, autoEvade: false, jukeRefill: 2.0 },
 };
 const currentLevel = () => DIFFICULTY_LEVELS[settings.difficulty] || DIFFICULTY_LEVELS.normal;
 const currentWordSet = () => WORD_SETS[settings.wordSet] || WORD_SETS.all;
@@ -386,7 +391,7 @@ function resetGame() {
   beamCooldown = 14;
   invuln = 0;
   grace = 0;
-  juke = { t: 0, dir: 0, cool: 0, iframes: 0 };
+  juke = { t: 0, dir: 0, charges: JUKE_CHARGES, refill: 0, iframes: 0, hold: 0 };
   shake = 0;
   flash = 0;
   typedCorrect = 0;
@@ -848,8 +853,15 @@ function update(dt) {
   // position is cosmetic for aiming — it can duck aside freely and never miss.
   // That is what makes automatic evasion possible without weakening the
   // shooting, and the player has no dodge key of their own.
-  if (juke.cool > 0) juke.cool -= dt;
+  if (juke.charges < JUKE_CHARGES) {
+    juke.refill += dt;
+    if (juke.refill >= (currentLevel().jukeRefill || JUKE_REFILL)) {
+      juke.charges++;
+      juke.refill = 0;
+    }
+  }
   if (juke.iframes > 0) juke.iframes -= dt;
+  if (juke.hold > 0) juke.hold -= dt;
 
   if (!player.captured) {
     const margin = 40;
@@ -878,6 +890,11 @@ function update(dt) {
       }
     } else {
       let aim = lockTarget ? lockTarget.x : W / 2;
+
+      // Straight after a juke, stay where the dodge put us. Sliding back to
+      // the target's column walks right back into the shot that is still
+      // inbound, which made the dodge self-defeating.
+      if (juke.hold > 0) aim = player.x;
 
       // Never chase a target that is diving at us. Tracking a diver's column
       // means following it into the ram, and the "closest target" lock rule
@@ -982,11 +999,12 @@ function jukeDirection() {
 
 function tryJuke() {
   if (player.captured) return;
-  if (juke.cool > 0) { sfx.jukeBlocked(); return; }
+  if (juke.charges <= 0) { sfx.jukeBlocked(); return; }
+  juke.charges--;
   juke.dir = jukeDirection();
   juke.t = JUKE_TIME;
   juke.iframes = JUKE_IFRAMES;
-  juke.cool = currentLevel().jukeCool || JUKE_COOLDOWN;
+  juke.hold = JUKE_HOLD;
   sfx.juke();
   shockwave(player.x, player.y, 90, NEON.lime, 2);
   for (let i = 0; i < 12; i++) {
@@ -1775,21 +1793,29 @@ function drawHUD() {
     ctx.fillText(`${streak} streak`, barX + barW + 10, my + 11);
   }
 
-  // Juke readiness — a bar that refills, so the cooldown is never a guess
+  // Juke charges as pips, with the one being refilled shown part-full
   {
     const jy = (multiplier > 1 || streak > 0) ? 92 : 74;
-    const ready = juke.cool <= 0;
     ctx.font = `bold 11px ${MONO}`;
-    ctx.fillStyle = ready ? NEON.lime : "rgba(190, 175, 235, 0.55)";
+    ctx.fillStyle = juke.charges > 0 ? NEON.lime : "rgba(190, 175, 235, 0.55)";
     ctx.fillText("SPACE", pad, jy + 9);
-    const bx = pad + 46, bw = 62, bh = 5, by = jy + 3;
-    ctx.fillStyle = "rgba(190, 175, 235, 0.22)";
-    roundRect(bx, by, bw, bh, 3);
-    ctx.fill();
-    const fill = ready ? 1 : 1 - juke.cool / (currentLevel().jukeCool || JUKE_COOLDOWN);
-    ctx.fillStyle = ready ? NEON.lime : "rgba(124, 255, 61, 0.45)";
-    roundRect(bx, by, Math.max(2, bw * fill), bh, 3);
-    ctx.fill();
+
+    const pipW = 26, pipH = 6, gap = 5, bx = pad + 46;
+    const per = currentLevel().jukeRefill || JUKE_REFILL;
+    for (let i = 0; i < JUKE_CHARGES; i++) {
+      const px = bx + i * (pipW + gap);
+      ctx.fillStyle = "rgba(190, 175, 235, 0.22)";
+      roundRect(px, jy + 3, pipW, pipH, 3);
+      ctx.fill();
+      let fill = 0;
+      if (i < juke.charges) fill = 1;
+      else if (i === juke.charges) fill = Math.min(1, juke.refill / per);
+      if (fill > 0) {
+        ctx.fillStyle = fill >= 1 ? NEON.lime : "rgba(124, 255, 61, 0.5)";
+        roundRect(px, jy + 3, Math.max(2, pipW * fill), pipH, 3);
+        ctx.fill();
+      }
+    }
   }
 
   // Wave, centred

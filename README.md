@@ -28,7 +28,7 @@ your ship — type the rescue word before the timer runs out to break free.
 | --- | --- |
 | any letter | start a run, or lock onto the word beginning with that letter |
 | letters | each correct letter fires a shot at your locked target |
-| `Space` | *(Squadron)* juke sideways out of danger, burning any shots you roll through |
+| `Space` | *(Squadron)* juke aside, burning any shots you roll through; two charges |
 | `Esc` | pause and open settings |
 | `Q` | quit the current run (from the pause screen, press twice to confirm) |
 | `M` | return to the main menu (from the summary screen) |
@@ -42,7 +42,10 @@ letters builds a score multiplier up to 5x; a mistake resets it.
 In Squadron the difficulty setting changes the rules, not just the numbers. Up
 to Normal the ship steers itself around danger and each correct letter briefly
 shields you. From **Hard** upward both assists are switched off and survival is
-down to timing your own space-bar jukes, which recharge faster to compensate.
+down to timing your own space-bar jukes. You carry two charges, since an attack
+run is usually two threats — the diving ship, and the shot trailing about a
+second behind it — and after a juke the ship holds its new position rather than
+sliding back into the shot's path.
 
 ## Practice word sets
 

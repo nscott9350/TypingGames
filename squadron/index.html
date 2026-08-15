@@ -6,7 +6,7 @@
   <title>Type Squadron</title>
   <!-- Bump ?v= on every deploy: GitHub Pages caches assets for 10 minutes, and
        a page that loads new HTML against a stale script would break. -->
-  <link rel="stylesheet" href="style.css?v=7">
+  <link rel="stylesheet" href="style.css?v=9">
 </head>
 <body>
   <canvas id="game"></canvas>
@@ -18,7 +18,7 @@
       <li>Swarms fly in and lock into formation &mdash; then they start diving</li>
       <li>Type a word's <strong>first letter</strong> to target that ship</li>
       <li>Every correct letter fires; finish the word to destroy it</li>
-      <li>Hit <strong>space</strong> to juke sideways out of danger &mdash; it recharges</li>
+      <li>Hit <strong>space</strong> to juke aside &mdash; two charges, so you can dodge a diver and its shot</li>
       <li>Watch for the <strong>boss tractor beam</strong> &mdash; type fast to break free</li>
     </ul>
     <p id="menu-diff" class="menu-diff"></p>
@@ -57,8 +57,9 @@
         </div>
         <p class="hint">Up to Normal the ship dodges for you and landing a letter
           briefly shields you. From <strong>Hard</strong> both assists are off &mdash;
-          staying alive is down to your <strong>space</strong> juke, which recharges
-          faster to compensate.</p>
+          staying alive is down to your <strong>space</strong> juke. You hold
+          <strong>two charges</strong>, because an attack run is usually two
+          threats: the diver, and the shot trailing about a second behind it.</p>
       </div>
       <div class="setting-group">
         <div class="setting-label">Word set</div>
@@ -96,7 +97,7 @@
     </div>
   </div>
 
-  <script src="../shared/words.js?v=7"></script>
-  <script src="game.js?v=7"></script>
+  <script src="../shared/words.js?v=9"></script>
+  <script src="game.js?v=9"></script>
 </body>
 </html>
