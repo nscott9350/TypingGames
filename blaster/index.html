@@ -6,7 +6,7 @@
   <title>Type Blaster</title>
   <!-- Bump ?v= on every deploy: GitHub Pages caches assets for 10 minutes, and
        a page that loads new HTML against a stale script would break. -->
-  <link rel="stylesheet" href="style.css?v=7">
+  <link rel="stylesheet" href="style.css?v=8">
 </head>
 <body>
   <canvas id="game"></canvas>
@@ -68,11 +68,12 @@
       <div class="setting-group">
         <div class="setting-label">
           <span>Keyboard guide</span>
-          <button id="kbd-toggle" class="toggle">ON</button>
+          <button id="kbd-toggle" class="toggle off">OFF</button>
         </div>
-        <p class="hint">Draws the keyboard on screen and lights up the next key,
-          colour-coded by which finger should press it &mdash; so you can learn the
-          reach without looking down.</p>
+        <p class="hint">Fades a keyboard across the play field and lights up the
+          next key, colour-coded by the finger that should press it. It sits in
+          the area you are already watching, so you can learn the reach without
+          looking down. Off by default &mdash; most useful while starting out.</p>
       </div>
       <div class="setting-group">
         <div class="setting-label">
@@ -98,8 +99,8 @@
     </div>
   </div>
 
-  <script src="../shared/words.js?v=7"></script>
-  <script src="../shared/keyboard.js?v=7"></script>
-  <script src="game.js?v=7"></script>
+  <script src="../shared/words.js?v=8"></script>
+  <script src="../shared/keyboard.js?v=8"></script>
+  <script src="game.js?v=8"></script>
 </body>
 </html>

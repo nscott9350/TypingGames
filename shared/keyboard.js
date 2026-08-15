@@ -1,6 +1,12 @@
 // ============================================================
 // On-screen keyboard guide — shared by both games.
 //
+// Drawn large and faint across the middle of the field, behind the action.
+// A small keyboard tucked along the bottom edge still costs you a glance
+// down, which is exactly the habit this is meant to break; sitting it in the
+// field you are already watching means you catch the lit key in peripheral
+// vision without moving your eyes.
+//
 // The point is not to show where a letter lives, it is to show which finger
 // owns it. Looking down teaches you the map; colour-coding by finger teaches
 // you the habit, which is the thing that actually transfers.
@@ -46,39 +52,20 @@ const KEY_ROWS = [
 const HOME_KEYS = new Set(["a","s","d","f","j","k","l"]);
 const BUMP_KEYS = new Set(["f","j"]);
 
-function kbUnit(width) {
-  return Math.min(46, width / 10.6);
-}
-
-// Total height the guide will occupy for a given width, so callers can lay
-// out around it rather than have it cover the play area.
 function keyboardGuideHeight(width, showSpace = true) {
-  const u = kbUnit(width);
+  const u = width / 10.6;
   const keyH = u * 0.9;
   const gap = u * 0.1;
   return 3 * (keyH + gap) + (showSpace ? keyH * 0.72 + gap : 0) + gap * 2;
 }
 
-function keyboardGuideWidth(canvasWidth) {
-  return Math.min(500, canvasWidth * 0.62);
-}
-
-// Places the guide for a given canvas, shrinking it on short windows.
-// Sizing on width alone means a fixed ~180px band whatever the height, which
-// on a laptop-height window swallows a third of the field and pushes the play
-// area into the enemies. Cap it as a share of the viewport instead.
-const GUIDE_MAX_HEIGHT_FRACTION = 0.26;
-
+// Centred across the play field and sized to it, rather than a strip pinned
+// to an edge. Nothing needs to reserve space for this: it is a watermark and
+// the game draws over the top of it.
 function keyboardGuideLayout(canvasWidth, canvasHeight, showSpace = true) {
-  let w = keyboardGuideWidth(canvasWidth);
-  let h = keyboardGuideHeight(w, showSpace);
-  const maxH = canvasHeight * GUIDE_MAX_HEIGHT_FRACTION;
-  if (h > maxH && h > 0) {
-    w *= maxH / h;              // height scales with width, so this converges
-    h = keyboardGuideHeight(w, showSpace);
-  }
-  const bottomPad = Math.min(34, canvasHeight * 0.05);
-  return { w, h, x: (canvasWidth - w) / 2, y: canvasHeight - h - bottomPad };
+  const w = Math.min(canvasWidth * 0.8, canvasHeight * 1.5, 980);
+  const h = keyboardGuideHeight(w, showSpace);
+  return { w, h, x: (canvasWidth - w) / 2, y: (canvasHeight - h) / 2 };
 }
 
 function kbRoundRect(ctx, x, y, w, h, r) {
@@ -93,21 +80,25 @@ function kbRoundRect(ctx, x, y, w, h, r) {
 
 /**
  * opts:
- *   x, y        top-left of the guide
- *   width       overall width
- *   next        the single key that must be pressed now (string) or null
- *   options     other currently-valid keys (array) — shown dimmer
- *   spaceReady  highlight the space bar (Squadron's juke)
- *   showSpace   draw the space bar at all
- *   mono        font stack
+ *   x, y         top-left of the guide
+ *   width        overall width
+ *   next         the key that must be pressed now, or null
+ *   options      other currently-valid keys — shown between faint and lit
+ *   spaceReady   highlight the space bar (Squadron's juke)
+ *   showSpace    draw the space bar at all
+ *   opacity      how present the unlit keys are (this is a backdrop)
+ *   highlight    how present the lit key is
+ *   mono         font stack
  */
 function drawKeyboardGuide(ctx, opts) {
   const { x, y, width, next = null, options = [], spaceReady = false,
-          showSpace = true, mono = "monospace" } = opts;
-  const u = kbUnit(width);
+          showSpace = true, opacity = 0.16, highlight = 0.9,
+          mono = "monospace" } = opts;
+  const u = width / 10.6;
   const keyH = u * 0.9;
   const gap = u * 0.1;
   const optionSet = new Set(options);
+  const optAlpha = Math.min(1, opacity * 2.6);
 
   ctx.save();
   ctx.textAlign = "center";
@@ -120,42 +111,31 @@ function drawKeyboardGuide(ctx, opts) {
     const indent = [0, u * 0.38, u * 0.95][r];
     let rx = x + indent;
     for (const key of row) {
-      const finger = KEY_FINGER[key];
-      const color = FINGER_COLOR[finger] || "#B9A8E8";
+      const color = FINGER_COLOR[KEY_FINGER[key]] || "#B9A8E8";
       const isNext = next === key;
       const isOption = !isNext && optionSet.has(key);
+      ctx.globalAlpha = isNext ? highlight : isOption ? optAlpha : opacity;
 
-      // Body
-      ctx.fillStyle = isNext ? color
-                    : isOption ? `${color}44`
-                    : "rgba(255,255,255,0.045)";
-      kbRoundRect(ctx, rx, ry, u * 0.9, keyH, 5);
+      ctx.fillStyle = isNext ? color : isOption ? `${color}33` : "rgba(255,255,255,0.05)";
+      kbRoundRect(ctx, rx, ry, u * 0.9, keyH, u * 0.1);
       ctx.fill();
 
-      // Edge: every key keeps a faint tint of its finger colour, so the
-      // hand map is legible even when nothing is highlighted.
-      ctx.strokeStyle = isNext ? "#FFFFFF"
-                      : isOption ? `${color}CC`
-                      : `${color}3A`;
-      ctx.lineWidth = isNext ? 2 : 1;
-      kbRoundRect(ctx, rx, ry, u * 0.9, keyH, 5);
+      // Every key keeps a tint of its finger colour, so the hand map stays
+      // legible even when nothing is highlighted.
+      ctx.strokeStyle = isNext ? "#FFFFFF" : color;
+      ctx.lineWidth = isNext ? 2.5 : 1.5;
+      kbRoundRect(ctx, rx, ry, u * 0.9, keyH, u * 0.1);
       ctx.stroke();
 
-      // Home-row marker
       if (HOME_KEYS.has(key) && !isNext) {
-        ctx.fillStyle = `${color}55`;
-        ctx.fillRect(rx + u * 0.28, ry + keyH - 5, u * 0.34, 2);
-      }
-      if (BUMP_KEYS.has(key) && !isNext) {
-        ctx.fillStyle = `${color}AA`;
-        ctx.fillRect(rx + u * 0.34, ry + keyH - 5, u * 0.22, 2.5);
+        ctx.fillStyle = color;
+        const bw = BUMP_KEYS.has(key) ? u * 0.26 : u * 0.36;
+        const bh = BUMP_KEYS.has(key) ? 3.5 : 2;
+        ctx.fillRect(rx + u * 0.45 - bw / 2, ry + keyH - u * 0.14, bw, bh);
       }
 
-      // Letter
-      ctx.font = `${isNext ? "bold " : ""}${Math.round(u * 0.42)}px ${mono}`;
-      ctx.fillStyle = isNext ? "#0B0212"
-                    : isOption ? "#FFFFFF"
-                    : "rgba(255,255,255,0.5)";
+      ctx.font = `${isNext ? "bold " : ""}${Math.round(u * 0.4)}px ${mono}`;
+      ctx.fillStyle = isNext ? "#0B0212" : "#FFFFFF";
       ctx.fillText(key.toUpperCase(), rx + u * 0.45, ry + keyH / 2 + 1);
 
       rx += u;
@@ -167,23 +147,22 @@ function drawKeyboardGuide(ctx, opts) {
     const spaceH = keyH * 0.72;
     const spaceW = u * 5.2;
     const sx = x + (width - spaceW) / 2;
-    ctx.fillStyle = spaceReady ? `${FINGER_COLOR.th}33` : "rgba(255,255,255,0.045)";
-    kbRoundRect(ctx, sx, ry, spaceW, spaceH, 5);
+    ctx.globalAlpha = spaceReady ? Math.min(1, opacity * 2) : opacity;
+    ctx.fillStyle = "rgba(255,255,255,0.05)";
+    kbRoundRect(ctx, sx, ry, spaceW, spaceH, u * 0.1);
     ctx.fill();
-    ctx.strokeStyle = spaceReady ? `${FINGER_COLOR.th}AA` : `${FINGER_COLOR.th}3A`;
-    ctx.lineWidth = 1;
-    kbRoundRect(ctx, sx, ry, spaceW, spaceH, 5);
+    ctx.strokeStyle = FINGER_COLOR.th;
+    ctx.lineWidth = 1.5;
+    kbRoundRect(ctx, sx, ry, spaceW, spaceH, u * 0.1);
     ctx.stroke();
-    ctx.font = `${Math.round(u * 0.26)}px ${mono}`;
-    ctx.fillStyle = spaceReady ? "rgba(255,255,255,0.8)" : "rgba(255,255,255,0.35)";
+    ctx.font = `${Math.round(u * 0.24)}px ${mono}`;
+    ctx.fillStyle = "#FFFFFF";
     ctx.fillText("SPACE", x + width / 2, ry + spaceH / 2 + 1);
   }
 
   ctx.restore();
 }
 
-// A one-line prompt naming the finger for the current key, for players who
-// are still learning which finger owns what.
 function fingerLabelFor(key) {
   const f = KEY_FINGER[key];
   return f ? FINGER_NAME[f] : null;

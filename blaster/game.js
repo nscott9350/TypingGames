@@ -33,7 +33,7 @@ const SETTINGS_KEY = "typeblaster-settings";
 const SCORES_KEY = "typeblaster-scores";
 const DEFAULT_SETTINGS = {
   difficulty: "normal", wordSet: "all", musicOn: true, musicVol: 50, sfxVol: 70,
-  keyboardGuide: true,
+  keyboardGuide: false,
 };
 let settings = { ...DEFAULT_SETTINGS };
 try {
@@ -93,11 +93,10 @@ const currentWordSet = () => WORD_SETS[settings.wordSet] || WORD_SETS.all;
 
 let W = 0, H = 0;
 
-// Bottom space reserved for the keyboard guide. Zero when the guide is off.
+// The guide is a watermark drawn behind the action, so it reserves nothing.
 function guideBox() {
   if (!settings.keyboardGuide) return { on: false, h: 0, w: 0, x: 0, y: H };
-  const l = keyboardGuideLayout(W, H, false);
-  return { on: true, ...l };
+  return { on: true, ...keyboardGuideLayout(W, H, false) };
 }
 
 // ---- Glow sprite cache ----
@@ -948,6 +947,10 @@ function draw() {
   if (bgCanvas) ctx.drawImage(bgCanvas, 0, 0, W, H);
   drawStars(t);
 
+  // Watermark sits above the starfield but under everything that matters,
+  // and outside the shake so it stays a steady reference point.
+  if (state === "playing" || state === "paused") drawGuide();
+
   ctx.save();
   if (shake > 0) {
     ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
@@ -968,10 +971,7 @@ function draw() {
   }
   drawVignette();
 
-  if (state === "playing" || state === "paused" || state === "gameover") {
-    drawGuide();
-    drawHUD();
-  }
+  if (state === "playing" || state === "paused" || state === "gameover") drawHUD();
 }
 
 function drawStars(t) {
@@ -1307,16 +1307,19 @@ function drawGuide() {
     x: g.x, y: g.y, width: g.w,
     next, options,
     showSpace: false,          // Blaster has no space action
+    opacity: 0.13,             // barely there until a key lights up
+    highlight: 0.85,
     mono: MONO,
   });
   if (next) {
     const label = fingerLabelFor(next);
     if (label) {
       ctx.save();
+      ctx.globalAlpha = 0.55;
       ctx.textAlign = "center";
-      ctx.font = `600 11px ${MONO}`;
+      ctx.font = `600 12px ${MONO}`;
       ctx.fillStyle = fingerColorFor(next);
-      ctx.fillText(label.toUpperCase(), W / 2, g.y - 14);
+      ctx.fillText(label.toUpperCase(), W / 2, g.y - 12);
       ctx.restore();
     }
   }
@@ -1377,9 +1380,7 @@ function drawHUD() {
   ctx.font = `13px ${MONO}`;
   ctx.textAlign = "left";
   ctx.fillStyle = "rgba(160, 190, 220, 0.8)";
-  // Sit above the keyboard guide when it is showing, not underneath it
-  const gb = guideBox();
-  const infoY = gb.on ? gb.y - 14 : H - 20;
+  const infoY = H - 20;
   ctx.fillText(
     `WPM ${wpm}    ACC ${acc}%    ${currentLevel().label}    ${currentWordSet().label.toUpperCase()}`,
     pad, infoY

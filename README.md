@@ -49,15 +49,18 @@ sliding back into the shot's path.
 
 ## Keyboard guide
 
-Both games can draw a keyboard along the bottom of the screen and light up the
-key you need next, so you never have to glance down. It is on by default and can
-be switched off in **Settings**.
+Both games can fade a keyboard across the play field and light up the key you
+need next, so you never have to glance down. It is drawn large and faint,
+behind the action, and sits in the part of the screen you are already watching —
+a small keyboard tucked along the bottom edge would still cost you the glance
+down that the guide exists to prevent. Off by default; switch it on in
+**Settings**.
 
 Keys are colour-coded by **which finger should press them**, which is the part
 that actually transfers — knowing where `P` lives is far less useful than
 knowing it belongs to the right pinky. The home-row keys carry a marker, with a
 heavier one under `F` and `J` for the raised bumps you use to find home position
-by touch, and the finger for the current key is named just above the keyboard.
+by touch, and the finger for the current key is named above the keyboard.
 
 When you have no target locked, every key that would start a valid word lights
 up dimly, so choosing what to shoot next is a visible decision rather than a

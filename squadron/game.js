@@ -45,7 +45,7 @@ const SETTINGS_KEY = "typesquadron-settings";
 const SCORES_KEY = "typesquadron-scores";
 const DEFAULT_SETTINGS = {
   difficulty: "normal", wordSet: "all", musicOn: true, musicVol: 50, sfxVol: 70,
-  keyboardGuide: true,
+  keyboardGuide: false,
 };
 let settings = { ...DEFAULT_SETTINGS };
 try {
@@ -137,12 +137,11 @@ const TYPES = {
 
 let W = 0, H = 0;
 
-// Bottom space reserved for the keyboard guide, so it never sits under the
-// ship or the HUD. Zero when the guide is off.
+// The guide is a watermark drawn behind the action, so it reserves nothing
+// and nothing has to lay out around it.
 function guideBox() {
   if (!settings.keyboardGuide) return { on: false, h: 0, w: 0, x: 0, y: H };
-  const l = keyboardGuideLayout(W, H, true);
-  return { on: true, ...l };
+  return { on: true, ...keyboardGuideLayout(W, H, true) };
 }
 
 // ---- Glow sprite cache ----
@@ -379,14 +378,8 @@ let score, lives, elapsed, wave, waveTime, waveClearTimer, diveTimer, beamCooldo
 let invuln, grace, shake, flash, juke;
 let typedCorrect, typedWrong, kills, streak, bestStreak, multiplier;
 
-// The ship rides above the keyboard guide when it is showing, but never so
-// high that it ends up among the formation — being parked in the enemy ranks
-// means taking hits with no time to react, which reads as dying at random.
-const SHIP_HIGHEST_FRACTION = 0.58;
 function playerBaseY() {
-  const g = guideBox();
-  const raised = H - PLAYER_BOTTOM - (g.on ? g.h + 18 : 0);
-  return Math.max(H * SHIP_HIGHEST_FRACTION, raised);
+  return H - PLAYER_BOTTOM;
 }
 
 function resetGame() {
@@ -1327,6 +1320,10 @@ function draw(dt) {
   if (bgCanvas) ctx.drawImage(bgCanvas, 0, 0, W, H);
   drawStars(dt);
 
+  // Watermark sits above the starfield but under everything that matters,
+  // and outside the shake so it stays a steady reference point.
+  if (state === "playing" || state === "paused") drawGuide();
+
   ctx.save();
   if (shake > 0) ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
 
@@ -1350,7 +1347,6 @@ function draw(dt) {
   if (state === "playing" || state === "paused" || state === "gameover") {
     if (capture && capture.phase === "held") drawRescuePrompt(t);
     drawBanner();
-    drawGuide();
     drawHUD();
   }
 }
@@ -1824,16 +1820,19 @@ function drawGuide() {
     x: g.x, y: g.y, width: g.w,
     next, options,
     spaceReady: juke.charges > 0,
+    opacity: 0.13,     // barely there until a key lights up
+    highlight: 0.85,
     mono: MONO,
   });
   if (next) {
     const label = fingerLabelFor(next);
     if (label) {
       ctx.save();
+      ctx.globalAlpha = 0.55;
       ctx.textAlign = "center";
-      ctx.font = `600 11px ${MONO}`;
+      ctx.font = `600 12px ${MONO}`;
       ctx.fillStyle = fingerColorFor(next);
-      ctx.fillText(label.toUpperCase(), W / 2, g.y - 14);
+      ctx.fillText(label.toUpperCase(), W / 2, g.y - 12);
       ctx.restore();
     }
   }
@@ -1924,9 +1923,7 @@ function drawHUD() {
   ctx.textAlign = "left";
   ctx.font = `13px ${MONO}`;
   ctx.fillStyle = "rgba(215, 205, 250, 0.85)";
-  // Sit above the keyboard guide when it is showing, not underneath it
-  const gb = guideBox();
-  const infoY = gb.on ? gb.y - 14 : H - 20;
+  const infoY = H - 20;
   ctx.fillText(
     `WPM ${wpm}    ACC ${acc}%    ${currentLevel().label}    ${currentWordSet().label.toUpperCase()}`,
     pad, infoY
