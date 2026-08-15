@@ -98,7 +98,7 @@ function drawKeyboardGuide(ctx, opts) {
   const keyH = u * 0.9;
   const gap = u * 0.1;
   const optionSet = new Set(options);
-  const optAlpha = Math.min(1, opacity * 2.6);
+  const optAlpha = Math.min(1, opacity * 2.2);
 
   ctx.save();
   ctx.textAlign = "center";
@@ -115,11 +115,17 @@ function drawKeyboardGuide(ctx, opts) {
       const isNext = next === key;
       const isOption = !isNext && optionSet.has(key);
 
-      // Fill stays at the overlay's weight even for the lit key. A solid block
-      // of colour over the play field reads as an object in the scene rather
-      // than as guidance; the outline and letter carry the signal instead.
-      ctx.globalAlpha = isOption ? optAlpha : opacity;
-      ctx.fillStyle = isNext || isOption ? color : "rgba(255,255,255,0.05)";
+      // Explicit alphas per layer, so the ordering can be read off directly:
+      // the lit key is always the strongest, options sit between, and the
+      // resting keys are barely there. The lit key's fill is translucent
+      // rather than a solid block, but it is still the most filled thing on
+      // screen — anything else inverts the hierarchy.
+      const fillA   = isNext ? highlight * 0.5 : isOption ? opacity * 1.15 : opacity;
+      const strokeA = isNext ? highlight       : isOption ? optAlpha       : opacity;
+      const textA   = isNext ? highlight       : isOption ? optAlpha       : opacity;
+
+      ctx.globalAlpha = fillA;
+      ctx.fillStyle = (isNext || isOption) ? color : "rgba(255,255,255,0.05)";
       kbRoundRect(ctx, rx, ry, u * 0.9, keyH, u * 0.1);
       ctx.fill();
 
@@ -127,7 +133,7 @@ function drawKeyboardGuide(ctx, opts) {
       // legible even when nothing is highlighted. The lit key keeps its own
       // finger colour rather than turning white, since which finger to use is
       // the thing worth learning.
-      ctx.globalAlpha = isNext ? highlight : isOption ? optAlpha : opacity;
+      ctx.globalAlpha = strokeA;
       ctx.strokeStyle = color;
       ctx.lineWidth = isNext ? 3 : 1.5;
       kbRoundRect(ctx, rx, ry, u * 0.9, keyH, u * 0.1);
@@ -141,7 +147,7 @@ function drawKeyboardGuide(ctx, opts) {
         ctx.fillRect(rx + u * 0.45 - bw / 2, ry + keyH - u * 0.14, bw, bh);
       }
 
-      ctx.globalAlpha = isNext ? highlight : isOption ? optAlpha : opacity;
+      ctx.globalAlpha = textA;
       ctx.font = `${isNext ? "bold " : ""}${Math.round(u * 0.4)}px ${mono}`;
       ctx.fillStyle = "#FFFFFF";
       ctx.fillText(key.toUpperCase(), rx + u * 0.45, ry + keyH / 2 + 1);
