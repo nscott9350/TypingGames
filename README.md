@@ -62,6 +62,10 @@ knowing it belongs to the right pinky. The home-row keys carry a marker, with a
 heavier one under `F` and `J` for the raised bumps you use to find home position
 by touch, and the finger for the current key is named above the keyboard.
 
+Press the wrong key and it is struck out in red where it sits, right beside the
+key you actually wanted — so a mistake tells you which reach went astray rather
+than only costing you points.
+
 When you have no target locked, every key that would start a valid word lights
 up dimly, so choosing what to shoot next is a visible decision rather than a
 hunt across the screen.

@@ -28,6 +28,7 @@ const MAX_PARTICLES = 700;
 const MAX_ENEMIES = 20;
 const STREAK_PER_MULT = 20;
 const MAX_MULT = 5;
+const WRONG_FLASH = 0.6;     // seconds the struck-out key stays on the guide
 const JUKE_TIME = 0.16;      // how long the sideways burst lasts
 const JUKE_DIST = 140;       // px covered by one juke
 const JUKE_IFRAMES = 0.5;    // untouchable window it buys
@@ -375,7 +376,7 @@ let state = "menu"; // menu | playing | paused | gameover
 let player, enemies, bullets, enemyBullets, particles, shockwaves, lockTarget;
 let formation, capture, banner;
 let score, lives, elapsed, wave, waveTime, waveClearTimer, diveTimer, beamCooldown;
-let invuln, grace, shake, flash, juke;
+let invuln, grace, shake, flash, juke, wrongKey;
 let typedCorrect, typedWrong, kills, streak, bestStreak, multiplier;
 
 function playerBaseY() {
@@ -404,6 +405,7 @@ function resetGame() {
   invuln = 0;
   grace = 0;
   juke = { t: 0, dir: 0, charges: JUKE_CHARGES, refill: 0, iframes: 0, hold: 0 };
+  wrongKey = { key: null, t: 0 };
   shake = 0;
   flash = 0;
   typedCorrect = 0;
@@ -725,14 +727,14 @@ window.addEventListener("keydown", (e) => {
       sfx.shoot(Math.min(12, capture.typed));
       if (capture.typed >= capture.word.length) freeFromCapture();
     } else {
-      wrongLetter();
+      wrongLetter(letter);
     }
     return;
   }
 
   if (lockTarget) {
     if (lockTarget.word[lockTarget.typed] === letter) correctLetter(lockTarget);
-    else wrongLetter();
+    else wrongLetter(letter);
   } else {
     let best = null, bestDist = Infinity;
     for (const e2 of enemies) {
@@ -746,7 +748,7 @@ window.addEventListener("keydown", (e) => {
       sfx.lock();
       correctLetter(best);
     } else {
-      wrongLetter();
+      wrongLetter(letter);
     }
   }
 });
@@ -782,7 +784,8 @@ function correctLetter(target) {
   }
 }
 
-function wrongLetter() {
+function wrongLetter(key) {
+  if (key) { wrongKey.key = key; wrongKey.t = WRONG_FLASH; }
   typedWrong++;
   streak = 0;
   multiplier = 1;
@@ -854,6 +857,7 @@ function update(dt) {
   }
   if (invuln > 0) invuln -= dt;
   if (grace > 0) grace -= dt;
+  if (wrongKey.t > 0) wrongKey.t -= dt;
   if (shake > 0) shake = Math.max(0, shake - dt * 20);
   if (flash > 0) flash = Math.max(0, flash - dt * 1.8);
   if (player.muzzle > 0) player.muzzle = Math.max(0, player.muzzle - dt);
@@ -1820,6 +1824,8 @@ function drawGuide() {
     x: g.x, y: g.y, width: g.w,
     next, options,
     spaceReady: juke.charges > 0,
+    wrong: wrongKey.t > 0 ? wrongKey.key : null,
+    wrongAlpha: Math.max(0, wrongKey.t / WRONG_FLASH),
     opacity: 0.13,     // barely there until a key lights up
     highlight: 0.85,
     mono: MONO,

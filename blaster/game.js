@@ -27,6 +27,7 @@ const STARTING_LIVES = 3;
 const MAX_PARTICLES = 700;
 const STREAK_PER_MULT = 20;       // correct letters needed per multiplier step
 const MAX_MULT = 5;
+const WRONG_FLASH = 0.6;     // seconds the struck-out key stays on the guide
 
 // ---- Settings (persisted to localStorage) ----
 const SETTINGS_KEY = "typeblaster-settings";
@@ -327,6 +328,7 @@ function stopMusic() {
 let state = "menu"; // menu | playing | paused | gameover
 let ship, asteroids, bullets, particles, shockwaves, lockTarget;
 let score, lives, elapsed, spawnTimer, invuln, shake, flash;
+let wrongKey;
 let typedCorrect, typedWrong, wordsDestroyed, streak, bestStreak, multiplier;
 
 function resetGame() {
@@ -341,6 +343,7 @@ function resetGame() {
   elapsed = 0;
   spawnTimer = 0.5;
   invuln = 0;
+  wrongKey = { key: null, t: 0 };
   shake = 0;
   flash = 0;
   typedCorrect = 0;
@@ -658,7 +661,7 @@ window.addEventListener("keydown", (e) => {
   if (lockTarget) {
     // Must finish the locked word
     if (lockTarget.word[lockTarget.typed] === letter) correctLetter(lockTarget);
-    else wrongLetter();
+    else wrongLetter(letter);
   } else {
     // Try to acquire a lock: nearest on-screen asteroid whose word starts with this letter
     let best = null, bestDist = Infinity;
@@ -673,7 +676,7 @@ window.addEventListener("keydown", (e) => {
       sfx.lock();
       correctLetter(best);
     } else {
-      wrongLetter();
+      wrongLetter(letter);
     }
   }
 });
@@ -700,7 +703,8 @@ function correctLetter(target) {
   }
 }
 
-function wrongLetter() {
+function wrongLetter(key) {
+  if (key) { wrongKey.key = key; wrongKey.t = WRONG_FLASH; }
   typedWrong++;
   streak = 0;
   multiplier = 1;
@@ -741,6 +745,7 @@ function update(dt) {
   ship.angle += da * Math.min(1, dt * 14);
 
   if (invuln > 0) invuln -= dt;
+  if (wrongKey.t > 0) wrongKey.t -= dt;
   if (shake > 0) shake = Math.max(0, shake - dt * 20);
   if (flash > 0) flash = Math.max(0, flash - dt * 1.8);
   if (ship.muzzle > 0) ship.muzzle = Math.max(0, ship.muzzle - dt);
@@ -1307,6 +1312,8 @@ function drawGuide() {
     x: g.x, y: g.y, width: g.w,
     next, options,
     showSpace: false,          // Blaster has no space action
+    wrong: wrongKey.t > 0 ? wrongKey.key : null,
+    wrongAlpha: Math.max(0, wrongKey.t / WRONG_FLASH),
     opacity: 0.13,             // barely there until a key lights up
     highlight: 0.85,
     mono: MONO,

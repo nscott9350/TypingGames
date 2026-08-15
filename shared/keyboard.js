@@ -88,12 +88,16 @@ function kbRoundRect(ctx, x, y, w, h, r) {
  *   showSpace    draw the space bar at all
  *   opacity      how present the unlit keys are (this is a backdrop)
  *   highlight    how present the lit key is
+ *   wrong        key just pressed in error, struck through until it fades
+ *   wrongAlpha   how far through that fade we are, 1 down to 0
  *   mono         font stack
  */
+const WRONG_COLOR = "#FF1744";
+
 function drawKeyboardGuide(ctx, opts) {
   const { x, y, width, next = null, options = [], spaceReady = false,
           showSpace = true, opacity = 0.16, highlight = 0.9,
-          mono = "monospace" } = opts;
+          wrong = null, wrongAlpha = 0, mono = "monospace" } = opts;
   const u = width / 10.6;
   const keyH = u * 0.9;
   const gap = u * 0.1;
@@ -151,6 +155,31 @@ function drawKeyboardGuide(ctx, opts) {
       ctx.font = `${isNext ? "bold " : ""}${Math.round(u * 0.4)}px ${mono}`;
       ctx.fillStyle = "#FFFFFF";
       ctx.fillText(key.toUpperCase(), rx + u * 0.45, ry + keyH / 2 + 1);
+
+      // A key just pressed in error is struck out where it sits, so the
+      // mistake is attached to the place on the keyboard rather than being an
+      // abstract penalty. Drawn over the letter, fading as it clears.
+      if (wrong === key && wrongAlpha > 0) {
+        const inset = u * 0.2;
+        ctx.globalAlpha = wrongAlpha;
+        ctx.fillStyle = WRONG_COLOR;
+        kbRoundRect(ctx, rx, ry, u * 0.9, keyH, u * 0.1);
+        ctx.fill();
+        ctx.strokeStyle = WRONG_COLOR;
+        ctx.lineWidth = 3;
+        kbRoundRect(ctx, rx, ry, u * 0.9, keyH, u * 0.1);
+        ctx.stroke();
+
+        ctx.strokeStyle = "#FFFFFF";
+        ctx.lineWidth = Math.max(2, u * 0.075);
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(rx + inset, ry + inset);
+        ctx.lineTo(rx + u * 0.9 - inset, ry + keyH - inset);
+        ctx.moveTo(rx + u * 0.9 - inset, ry + inset);
+        ctx.lineTo(rx + inset, ry + keyH - inset);
+        ctx.stroke();
+      }
 
       rx += u;
     }
