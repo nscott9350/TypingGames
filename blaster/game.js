@@ -28,26 +28,30 @@ const MAX_PARTICLES = 700;
 const STREAK_PER_MULT = 20;       // correct letters needed per multiplier step
 const MAX_MULT = 5;
 const WRONG_FLASH = 0.6;     // seconds the struck-out key stays on the guide
+const ASSIST_MISSES = 3;     // consecutive misses before the guide steps in
+const ASSIST_FADE_IN = 0.18; // appears quickly, so it is there when wanted
+const ASSIST_FADE_OUT = 0.7; // leaves slowly, so it is not snatched away
 
 // ---- Settings (persisted to localStorage) ----
 const SETTINGS_KEY = "typeblaster-settings";
 const SCORES_KEY = "typeblaster-scores";
-const SETTINGS_VERSION = 2;
+const SETTINGS_VERSION = 3;
 const DEFAULT_SETTINGS = {
   v: SETTINGS_VERSION,
   difficulty: "normal", wordSet: "all", musicOn: true, musicVol: 50, sfxVol: 70,
-  keyboardGuide: false,
+  keyboardGuide: "off",   // "off" | "assist" | "always"
 };
 let settings = { ...DEFAULT_SETTINGS };
 try {
   const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY));
   if (saved && typeof saved === "object") {
-    // The keyboard guide briefly shipped defaulting to on. Any player who
-    // adjusted an unrelated setting during that window had `true` written to
-    // storage without ever choosing it, and a stored value outranks a default
-    // forever. Drop just that key from pre-v2 saves so the current default
-    // applies, while keeping every preference they actually picked.
-    if (saved.v !== SETTINGS_VERSION) delete saved.keyboardGuide;
+    // The keyboard guide briefly shipped defaulting to on, so pre-v2 saves may
+    // carry `true` that the player never chose — drop it and let the default
+    // apply. From v2 to v3 the setting became a mode rather than a flag.
+    if (saved.v === undefined) delete saved.keyboardGuide;
+    else if (saved.v < 3 && typeof saved.keyboardGuide === "boolean") {
+      saved.keyboardGuide = saved.keyboardGuide ? "always" : "off";
+    }
     settings = { ...DEFAULT_SETTINGS, ...saved, v: SETTINGS_VERSION };
   }
 } catch (e) { /* corrupted or unavailable storage: fall back to defaults */ }
@@ -101,12 +105,24 @@ const DIFFICULTY_LEVELS = {
 };
 const currentLevel = () => DIFFICULTY_LEVELS[settings.difficulty] || DIFFICULTY_LEVELS.normal;
 const currentWordSet = () => WORD_SETS[settings.wordSet] || WORD_SETS.all;
+const GUIDE_MODES = ["off", "assist", "always"];
+const guideMode = () =>
+  GUIDE_MODES.includes(settings.keyboardGuide) ? settings.keyboardGuide : "off";
 
 let W = 0, H = 0;
 
 // The guide is a watermark drawn behind the action, so it reserves nothing.
+// How present the guide should be right now: always-on shows at full weight,
+// assist mode rides its fade, off is nothing.
+function guideVisibility() {
+  const m = guideMode();
+  if (m === "always") return 1;
+  if (m === "assist") return assist ? assist.alpha : 0;
+  return 0;
+}
+
 function guideBox() {
-  if (!settings.keyboardGuide) return { on: false, h: 0, w: 0, x: 0, y: H };
+  if (guideVisibility() <= 0.001) return { on: false, h: 0, w: 0, x: 0, y: H };
   return { on: true, ...keyboardGuideLayout(W, H, false) };
 }
 
@@ -338,7 +354,7 @@ function stopMusic() {
 let state = "menu"; // menu | playing | paused | gameover
 let ship, asteroids, bullets, particles, shockwaves, lockTarget;
 let score, lives, elapsed, spawnTimer, invuln, shake, flash;
-let wrongKey;
+let wrongKey, assist;
 let typedCorrect, typedWrong, wordsDestroyed, streak, bestStreak, multiplier;
 
 function resetGame() {
@@ -354,6 +370,7 @@ function resetGame() {
   spawnTimer = 0.5;
   invuln = 0;
   wrongKey = { key: null, t: 0 };
+  assist = { misses: 0, showing: false, alpha: 0 };
   shake = 0;
   flash = 0;
   typedCorrect = 0;
@@ -694,6 +711,7 @@ window.addEventListener("keydown", (e) => {
 function correctLetter(target) {
   target.typed++;
   typedCorrect++;
+  noteCorrectKey();
   streak++;
   if (streak > bestStreak) bestStreak = streak;
 
@@ -713,8 +731,14 @@ function correctLetter(target) {
   }
 }
 
+function noteCorrectKey() {
+  assist.misses = 0;
+  assist.showing = false;
+}
+
 function wrongLetter(key) {
   if (key) { wrongKey.key = key; wrongKey.t = WRONG_FLASH; }
+  if (++assist.misses >= ASSIST_MISSES) assist.showing = true;
   typedWrong++;
   streak = 0;
   multiplier = 1;
@@ -773,6 +797,12 @@ function update(dt) {
     if (invuln <= 0 && shipIsOverlapped()) invuln = 0.12;
   }
   if (wrongKey.t > 0) wrongKey.t -= dt;
+  // Assist mode eases the guide in when the player is stuck and back out once
+  // they are moving again, rather than snapping it on and off.
+  const assistTarget = assist.showing ? 1 : 0;
+  const assistRate = dt / (assist.showing ? ASSIST_FADE_IN : ASSIST_FADE_OUT);
+  assist.alpha += Math.sign(assistTarget - assist.alpha) *
+                  Math.min(assistRate, Math.abs(assistTarget - assist.alpha));
   if (shake > 0) shake = Math.max(0, shake - dt * 20);
   if (flash > 0) flash = Math.max(0, flash - dt * 1.8);
   if (ship.muzzle > 0) ship.muzzle = Math.max(0, ship.muzzle - dt);
@@ -1348,14 +1378,15 @@ function drawGuide() {
   const g = guideBox();
   if (!g.on) return;
   const { next, options } = guideKeys();
+  const vis = guideVisibility();
   drawKeyboardGuide(ctx, {
     x: g.x, y: g.y, width: g.w,
     next, options,
     showSpace: false,          // Blaster has no space action
     wrong: wrongKey.t > 0 ? wrongKey.key : null,
-    wrongAlpha: Math.max(0, wrongKey.t / WRONG_FLASH),
-    opacity: 0.13,             // barely there until a key lights up
-    highlight: 0.85,
+    wrongAlpha: Math.max(0, wrongKey.t / WRONG_FLASH) * vis,
+    opacity: 0.13 * vis,             // barely there until a key lights up
+    highlight: 0.85 * vis,
     mono: MONO,
   });
 }
@@ -1429,7 +1460,7 @@ function drawHUD() {
 // ---- Settings UI wiring ----
 const diffButtons = Array.from(document.querySelectorAll(".diff-btn"));
 const setButtons = Array.from(document.querySelectorAll(".set-btn"));
-const kbdToggleEl = document.getElementById("kbd-toggle");
+const kbdButtons = Array.from(document.querySelectorAll(".kbd-btn"));
 const musicToggleEl = document.getElementById("music-toggle");
 const musicVolEl = document.getElementById("music-vol");
 const musicVolNumEl = document.getElementById("music-vol-num");
@@ -1443,8 +1474,7 @@ function syncSettingsUI() {
   for (const b of setButtons) {
     b.classList.toggle("selected", b.dataset.set === settings.wordSet);
   }
-  kbdToggleEl.textContent = settings.keyboardGuide ? "ON" : "OFF";
-  kbdToggleEl.classList.toggle("off", !settings.keyboardGuide);
+  for (const b of kbdButtons) b.classList.toggle("selected", b.dataset.kbd === guideMode());
   musicToggleEl.textContent = settings.musicOn ? "ON" : "OFF";
   musicToggleEl.classList.toggle("off", !settings.musicOn);
   musicVolEl.value = settings.musicVol;
@@ -1474,11 +1504,13 @@ for (const b of setButtons) {
   });
 }
 
-kbdToggleEl.addEventListener("click", () => {
-  settings.keyboardGuide = !settings.keyboardGuide;
-  saveSettings();
-  syncSettingsUI();
-});
+for (const b of kbdButtons) {
+  b.addEventListener("click", () => {
+    settings.keyboardGuide = b.dataset.kbd;
+    saveSettings();
+    syncSettingsUI();
+  });
+}
 
 musicToggleEl.addEventListener("click", () => {
   settings.musicOn = !settings.musicOn;

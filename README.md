@@ -53,8 +53,19 @@ Both games can fade a keyboard across the play field and light up the key you
 need next, so you never have to glance down. It is drawn large and faint,
 behind the action, and sits in the part of the screen you are already watching —
 a small keyboard tucked along the bottom edge would still cost you the glance
-down that the guide exists to prevent. Off by default; switch it on in
-**Settings**.
+down that the guide exists to prevent.
+
+**Settings** offers three modes:
+
+| Mode | Behaviour |
+| --- | --- |
+| **Off** | never shown (the default) |
+| **When stuck** | hidden until you miss three keys in a row, then fades in until you get one right |
+| **Always** | on for the whole run |
+
+*When stuck* is the one to reach for once you know roughly where the keys are:
+it stays out of the way while you are managing, and appears the moment you are
+hunting — so there is nothing to lean on except when you actually need it.
 
 Keys are colour-coded by **which finger should press them**, which is the part
 that actually transfers — knowing where `P` lives is far less useful than
