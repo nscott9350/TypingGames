@@ -34,6 +34,18 @@ Unlike the other two you are defending something other than yourself, so which
 warhead to shoot next — the lowest, or the one over a cluster — is the real
 decision.
 
+### Type Burrow — marble popper
+
+A line of marbles creeps down a garden path toward a gopher's hole, drawn as a
+1932 cartoon. Typing a marble's word pops it and the line closes the gap — and
+if that brings three of a colour together they burst too, which can cascade.
+Marbles that reach the hole fill the burrow; fill it and the gopher is overrun.
+
+Only the marbles nearest the hole carry words, so targeting is never ambiguous;
+the rest show their colour, which is what you plan on. Popping the front marble
+can never cascade, because nothing sits ahead of it — so the most urgent marble
+and the most valuable one are rarely the same, which is the whole game.
+
 ## How to play
 
 | Key | Action |
@@ -61,7 +73,7 @@ sliding back into the shot's path.
 
 ## Keyboard guide
 
-All three games can fade a keyboard across the play field and light up the key you
+All four games can fade a keyboard across the play field and light up the key you
 need next, so you never have to glance down. It is drawn large and faint,
 behind the action, and sits in the part of the screen you are already watching —
 a small keyboard tucked along the bottom edge would still cost you the glance
@@ -98,7 +110,7 @@ hunt across the screen.
 
 ## Practice word sets
 
-All three games share the same word sets, so you can drill one part of the
+All four games share the same word sets, so you can drill one part of the
 keyboard and then take it into any of them. Choose in **Settings**:
 
 - **Home row** — words using only `a s d f g h j k l`
@@ -133,8 +145,9 @@ index.html, hub.css     the arcade landing page
 blaster/                Type Blaster (index.html, game.js, style.css)
 squadron/               Type Squadron (index.html, game.js, style.css)
 sentinel/               Type Sentinel (index.html, game.js, style.css)
-shared/words.js         word sets, shared by all three games
-shared/keyboard.js      on-screen keyboard guide, shared by all three
+burrow/                 Type Burrow (index.html, game.js, style.css)
+shared/words.js         word sets, shared by all four games
+shared/keyboard.js      on-screen keyboard guide, shared by all four
 ```
 
 Each game keeps its own settings and high scores under its own `localStorage`
@@ -154,8 +167,8 @@ may serve you the cached page.
 These are original games, written from scratch, in genres established by the
 arcade era. Game mechanics are not protectable, but the titles of the games that
 inspired these are trademarks belonging to their owners, so they are not used
-here — the genre terms *multidirectional shooter*, *formation shooter* and
-*city defence* are the accurate descriptions and are what you will find
+here — the genre terms *multidirectional shooter*, *formation shooter*, *city defence*
+and *marble popper* are the accurate descriptions and are what you will find
 throughout.
 
 Everything here is original work. There are no dependencies, no bundled fonts

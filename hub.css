@@ -136,6 +136,11 @@ body {
   --accent-2: #4DC4FF;
 }
 
+.card-burrow {
+  --accent: #FFD400;
+  --accent-2: #7CFF3D;
+}
+
 .card:hover {
   transform: translateY(-5px);
   border-color: color-mix(in srgb, var(--accent) 55%, transparent);
