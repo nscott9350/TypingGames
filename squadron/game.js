@@ -141,9 +141,8 @@ let W = 0, H = 0;
 // ship or the HUD. Zero when the guide is off.
 function guideBox() {
   if (!settings.keyboardGuide) return { on: false, h: 0, w: 0, x: 0, y: H };
-  const w = keyboardGuideWidth(W);
-  const h = keyboardGuideHeight(w);
-  return { on: true, h, w, x: (W - w) / 2, y: H - h - 34 };
+  const l = keyboardGuideLayout(W, H, true);
+  return { on: true, ...l };
 }
 
 // ---- Glow sprite cache ----
@@ -380,10 +379,14 @@ let score, lives, elapsed, wave, waveTime, waveClearTimer, diveTimer, beamCooldo
 let invuln, grace, shake, flash, juke;
 let typedCorrect, typedWrong, kills, streak, bestStreak, multiplier;
 
-// The ship rides above the keyboard guide when it is showing
+// The ship rides above the keyboard guide when it is showing, but never so
+// high that it ends up among the formation — being parked in the enemy ranks
+// means taking hits with no time to react, which reads as dying at random.
+const SHIP_HIGHEST_FRACTION = 0.58;
 function playerBaseY() {
   const g = guideBox();
-  return H - PLAYER_BOTTOM - (g.on ? g.h + 20 : 0);
+  const raised = H - PLAYER_BOTTOM - (g.on ? g.h + 18 : 0);
+  return Math.max(H * SHIP_HIGHEST_FRACTION, raised);
 }
 
 function resetGame() {

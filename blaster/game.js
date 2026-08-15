@@ -96,9 +96,8 @@ let W = 0, H = 0;
 // Bottom space reserved for the keyboard guide. Zero when the guide is off.
 function guideBox() {
   if (!settings.keyboardGuide) return { on: false, h: 0, w: 0, x: 0, y: H };
-  const w = keyboardGuideWidth(W);
-  const h = keyboardGuideHeight(w);
-  return { on: true, h, w, x: (W - w) / 2, y: H - h - 34 };
+  const l = keyboardGuideLayout(W, H, false);
+  return { on: true, ...l };
 }
 
 // ---- Glow sprite cache ----

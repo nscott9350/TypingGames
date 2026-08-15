@@ -63,6 +63,24 @@ function keyboardGuideWidth(canvasWidth) {
   return Math.min(500, canvasWidth * 0.62);
 }
 
+// Places the guide for a given canvas, shrinking it on short windows.
+// Sizing on width alone means a fixed ~180px band whatever the height, which
+// on a laptop-height window swallows a third of the field and pushes the play
+// area into the enemies. Cap it as a share of the viewport instead.
+const GUIDE_MAX_HEIGHT_FRACTION = 0.26;
+
+function keyboardGuideLayout(canvasWidth, canvasHeight, showSpace = true) {
+  let w = keyboardGuideWidth(canvasWidth);
+  let h = keyboardGuideHeight(w, showSpace);
+  const maxH = canvasHeight * GUIDE_MAX_HEIGHT_FRACTION;
+  if (h > maxH && h > 0) {
+    w *= maxH / h;              // height scales with width, so this converges
+    h = keyboardGuideHeight(w, showSpace);
+  }
+  const bottomPad = Math.min(34, canvasHeight * 0.05);
+  return { w, h, x: (canvasWidth - w) / 2, y: canvasHeight - h - bottomPad };
+}
+
 function kbRoundRect(ctx, x, y, w, h, r) {
   ctx.beginPath();
   ctx.moveTo(x + r, y);
