@@ -1,5 +1,5 @@
 // ============================================================
-// Type Blaster — an asteroids-style touch typing trainer
+// Type Blaster — a multidirectional shooter for touch typists
 // ============================================================
 
 const canvas = document.getElementById("game");

@@ -1,5 +1,5 @@
 // ============================================================
-// Type Squadron — a Galaga-style touch typing trainer
+// Type Squadron — a formation shooter for touch typists
 // ============================================================
 
 const canvas = document.getElementById("game");
