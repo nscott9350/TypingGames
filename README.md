@@ -58,9 +58,11 @@ down that the guide exists to prevent. Off by default; switch it on in
 
 Keys are colour-coded by **which finger should press them**, which is the part
 that actually transfers — knowing where `P` lives is far less useful than
-knowing it belongs to the right pinky. The home-row keys carry a marker, with a
-heavier one under `F` and `J` for the raised bumps you use to find home position
-by touch, and the finger for the current key is named above the keyboard.
+knowing it belongs to the right pinky. Eight lamps sit above the keyboard, one
+per finger, each parked over the home key that finger rests on, and the one you
+need lights up in that finger's colour. The home-row keys carry a marker too,
+with a heavier one under `F` and `J` for the raised bumps you use to find home
+position by touch.
 
 Press the wrong key and it is struck out in red where it sits, right beside the
 key you actually wanted — so a mistake tells you which reach went astray rather

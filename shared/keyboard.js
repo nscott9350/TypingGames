@@ -52,11 +52,28 @@ const KEY_ROWS = [
 const HOME_KEYS = new Set(["a","s","d","f","j","k","l"]);
 const BUMP_KEYS = new Set(["f","j"]);
 
+// Eight finger lamps, one per typing finger, each parked directly above the
+// home key that finger rests on: a s d f and j k l plus the semicolon column.
+// Reading a colour is faster than reading the words "left middle" mid-word,
+// and anchoring each lamp over its own key makes the mapping self-evident.
+// `lift` nudges them into a hand's silhouette — middle tallest, pinky lowest.
+const FINGER_DOTS = [
+  { f: "lp",  col: 0.83, lift: 0.15 },
+  { f: "lr",  col: 1.83, lift: 0.03 },
+  { f: "lm",  col: 2.83, lift: 0.00 },
+  { f: "li",  col: 3.83, lift: 0.09 },
+  { f: "ri",  col: 6.83, lift: 0.09 },
+  { f: "rm",  col: 7.83, lift: 0.00 },
+  { f: "rr",  col: 8.83, lift: 0.03 },
+  { f: "rpk", col: 9.83, lift: 0.15 },
+];
+const DOT_BAND = 1.15;   // in key units, reserved above the top row
+
 function keyboardGuideHeight(width, showSpace = true) {
   const u = width / 10.6;
   const keyH = u * 0.9;
   const gap = u * 0.1;
-  return 3 * (keyH + gap) + (showSpace ? keyH * 0.72 + gap : 0) + gap * 2;
+  return u * DOT_BAND + 3 * (keyH + gap) + (showSpace ? keyH * 0.72 + gap : 0) + gap * 2;
 }
 
 // Centred across the play field and sized to it, rather than a strip pinned
@@ -108,7 +125,39 @@ function drawKeyboardGuide(ctx, opts) {
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
 
-  let ry = y + gap;
+  // ---- Finger lamps ----
+  const activeFinger = next ? KEY_FINGER[next] : null;
+  const dotR = u * 0.26;
+  for (const d of FINGER_DOTS) {
+    const color = FINGER_COLOR[d.f];
+    const on = d.f === activeFinger;
+    const cx = x + d.col * u;
+    const cy = y + gap + u * DOT_BAND * 0.5 + d.lift * u;
+
+    if (on) {
+      // A soft halo so the lit finger is caught peripherally
+      ctx.globalAlpha = highlight * 0.28;
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(cx, cy, dotR * 2.1, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.globalAlpha = on ? highlight : opacity;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(cx, cy, on ? dotR * 1.15 : dotR * 0.42, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.globalAlpha = on ? highlight : opacity;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = on ? 2.5 : 1.5;
+    ctx.beginPath();
+    ctx.arc(cx, cy, dotR, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  let ry = y + gap + u * DOT_BAND;
   for (let r = 0; r < KEY_ROWS.length; r++) {
     const row = KEY_ROWS[r];
     // Stagger the rows the way a real keyboard does

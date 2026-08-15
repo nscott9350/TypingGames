@@ -1318,18 +1318,6 @@ function drawGuide() {
     highlight: 0.85,
     mono: MONO,
   });
-  if (next) {
-    const label = fingerLabelFor(next);
-    if (label) {
-      ctx.save();
-      ctx.globalAlpha = 0.55;
-      ctx.textAlign = "center";
-      ctx.font = `600 12px ${MONO}`;
-      ctx.fillStyle = fingerColorFor(next);
-      ctx.fillText(label.toUpperCase(), W / 2, g.y - 12);
-      ctx.restore();
-    }
-  }
 }
 
 function drawHUD() {
