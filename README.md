@@ -22,6 +22,18 @@ peel off to dive at you and shoot. Your ship slides along the bottom of the
 screen. Clear a wave to advance. Bosses can open a tractor beam that captures
 your ship — type the rescue word before the timer runs out to break free.
 
+### Type Sentinel — city defence
+
+Warheads fall from the night sky toward six cities, and you are the only thing
+between them. Type a warhead's word to intercept it; every interception leaves a
+fireball that destroys anything caught inside, so firing into a cluster takes out
+several at once. From the later waves some warheads split partway down into
+several smaller ones. The run ends when the last city is gone.
+
+Unlike the other two you are defending something other than yourself, so which
+warhead to shoot next — the lowest, or the one over a cluster — is the real
+decision.
+
 ## How to play
 
 | Key | Action |
@@ -49,7 +61,7 @@ sliding back into the shot's path.
 
 ## Keyboard guide
 
-Both games can fade a keyboard across the play field and light up the key you
+All three games can fade a keyboard across the play field and light up the key you
 need next, so you never have to glance down. It is drawn large and faint,
 behind the action, and sits in the part of the screen you are already watching —
 a small keyboard tucked along the bottom edge would still cost you the glance
@@ -86,15 +98,15 @@ hunt across the screen.
 
 ## Practice word sets
 
-Both games share the same word sets, so you can drill one part of the keyboard
-and then take it into either game. Choose in **Settings**:
+All three games share the same word sets, so you can drill one part of the
+keyboard and then take it into any of them. Choose in **Settings**:
 
 - **Home row** — words using only `a s d f g h j k l`
 - **Left hand** / **Right hand** — one side of the keyboard at a time
 - **Common words** — the words that actually come up most when typing English
 - **All words** — the full mixed vocabulary
 
-Every ship or rock on screen is given a different starting letter, so a keypress
+Every target on screen is given a different starting letter, so a keypress
 is never ambiguous. Narrow sets therefore cap how many targets can appear at
 once — the home row only offers eight distinct starting letters, so Squadron
 forms a smaller, tighter formation on that setting.
@@ -120,12 +132,13 @@ Then open http://localhost:8642.
 index.html, hub.css     the arcade landing page
 blaster/                Type Blaster (index.html, game.js, style.css)
 squadron/               Type Squadron (index.html, game.js, style.css)
-shared/words.js         word sets, used by both games
-shared/keyboard.js      on-screen keyboard guide, used by both games
+sentinel/               Type Sentinel (index.html, game.js, style.css)
+shared/words.js         word sets, shared by all three games
+shared/keyboard.js      on-screen keyboard guide, shared by all three
 ```
 
 Each game keeps its own settings and high scores under its own `localStorage`
-keys, so the two never interfere.
+keys, so they never interfere with one another.
 
 ## Deploying
 
@@ -141,8 +154,9 @@ may serve you the cached page.
 These are original games, written from scratch, in genres established by the
 arcade era. Game mechanics are not protectable, but the titles of the games that
 inspired these are trademarks belonging to their owners, so they are not used
-here — the genre terms *multidirectional shooter* and *formation shooter* are
-the accurate descriptions and are what you will find throughout.
+here — the genre terms *multidirectional shooter*, *formation shooter* and
+*city defence* are the accurate descriptions and are what you will find
+throughout.
 
 Everything here is original work. There are no dependencies, no bundled fonts
 or sound files, and no third-party assets of any kind — the games draw to a
