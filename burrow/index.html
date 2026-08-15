@@ -6,19 +6,19 @@
   <title>Type Burrow</title>
   <!-- Bump ?v= on every deploy: GitHub Pages caches assets for 10 minutes, and
        a page that loads new HTML against a stale script would break. -->
-  <link rel="stylesheet" href="style.css?v=1">
+  <link rel="stylesheet" href="style.css?v=7">
 </head>
 <body>
   <canvas id="game"></canvas>
 
   <div id="menu" class="overlay">
     <h1>TYPE BURROW</h1>
-    <p class="tagline">A marble popper for touch typists</p>
+    <p class="tagline">Gopher vs. Ants &mdash; a marble popper for touch typists</p>
     <ul class="howto">
-      <li>Marbles creep down the path toward the gopher's hole</li>
-      <li>Type a word's <strong>first letter</strong> to aim, finish it to pop that marble</li>
-      <li>The line closes up &mdash; land <strong>three of a colour together</strong> and they burst too</li>
-      <li>Cascades are worth far more than speed. Read the line before you type</li>
+      <li>Ants march down the path toward Gordo's burrow</li>
+      <li>Type a word's <strong>first letter</strong> to aim, finish it to send a berry</li>
+      <li>The column closes up &mdash; land <strong>three of a colour together</strong> and they scatter too</li>
+      <li>Cascades are worth far more than speed. Read the column before you type</li>
     </ul>
     <p id="menu-diff" class="menu-diff"></p>
     <p id="menu-best" class="menu-best"></p>
@@ -54,9 +54,9 @@
           <button class="diff-btn chip" data-diff="hard">Hard</button>
           <button class="diff-btn chip" data-diff="master">Master</button>
         </div>
-        <p class="hint">Higher settings creep the line along faster, send more
-          marbles per wave, add a colour to juggle, and give the burrow less room
-          before the gopher is overrun.</p>
+        <p class="hint">Higher settings march the column along faster, send more
+          ants per wave, add a colour to juggle, and give the burrow less room
+          before it gives out.</p>
       </div>
       <div class="setting-group">
         <div class="setting-label">Word set</div>
@@ -67,9 +67,9 @@
           <button class="set-btn chip" data-set="left">Left hand</button>
           <button class="set-btn chip" data-set="right">Right hand</button>
         </div>
-        <p class="hint">The marbles nearest the hole carry the words, each with a
+        <p class="hint">The ants nearest the burrow carry the words, each with a
           different starting letter so a keypress is never ambiguous. The rest show
-          their colour, which is what you plan cascades on.</p>
+          only their colour, which is what you plan cascades on.</p>
       </div>
       <div class="setting-group">
         <div class="setting-label">Keyboard guide</div>
@@ -107,8 +107,9 @@
     </div>
   </div>
 
-  <script src="../shared/words.js?v=1"></script>
-  <script src="../shared/keyboard.js?v=1"></script>
-  <script src="game.js?v=1"></script>
+  <script src="../shared/words.js?v=7"></script>
+  <script src="../shared/keyboard.js?v=7"></script>
+  <script src="sprites.js?v=7"></script>
+  <script src="game.js?v=7"></script>
 </body>
 </html>

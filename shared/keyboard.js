@@ -116,9 +116,17 @@ function kbRoundRect(ctx, x, y, w, h, r) {
 const WRONG_COLOR = "#FF1744";
 
 function drawKeyboardGuide(ctx, opts) {
+  // `ink` is the neutral the guide is drawn in — letters, resting key fill and
+  // the space bar. It defaults to white, which is right over the near-black
+  // playfields the shooters use. A game played over a light background passes
+  // a dark ink instead, otherwise the guide dissolves into the scenery: the
+  // finger colours are saturated enough to survive either way, but a white
+  // letter at 16% alpha over sunlit grass is simply not there.
   const { x, y, width, next = null, options = [], spaceReady = false,
           showSpace = true, opacity = 0.16, highlight = 0.9,
-          wrong = null, wrongAlpha = 0, mono = "monospace" } = opts;
+          wrong = null, wrongAlpha = 0, mono = "monospace",
+          ink = "255,255,255" } = opts;
+  const inkSolid = `rgb(${ink})`;
   const u = width / 10.6;
   const keyH = u * 0.9;
   const gap = u * 0.1;
@@ -191,7 +199,7 @@ function drawKeyboardGuide(ctx, opts) {
       const textA   = isNext ? highlight       : isOption ? optAlpha       : opacity;
 
       ctx.globalAlpha = fillA;
-      ctx.fillStyle = (isNext || isOption) ? color : "rgba(255,255,255,0.05)";
+      ctx.fillStyle = (isNext || isOption) ? color : `rgba(${ink},0.05)`;
       kbRoundRect(ctx, rx, ry, u * 0.9, keyH, u * 0.1);
       ctx.fill();
 
@@ -215,7 +223,7 @@ function drawKeyboardGuide(ctx, opts) {
 
       ctx.globalAlpha = textA;
       ctx.font = `${isNext ? "bold " : ""}${Math.round(u * 0.4)}px ${mono}`;
-      ctx.fillStyle = "#FFFFFF";
+      ctx.fillStyle = inkSolid;
       ctx.fillText(key.toUpperCase(), rx + u * 0.45, ry + keyH / 2 + 1);
 
       // A key just pressed in error is struck out where it sits, so the
@@ -253,7 +261,7 @@ function drawKeyboardGuide(ctx, opts) {
     const spaceW = u * 5.2;
     const sx = x + (width - spaceW) / 2;
     ctx.globalAlpha = spaceReady ? Math.min(1, opacity * 2) : opacity;
-    ctx.fillStyle = "rgba(255,255,255,0.05)";
+    ctx.fillStyle = `rgba(${ink},0.05)`;
     kbRoundRect(ctx, sx, ry, spaceW, spaceH, u * 0.1);
     ctx.fill();
     ctx.strokeStyle = FINGER_COLOR.th;
@@ -261,7 +269,7 @@ function drawKeyboardGuide(ctx, opts) {
     kbRoundRect(ctx, sx, ry, spaceW, spaceH, u * 0.1);
     ctx.stroke();
     ctx.font = `${Math.round(u * 0.24)}px ${mono}`;
-    ctx.fillStyle = "#FFFFFF";
+    ctx.fillStyle = inkSolid;
     ctx.fillText("SPACE", x + width / 2, ry + spaceH / 2 + 1);
   }
 

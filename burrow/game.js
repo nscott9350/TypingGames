@@ -1,10 +1,14 @@
 // ============================================================
-// Type Burrow — a marble popper for touch typists
+// Type Burrow — Gopher vs. Ants
 //
-// A line of marbles creeps down a garden path toward a gopher's hole. Typing a
-// marble's word pops it and the line closes the gap — and if that brings three
-// of a colour together they go too, which can cascade. So the fastest marble to
-// type is rarely the right one: the game is read before it is reflex.
+// A column of ants marches down a garden path toward the gopher's burrow.
+// Typing an ant's word sends a berry after it, and the column closes the gap —
+// if that brings three of a colour together they go too, which can cascade.
+// So the fastest ant to type is rarely the right one: the game is read before
+// it is reflex.
+//
+// All art is drawn from the supplied sheets; see sprites.js for how they are
+// keyed to transparency at load.
 // ============================================================
 
 const canvas = document.getElementById("game");
@@ -24,36 +28,19 @@ const quitBtn = document.getElementById("quit-btn");
 const MONO = "ui-monospace, 'SF Mono', Menlo, Consolas, 'Courier New', monospace";
 
 // ---- Tuning ----
-const SPACING_MUL = 2.12;     // marble spacing as a multiple of radius
+const SPACING_MUL = 1.62;     // ant spacing as a multiple of body radius
 const SETTLE_TIME = 0.2;      // pause after a pop so the gap visibly closes
 const MAX_PARTICLES = 600;
-const LABEL_WINDOW = 12;      // how many marbles nearest the hole carry words
-const CASCADE_SEED = 0.5;     // chance a new marble is placed to set up a cascade
+const LABEL_WINDOW = 4;       // ants nearest the burrow that carry word tags
+const CASCADE_SEED = 0.5;     // chance a new ant is placed to set up a cascade
+const STAGE_AR = 1672 / 941;  // the background painting's aspect ratio
+const LIVES_START = 3;
 const STREAK_PER_MULT = 20;
 const MAX_MULT = 5;
 const WRONG_FLASH = 0.6;
 const ASSIST_MISSES = 3;
 const ASSIST_FADE_IN = 0.18;
 const ASSIST_FADE_OUT = 0.7;
-
-// ---- Cartoon palette (early Technicolor: bright but chalky) ----
-const INK = "#2E2018";
-const PAL = {
-  skyTop: "#7FC8DE", skyLow: "#CFEAF0",
-  sun: "#FFD65C",
-  hillFar: "#8FBF63", hillMid: "#6FA84B", hillNear: "#5A9040",
-  dirt: "#C08A4E", dirtDark: "#9C6A38",
-  fur: "#D2985A", furDark: "#B87C42", belly: "#F4DDAE",
-  cream: "#FFF3D6", white: "#FFFDF2", red: "#D6453C",
-};
-const MARBLE_COLOURS = [
-  { fill: "#D6453C", name: "red" },
-  { fill: "#3C7FD6", name: "blue" },
-  { fill: "#4FB050", name: "green" },
-  { fill: "#F0A62E", name: "amber" },
-  { fill: "#9B59B6", name: "grape" },
-  { fill: "#28B7C6", name: "teal" },
-];
 
 // ---- Settings & scores ----
 const SETTINGS_KEY = "typeburrow-settings";
@@ -101,15 +88,15 @@ function recordScore(entry) {
 }
 
 // ---- Difficulty ----
-// `crawl` is path pixels per second, `load` the marbles in a wave, `hues` how
-// many colours are in play (fewer colours means easier cascades), and `burrow`
-// how many marbles may drop in before the gopher is overrun.
+// `crawl` is path pixels per second, `load` the ants in a level, `hues` how many
+// colours are in play (fewer colours means easier cascades), and `hole` how many
+// ants the burrow absorbs before it gives out and costs a life.
 const DIFFICULTY_LEVELS = {
-  beginner: { label: "BEGINNER", crawl: [13, 24], load: [22, 34], hues: 4, burrow: 8 },
-  easy:     { label: "EASY",     crawl: [17, 31], load: [26, 42], hues: 4, burrow: 7 },
-  normal:   { label: "NORMAL",   crawl: [22, 41], load: [30, 50], hues: 5, burrow: 6 },
-  hard:     { label: "HARD",     crawl: [28, 52], load: [36, 58], hues: 5, burrow: 5 },
-  master:   { label: "MASTER",   crawl: [35, 64], load: [42, 66], hues: 6, burrow: 4 },
+  beginner: { label: "BEGINNER", crawl: [13, 24], load: [22, 34], hues: 4, hole: 6 },
+  easy:     { label: "EASY",     crawl: [17, 31], load: [26, 42], hues: 4, hole: 5 },
+  normal:   { label: "NORMAL",   crawl: [22, 41], load: [30, 50], hues: 5, hole: 4 },
+  hard:     { label: "HARD",     crawl: [28, 52], load: [36, 58], hues: 5, hole: 3 },
+  master:   { label: "MASTER",   crawl: [35, 64], load: [42, 66], hues: 6, hole: 3 },
 };
 const currentLevel = () => DIFFICULTY_LEVELS[settings.difficulty] || DIFFICULTY_LEVELS.normal;
 const currentWordSet = () => WORD_SETS[settings.wordSet] || WORD_SETS.all;
@@ -130,124 +117,78 @@ function guideBox() {
   return { on: true, ...keyboardGuideLayout(W, H, false) };
 }
 
-// ---- Cartoon drawing helpers ----
-function ink(fill, lw = LW) {
-  if (fill) { ctx.fillStyle = fill; ctx.fill(); }
-  ctx.strokeStyle = INK;
-  ctx.lineWidth = lw;
-  ctx.lineJoin = "round";
-  ctx.lineCap = "round";
-  ctx.stroke();
-}
-function circle(x, y, r) { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); }
-function ellipse(x, y, rx, ry, rot = 0) {
-  ctx.beginPath(); ctx.ellipse(x, y, rx, ry, rot, 0, Math.PI * 2);
-}
-function hose(x1, y1, cx, cy, x2, y2, w, colour) {
-  ctx.beginPath();
-  ctx.moveTo(x1, y1);
-  ctx.quadraticCurveTo(cx, cy, x2, y2);
-  ctx.strokeStyle = INK; ctx.lineWidth = w + LW * 1.5; ctx.lineCap = "round"; ctx.stroke();
-  ctx.strokeStyle = colour; ctx.lineWidth = w; ctx.stroke();
-}
-// Pie-cut eye: a white disc with a wedge bitten out, pupil riding on top
-function pieEye(x, y, r, lookX, lookY, blink) {
-  if (blink) {
-    ctx.beginPath();
-    ctx.moveTo(x - r, y);
-    ctx.quadraticCurveTo(x, y + r * 0.5, x + r, y);
-    ctx.strokeStyle = INK; ctx.lineWidth = LW; ctx.lineCap = "round"; ctx.stroke();
-    return;
+// ---- Stage and path -------------------------------------------------------
+// The background is a finished painting, so the whole playfield is letterboxed
+// to its aspect ratio and everything is positioned in fractions of it. Cropping
+// to fill would cut off part of the route the ants have to walk.
+let stage = { x: 0, y: 0, w: 0, h: 0 };
+
+function layoutStage() {
+  const winAR = W / H;
+  if (winAR > STAGE_AR) {
+    stage.h = H; stage.w = H * STAGE_AR;
+  } else {
+    stage.w = W; stage.h = W / STAGE_AR;
   }
-  const cut = -Math.PI * 0.62;
-  ctx.beginPath();
-  ctx.arc(x, y, r, cut + 0.55, cut + Math.PI * 2 - 0.55);
-  ctx.closePath();
-  ink(PAL.white);
-  circle(x + lookX * r * 0.3, y + lookY * r * 0.3, r * 0.42);
-  ctx.fillStyle = INK; ctx.fill();
-}
-function roundRect(x, y, w, h, r) {
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.arcTo(x + w, y, x + w, y + h, r);
-  ctx.arcTo(x + w, y + h, x, y + h, r);
-  ctx.arcTo(x, y + h, x, y, r);
-  ctx.arcTo(x, y, x + w, y, r);
-  ctx.closePath();
+  stage.x = (W - stage.w) / 2;
+  stage.y = (H - stage.h) / 2;
 }
 
-// ---- Film treatment ----
-let grainTiles = [];
-function buildGrain() {
-  grainTiles = [];
-  for (let n = 0; n < 4; n++) {
-    const size = 160;
-    const t = document.createElement("canvas");
-    t.width = t.height = size;
-    const g = t.getContext("2d");
-    const img = g.createImageData(size, size);
-    for (let i = 0; i < img.data.length; i += 4) {
-      const v = 128 + (Math.random() - 0.5) * 88;
-      img.data[i] = img.data[i + 1] = img.data[i + 2] = v;
-      img.data[i + 3] = 24;
-    }
-    g.putImageData(img, 0, 0);
-    grainTiles.push(t);
-  }
-}
-function filmGrain(frame) {
-  const t = grainTiles[frame % grainTiles.length];
-  if (!t) return;
-  ctx.save();
-  ctx.globalCompositeOperation = "overlay";
-  ctx.fillStyle = ctx.createPattern(t, "repeat");
-  ctx.translate((frame * 7) % 160 - 160, (frame * 11) % 160 - 160);
-  ctx.fillRect(0, 0, W + 320, H + 320);
-  ctx.restore();
-}
-function filmLook() {
-  ctx.save();
-  ctx.globalCompositeOperation = "multiply";
-  ctx.fillStyle = "rgba(255, 226, 178, 0.18)";
-  ctx.fillRect(0, 0, W, H);
-  ctx.restore();
-  const g = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.34,
-                                     W / 2, H / 2, Math.max(W, H) * 0.78);
-  g.addColorStop(0, "rgba(0,0,0,0)");
-  g.addColorStop(1, "rgba(40, 26, 14, 0.4)");
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, W, H);
-}
+// Traced from background.png by sampling the painting for trail pixels — dirt
+// reads green/red ~0.68 against grass at ~0.93, which separates them cleanly.
+// The march starts at the painted anthill in the top-left corner and ends at
+// the mouth of the burrow, so the ants are always walking somewhere the
+// picture says they can walk.
+const ROUTE = [
+  [0.118, 0.176], [0.170, 0.180], [0.227, 0.181], [0.290, 0.172], [0.352, 0.164],
+  [0.415, 0.161], [0.477, 0.164], [0.530, 0.170], [0.570, 0.181], [0.607, 0.208],
+  [0.625, 0.236], [0.630, 0.272], [0.633, 0.306], [0.650, 0.340], [0.672, 0.364],
+  [0.715, 0.366], [0.758, 0.367], [0.805, 0.371], [0.852, 0.375], [0.882, 0.393],
+  [0.898, 0.417], [0.900, 0.452], [0.898, 0.486], [0.885, 0.516], [0.867, 0.542],
+  [0.842, 0.568], [0.820, 0.597], [0.814, 0.637], [0.813, 0.675], [0.788, 0.693],
+  [0.758, 0.697], [0.726, 0.684], [0.695, 0.667], [0.671, 0.646], [0.648, 0.625],
+  [0.617, 0.612], [0.586, 0.603], [0.543, 0.599], [0.500, 0.597], [0.460, 0.601],
+  [0.420, 0.606], [0.386, 0.610], [0.352, 0.614], [0.332, 0.578], [0.313, 0.542],
+  [0.293, 0.514], [0.273, 0.486], [0.234, 0.468], [0.195, 0.453], [0.156, 0.454],
+  [0.117, 0.458], [0.096, 0.478], [0.078, 0.500], [0.072, 0.535], [0.070, 0.569],
+  [0.084, 0.600], [0.102, 0.625], [0.137, 0.633], [0.172, 0.642], [0.200, 0.660],
+  [0.227, 0.681], [0.243, 0.708], [0.258, 0.736], [0.270, 0.768], [0.281, 0.800],
+  [0.308, 0.808], [0.336, 0.814], [0.375, 0.828], [0.414, 0.842], [0.453, 0.851],
+  [0.500, 0.855],
+];
 
-// ---- The garden path -----------------------------------------------------
-// Sampled once into an arc-length table so marbles can be spaced evenly along
-// it no matter how the curve bunches up.
 let pathPts = [], pathLen = 0;
 
-function pathAt(u) {
-  const x = W * 0.5 + Math.sin(u * Math.PI * 3 - Math.PI / 2) * W * 0.37;
-  const y = H * 0.13 + u * H * 0.64;
-  return { x, y };
-}
-
 function buildPath() {
+  const P = ROUTE.map(([fx, fy]) => [stage.x + fx * stage.w, stage.y + fy * stage.h]);
+  // Catmull-Rom so the ants ride a smooth curve rather than hinge at each point
+  const pts = [];
+  for (let i = 0; i < P.length - 1; i++) {
+    const p0 = P[i - 1] || P[i], p1 = P[i], p2 = P[i + 1], p3 = P[i + 2] || P[i + 1];
+    const steps = 22;
+    for (let k = 0; k < steps; k++) {
+      const t = k / steps, t2 = t * t, t3 = t2 * t;
+      pts.push([
+        0.5*((2*p1[0])+(-p0[0]+p2[0])*t+(2*p0[0]-5*p1[0]+4*p2[0]-p3[0])*t2+(-p0[0]+3*p1[0]-3*p2[0]+p3[0])*t3),
+        0.5*((2*p1[1])+(-p0[1]+p2[1])*t+(2*p0[1]-5*p1[1]+4*p2[1]-p3[1])*t2+(-p0[1]+3*p1[1]-3*p2[1]+p3[1])*t3),
+      ]);
+    }
+  }
+  pts.push(P[P.length - 1]);
+
   pathPts = [];
-  const N = 600;
-  let acc = 0, prev = pathAt(0);
-  pathPts.push({ ...prev, d: 0 });
-  for (let i = 1; i <= N; i++) {
-    const p = pathAt(i / N);
-    acc += Math.hypot(p.x - prev.x, p.y - prev.y);
-    pathPts.push({ ...p, d: acc });
-    prev = p;
+  let acc = 0;
+  pathPts.push({ x: pts[0][0], y: pts[0][1], d: 0 });
+  for (let i = 1; i < pts.length; i++) {
+    acc += Math.hypot(pts[i][0] - pts[i-1][0], pts[i][1] - pts[i-1][1]);
+    pathPts.push({ x: pts[i][0], y: pts[i][1], d: acc });
   }
   pathLen = acc;
 }
 
 function pointAtDist(d) {
-  if (d <= 0) return { ...pathPts[0], t: 0 };
-  if (d >= pathLen) return { ...pathPts[pathPts.length - 1], t: 1 };
+  if (d <= 0) return { ...pathPts[0] };
+  if (d >= pathLen) return { ...pathPts[pathPts.length - 1] };
   let lo = 0, hi = pathPts.length - 1;
   while (lo < hi - 1) {
     const mid = (lo + hi) >> 1;
@@ -255,15 +196,19 @@ function pointAtDist(d) {
   }
   const a = pathPts[lo], b = pathPts[hi];
   const f = (d - a.d) / Math.max(1e-6, b.d - a.d);
-  return { x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f, t: lo / (pathPts.length - 1) };
+  return { x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f };
+}
+
+function headingAtDist(d) {
+  const a = pointAtDist(Math.max(0, d - 8));
+  const b = pointAtDist(Math.min(pathLen, d + 8));
+  return { x: b.x - a.x, y: b.y - a.y };
 }
 
 function normalAtDist(d) {
-  const a = pointAtDist(Math.max(0, d - 6));
-  const b = pointAtDist(Math.min(pathLen, d + 6));
-  const dx = b.x - a.x, dy = b.y - a.y;
-  const len = Math.hypot(dx, dy) || 1;
-  return { x: -dy / len, y: dx / len };
+  const h = headingAtDist(d);
+  const len = Math.hypot(h.x, h.y) || 1;
+  return { x: -h.y / len, y: h.x / len };
 }
 
 function resize() {
@@ -271,23 +216,13 @@ function resize() {
   W = window.innerWidth; H = window.innerHeight;
   canvas.width = W * dpr; canvas.height = H * dpr;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  LW = Math.max(2.4, Math.min(W, H) * 0.005);
-  R = Math.max(13, Math.min(W, H) * 0.026);
+  layoutStage();
+  LW = Math.max(2, stage.h * 0.005);
+  R = Math.max(11, stage.h * 0.038);      // ant body radius, tuned to the art
   SPACING = R * SPACING_MUL;
   buildPath();
-  buildGrain();
-  makeStars();
 }
 window.addEventListener("resize", resize);
-
-let clouds = [];
-function makeStars() {
-  clouds = [
-    { x: W * 0.24, y: H * 0.12, s: Math.min(W, H) * 0.07, ph: 0 },
-    { x: W * 0.68, y: H * 0.08, s: Math.min(W, H) * 0.055, ph: 2.1 },
-    { x: W * 0.88, y: H * 0.2, s: Math.min(W, H) * 0.045, ph: 4.0 },
-  ];
-}
 
 // ---- Audio ----
 let audioCtx = null, sfxGain = null, musicGain = null;
@@ -392,7 +327,7 @@ function stopMusic() {
 let state = "menu";
 let chain, shots, pops, particles, lockTarget;
 let headDist, remaining, settleTimer, cascadeDepth;
-let score, elapsed, wave, waveClearTimer, burrowFill;
+let score, elapsed, wave, waveClearTimer, holeFill, lives;
 let shake, flash, banner;
 let typedCorrect, typedWrong, popped, cascaded, streak, bestStreak, multiplier;
 let wrongKey, assist, gopherThrow;
@@ -411,7 +346,8 @@ function resetGame() {
   elapsed = 0;
   wave = 0;
   waveClearTimer = 0;
-  burrowFill = 0;
+  holeFill = 0;
+  lives = LIVES_START;
   shake = 0;
   flash = 0;
   banner = null;
@@ -428,7 +364,7 @@ function resetGame() {
 }
 
 // ---- Words ----
-// Only the marbles nearest the hole carry words, and each is given one as it
+// Only the ants nearest the burrow carry words, and each is given one as it
 // enters that window. Colour is fixed from birth, so a cascade can be planned
 // on the whole line while targeting stays unambiguous among the few that count.
 function distinctFirstLetters() {
@@ -442,7 +378,7 @@ const letteredCount = () => Math.min(LABEL_WINDOW, distinctFirstLetters());
 
 function pickWord(used) {
   const pools = currentWordSet().pools;
-  // Short words only: they have to sit under a marble without colliding
+  // Short words only: the tag has to sit beside an ant without colliding
   for (const key of ["short", "medium"]) {
     const pool = (pools[key] || []).filter(w => w.length <= 5);
     const cands = pool.filter(w => !used.has(w[0]));
@@ -467,7 +403,7 @@ function refreshLabels() {
   for (let i = 0; i < chain.length; i++) {
     const m = chain[i];
     if (!used.has(m.word ? m.word[0] : "") || m.d < 0) {
-      // marbles beyond the window keep their colour but lose their label
+      // ants beyond the window keep their colour but lose their label
       if (m.lettered && !(m.word && used.has(m.word[0]))) m.lettered = false;
     }
   }
@@ -476,7 +412,7 @@ function refreshLabels() {
 // ---- Chain ----
 function targetDist(i) { return headDist - i * SPACING; }
 
-function newMarble(hues) {
+function newAnt(hues) {
   const n = chain.length;
   const back = (k) => (chain[n - k] ? chain[n - k].hue : -1);
   let hue = null;
@@ -512,7 +448,7 @@ function startWave(n) {
   headDist = 0;
   chain = [];
   lockTarget = null;
-  banner = { text: `WAVE ${n}`, sub: `${remaining} MARBLES`, life: 2.0, maxLife: 2.0 };
+  banner = { text: `LEVEL ${n}`, sub: `${remaining} ANTS MARCHING`, life: 2.0, maxLife: 2.0 };
   sfx.wave();
 }
 
@@ -537,14 +473,15 @@ function resolveMatches() {
       const gone = chain.splice(i, run);
       for (const m of gone) {
         const p = pointAtDist(m.d);
-        pops.push({ x: p.x, y: p.y, r: R, life: 0.34, maxLife: 0.34, hue: m.hue });
-        burstAt(p.x, p.y, MARBLE_COLOURS[m.hue].fill, 10);
+        pops.push({ x: p.x, y: p.y, r: R, life: 0.4, maxLife: 0.4, hue: m.hue, variant: (Math.random()*4)|0 });
+        burstAt(p.x, p.y, ANT_TINT[m.hue], 10);
         score += 100 * cascadeDepth * multiplier;
         popped++;
         cascaded++;
       }
       removed += run;
       sfx.cascade(cascadeDepth);
+      setMood("gopherCheer", 0.9);
       shake = Math.max(shake, 5 + cascadeDepth * 2);
       if (lockTarget && gone.includes(lockTarget)) lockTarget = null;
       i = Math.max(0, i - 2);
@@ -555,13 +492,13 @@ function resolveMatches() {
   return removed;
 }
 
-function popMarble(m) {
+function popAnt(m) {
   const idx = chain.indexOf(m);
   if (idx === -1) return;
   const p = pointAtDist(m.d);
   chain.splice(idx, 1);
-  pops.push({ x: p.x, y: p.y, r: R, life: 0.34, maxLife: 0.34, hue: m.hue });
-  burstAt(p.x, p.y, MARBLE_COLOURS[m.hue].fill, 12);
+  pops.push({ x: p.x, y: p.y, r: R, life: 0.4, maxLife: 0.4, hue: m.hue, variant: (Math.random()*4)|0 });
+  burstAt(p.x, p.y, ANT_TINT[m.hue], 12);
   score += 50 * multiplier;
   popped++;
   sfx.pop();
@@ -717,14 +654,15 @@ function wrongLetter(key) {
 }
 
 function gopherPos() {
-  const end = pointAtDist(pathLen);
-  return { x: end.x - R * 4.2, y: end.y + R * 0.4 };
+  return { x: stage.x + stage.w * 0.40, y: stage.y + stage.h * 0.80 };
 }
 
 function fireShot(target) {
   const g = gopherPos();
   gopherThrow = 0.16;
-  shots.push({ x: g.x, y: g.y - R * 1.4, target, life: 3, spin: 0 });
+  setMood("gopherShoot", 0.32);
+  shots.push({ x: g.x + R * 1.2, y: g.y - stage.h * 0.12, target,
+               life: 3, spin: 0, hue: target.hue, dx: 0, dy: 0 });
 }
 
 // ---- Update ----
@@ -735,6 +673,14 @@ function update(dt) {
   if (flash > 0) flash = Math.max(0, flash - dt * 1.8);
   if (wrongKey.t > 0) wrongKey.t -= dt;
   if (gopherThrow > 0) gopherThrow -= dt;
+  if (gopherMood.t > 0) {
+    gopherMood.t -= dt;
+    if (gopherMood.t <= 0) gopherMood.pose = "gopherIdle";
+  } else {
+    // Wide-eyed once the leading ant is close to getting in
+    const lead = chain.length ? chain[0].d / pathLen : 0;
+    gopherMood.pose = lead > 0.86 ? "gopherAlert" : "gopherIdle";
+  }
 
   const at = assist.showing ? 1 : 0;
   const ar = dt / (assist.showing ? ASSIST_FADE_IN : ASSIST_FADE_OUT);
@@ -742,9 +688,9 @@ function update(dt) {
 
   const L = currentLevel();
 
-  // Feed the line in from the top while the wave still has marbles to send
+  // Feed the column in from the anthill while the wave still has ants to send
   while (remaining > 0 && (chain.length === 0 || targetDist(chain.length - 1) > -SPACING * 1.5)) {
-    chain.push(newMarble(L.hues));
+    chain.push(newAnt(L.hues));
     remaining--;
   }
 
@@ -756,7 +702,7 @@ function update(dt) {
     headDist += crawlSpeed() * dt;
   }
 
-  // Ease each marble toward its slot; this is what makes the gap visibly close
+  // Ease each ant toward its slot; this is what makes the gap visibly close
   for (let i = 0; i < chain.length; i++) {
     const m = chain[i];
     const want = targetDist(i);
@@ -769,15 +715,23 @@ function update(dt) {
   while (chain.length && chain[0].d >= pathLen) {
     const m = chain.shift();
     if (lockTarget === m) lockTarget = null;
-    burrowFill++;
-    shake = 14;
-    flash = 0.4;
+    holeFill++;
+    shake = 12;
+    flash = 0.35;
     const p = pointAtDist(pathLen);
-    burstAt(p.x, p.y, PAL.dirt, 14);
+    burstAt(p.x, p.y, "#B8813F", 14);
     sfx.drop();
     streak = 0;
     multiplier = 1;
-    if (burrowFill >= L.burrow) { endGame("dead"); return; }
+    // The burrow absorbs a few before it gives out, and that costs a life
+    if (holeFill >= L.hole) {
+      holeFill = 0;
+      lives--;
+      shake = 22;
+      flash = 0.6;
+      sfx.overrun();
+      if (lives <= 0) { endGame("dead"); return; }
+    }
   }
 
   refreshLabels();
@@ -788,10 +742,10 @@ function update(dt) {
   if (state === "playing" && remaining === 0 && chain.length === 0) {
     if (waveClearTimer <= 0) {
       waveClearTimer = 2.4;
-      const spare = Math.max(0, L.burrow - burrowFill);
+      const spare = Math.max(0, L.hole - holeFill);
       const bonus = (200 * wave + 120 * spare) * multiplier;
       score += bonus;
-      banner = { text: `WAVE ${wave} CLEARED`, sub: `+${bonus}`, life: 2.2, maxLife: 2.2 };
+      banner = { text: `LEVEL ${wave} HELD`, sub: `+${bonus}`, life: 2.2, maxLife: 2.2 };
       sfx.wave();
     } else {
       waveClearTimer -= dt;
@@ -814,10 +768,12 @@ function updateShots(dt) {
     if (dist <= step + R) {
       shots.splice(i, 1);
       t.squash = 1;
-      if (t.dead) popMarble(t);
+      if (t.dead) popAnt(t);
     } else {
-      s.x += (dx / dist) * step;
-      s.y += (dy / dist) * step;
+      s.dx = (dx / dist) * step;
+      s.dy = (dy / dist) * step;
+      s.x += s.dx;
+      s.y += s.dy;
     }
   }
 }
@@ -835,7 +791,7 @@ function updateParticles(dt) {
     if (p.life <= 0) { particles.splice(i, 1); continue; }
     p.x += p.vx * dt;
     p.y += p.vy * dt;
-    p.vy += 420 * dt;          // marbles fall; this is a cartoon, gravity is loud
+    p.vy += 420 * dt;          // debris falls; this is a cartoon, gravity is loud
     p.vx *= 1 - dt * 1.2;
   }
 }
@@ -856,18 +812,18 @@ function endGame(reason = "dead") {
   const total = typedCorrect + typedWrong;
   const acc = total ? Math.round((typedCorrect / total) * 100) : 100;
   const entry = {
-    score, wpm, acc, popped, cascaded, wave, streak: bestStreak,
+    score, wpm, acc, popped, cascaded, wave, streak: bestStreak, lives,
     time: Math.floor(elapsed),
     difficulty: settings.difficulty, wordSet: settings.wordSet, date: Date.now(),
   };
   const worth = typedCorrect > 0;
   const rank = worth ? recordScore(entry) : -1;
-  gameoverTitleEl.textContent = reason === "quit" ? "RUN ENDED" : "BURROW OVERRUN";
+  gameoverTitleEl.textContent = reason === "quit" ? "RUN ENDED" : "THE ANTS GOT IN";
   finalStatsEl.innerHTML = `
     <span class="label">Score</span><span class="value">${score}</span>
     <span class="label">Wave reached</span><span class="value">${wave}</span>
-    <span class="label">Marbles popped</span><span class="value">${popped}</span>
-    <span class="label">Popped by cascade</span><span class="value">${cascaded}</span>
+    <span class="label">Ants stopped</span><span class="value">${popped}</span>
+    <span class="label">Caught in cascades</span><span class="value">${cascaded}</span>
     <span class="label">WPM</span><span class="value">${wpm}</span>
     <span class="label">Accuracy</span><span class="value">${acc}%</span>
   `;
@@ -892,231 +848,178 @@ function renderScoreList(highlight) {
 }
 
 // ---- Drawing ----
-let frame = 0;
-function draw() {
-  const t = performance.now() / 1000;
-  frame++;
+const UI_CREAM = "#F6E7C3";
+// Plate colours sampled from assets.png, used to blank the specimen values the
+// panels ship with before the live figures are drawn over them.
+const SCORE_PLATE = "#FBDCAA";
+const LEVEL_PLATE = "#FADCAC";
+const COMBO_BADGE = "#301405";
+const UI_INK = "#5C4326";
 
-  // Gate weave: the frame never sat perfectly still in the projector
-  const wx = (frame % 3 === 0) ? (Math.random() - 0.5) * 2 : 0;
-  const wy = (frame % 3 === 0) ? (Math.random() - 0.5) * 2 : 0;
+let gopherMood = { pose: "gopherIdle", t: 0 };
+function setMood(pose, secs) {
+  // Cheering outranks everything; nothing should interrupt a cascade grin
+  if (gopherMood.t > 0 && gopherMood.pose === "gopherCheer" && pose !== "gopherCheer") return;
+  gopherMood.pose = pose;
+  gopherMood.t = secs;
+}
+
+function draw(dt) {
+  ctx.fillStyle = "#20361C";
+  ctx.fillRect(0, 0, W, H);
+
   ctx.save();
-  ctx.translate(wx, wy);
   if (shake > 0) ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
 
-  drawSky();
-  drawSun(t);
-  for (const c of clouds) drawCloud(c.x, c.y, c.s, t, c.ph);
-  drawHills();
-  drawTrack();
-  drawHole(t);
+  // The painting is the playfield; everything else sits on top of it
+  const bg = Sprites.images.bg;
+  if (bg) ctx.drawImage(bg, stage.x, stage.y, stage.w, stage.h);
+  else { ctx.fillStyle = "#8CC63F"; ctx.fillRect(stage.x, stage.y, stage.w, stage.h); }
 
   if (state === "playing" || state === "paused") drawGuide();
 
   if (state !== "menu") {
-    drawChain(t);
-    drawShots();
+    drawColumn();
+    drawBerries();
+    drawGopher();
     drawPops();
     drawParticles();
-    drawGopher(t);
   }
   ctx.restore();
 
   if (flash > 0) {
-    ctx.fillStyle = `rgba(255, 240, 210, ${flash * 0.5})`;
+    ctx.fillStyle = `rgba(255, 246, 214, ${flash * 0.45})`;
     ctx.fillRect(0, 0, W, H);
   }
-  filmGrain(frame);
-  filmLook();
-  if (state !== "menu") { drawBanner(); drawHUD(); }
+  if (state !== "menu") { drawHUD(); drawBanner(); }
 }
 
-function drawSky() {
-  const g = ctx.createLinearGradient(0, 0, 0, H * 0.7);
-  g.addColorStop(0, PAL.skyTop);
-  g.addColorStop(1, PAL.skyLow);
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, W, H);
-}
-
-function drawSun(t) {
-  const x = W * 0.085, y = H * 0.27, r = Math.min(W, H) * 0.055;
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.rotate(t * 0.12);
-  for (let i = 0; i < 12; i++) {
-    ctx.rotate(Math.PI * 2 / 12);
-    ctx.beginPath();
-    ctx.moveTo(0, -r * 1.24);
-    ctx.lineTo(r * 0.16, -r * 1.62);
-    ctx.lineTo(-r * 0.16, -r * 1.62);
-    ctx.closePath();
-    ink(PAL.sun, LW * 0.8);
-  }
-  ctx.restore();
-  circle(x, y, r); ink(PAL.sun);
-  pieEye(x - r * 0.33, y - r * 0.15, r * 0.19, 0.2, 0.1, false);
-  pieEye(x + r * 0.33, y - r * 0.15, r * 0.19, 0.2, 0.1, false);
-  ctx.beginPath();
-  ctx.arc(x, y + r * 0.12, r * 0.4, 0.25, Math.PI - 0.25);
-  ctx.strokeStyle = INK; ctx.lineWidth = LW; ctx.lineCap = "round"; ctx.stroke();
-}
-
-const CLOUD_BUMPS = [
-  { dx: -0.62, dy: 0, r: 0.44 }, { dx: -0.16, dy: -0.24, r: 0.56 },
-  { dx: 0.42, dy: -0.06, r: 0.46 }, { dx: 0.86, dy: 0.1, r: 0.34 },
-];
-function cloudPath(s, sq, inset) {
-  ctx.beginPath();
-  for (const b of CLOUD_BUMPS) {
-    ctx.moveTo(b.dx * s + b.r * s * sq - inset, b.dy * s);
-    ctx.arc(b.dx * s, b.dy * s, Math.max(0.5, b.r * s * sq - inset), 0, Math.PI * 2);
-  }
-  ctx.rect(-s * 0.62, -s * 0.02, s * 1.5, s * 0.42 - inset);
-}
-// Outline by filling twice: stroking the union would draw every buried arc
-function drawCloud(x, y, s, t, phase) {
-  const bob = Math.sin(t * 0.9 + phase) * s * 0.05;
-  const sq = 1 + Math.sin(t * 1.3 + phase) * 0.04;
-  ctx.save();
-  ctx.translate(x, y + bob);
-  cloudPath(s, sq, 0); ctx.fillStyle = INK; ctx.fill();
-  cloudPath(s, sq, LW * 1.7); ctx.fillStyle = PAL.cream; ctx.fill();
-  ctx.restore();
-}
-
-function drawHills() {
-  const base = H * 0.7;
-  for (const L of [
-    { y: base - H * 0.1, c: PAL.hillFar, amp: H * 0.05, n: 3, off: 0 },
-    { y: base + H * 0.02, c: PAL.hillMid, amp: H * 0.065, n: 2, off: 1.4 },
-  ]) {
-    ctx.beginPath();
-    ctx.moveTo(-10, H + 10);
-    ctx.lineTo(-10, L.y);
-    const seg = (W + 20) / L.n;
-    for (let i = 0; i < L.n; i++) {
-      const x0 = -10 + i * seg;
-      ctx.quadraticCurveTo(x0 + seg * 0.5, L.y - L.amp * (1 + 0.25 * Math.sin(i + L.off)), x0 + seg, L.y);
-    }
-    ctx.lineTo(W + 10, H + 10);
-    ctx.closePath();
-    ink(L.c);
-  }
-  ctx.beginPath();
-  ctx.moveTo(-10, H + 10);
-  ctx.lineTo(-10, base + H * 0.11);
-  ctx.quadraticCurveTo(W * 0.5, base + H * 0.05, W + 10, base + H * 0.11);
-  ctx.lineTo(W + 10, H + 10);
-  ctx.closePath();
-  ink(PAL.hillNear);
-}
-
-function drawTrack() {
-  ctx.beginPath();
-  for (let i = 0; i < pathPts.length; i += 6) {
-    const p = pathPts[i];
-    if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
-  }
-  const last = pathPts[pathPts.length - 1];
-  ctx.lineTo(last.x, last.y);
-  ctx.strokeStyle = INK; ctx.lineWidth = R * 2.5; ctx.lineCap = "round"; ctx.lineJoin = "round";
-  ctx.stroke();
-  ctx.strokeStyle = PAL.dirt; ctx.lineWidth = R * 2.2; ctx.stroke();
-  ctx.strokeStyle = "rgba(156,106,56,0.4)"; ctx.lineWidth = R * 0.7; ctx.stroke();
-}
-
-function drawHole(t) {
-  const p = pointAtDist(pathLen);
-  ellipse(p.x, p.y + R * 0.3, R * 2.1, R * 1.05); ink(PAL.dirtDark);
-  ellipse(p.x, p.y, R * 1.45, R * 0.78); ink("#20150E");
-  ctx.beginPath();
-  ctx.ellipse(p.x, p.y, R * 1.1, R * 0.56, 0, Math.PI * 1.05, Math.PI * 1.95);
-  ctx.strokeStyle = "rgba(255,243,214,0.25)"; ctx.lineWidth = LW; ctx.stroke();
-}
-
-function drawMarble(x, y, r, colour, spin, squash) {
-  const sx = 1 + squash * 0.22, sy = 1 - squash * 0.22;
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.scale(sx, sy);
-  circle(0, 0, r); ink(colour);
-  ctx.save();
-  ctx.beginPath(); ctx.arc(0, 0, r - LW * 0.4, 0, Math.PI * 2); ctx.clip();
-  ctx.rotate(spin);
-  ellipse(0, 0, r * 0.72, r * 0.3); ctx.fillStyle = PAL.cream; ctx.fill();
-  ellipse(0, 0, r * 0.4, r * 0.16); ctx.fillStyle = "rgba(255,255,255,0.85)"; ctx.fill();
-  ctx.restore();
-  ellipse(-r * 0.34, -r * 0.38, r * 0.24, r * 0.16, -0.5);
-  ctx.fillStyle = "rgba(255,255,255,0.9)"; ctx.fill();
-  ctx.restore();
-}
-
-function drawChain(t) {
-  // Back to front, so nearer marbles overlap the ones behind them
+// Ants walk the painted route, facing the way they are going
+function drawColumn() {
+  const antH = R * 2.5;
   for (let i = chain.length - 1; i >= 0; i--) {
     const m = chain[i];
-    if (m.d < -R) continue;
+    if (m.d < -R * 2) continue;
     const p = pointAtDist(m.d);
-    drawMarble(p.x, p.y, R, MARBLE_COLOURS[m.hue].fill, m.spin, m.squash);
+    const head = headingAtDist(m.d);
+    // Sheet art faces left, so mirror when the route runs right
+    const flip = head.x > 0;
+    const bob = Math.sin(m.spin * 6) * antH * 0.03;
+    const squash = 1 + m.squash * 0.18;
+    ctx.save();
+    ctx.translate(p.x, p.y + bob);
+    ctx.scale(1, squash);
+    ctx.translate(-p.x, -(p.y + bob));
+    Sprites.draw(ctx, "ant" + (m.hue % 6), p.x, p.y + bob, antH, flip);
+    ctx.restore();
   }
   for (let i = chain.length - 1; i >= 0; i--) {
-    const m = chain[i];
-    if (!targetable(m)) continue;
-    drawLabel(m, i, m === lockTarget);
+    if (targetable(chain[i])) drawWordTag(chain[i], i, chain[i] === lockTarget);
   }
 }
 
-function drawLabel(m, index, locked) {
+// A speech bubble drawn to match the sheet's tag, but sized to the word.
+// Lays down a rounded-rect path; the caller decides whether to fill or stroke.
+function roundRect(x, y, w, h, r) {
+  const rr = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + rr, y);
+  ctx.arcTo(x + w, y, x + w, y + h, rr);
+  ctx.arcTo(x + w, y + h, x, y + h, rr);
+  ctx.arcTo(x, y + h, x, y, rr);
+  ctx.arcTo(x, y, x + w, y, rr);
+  ctx.closePath();
+}
+
+// The sheet's tag has "ant" baked into it, so it cannot be reused directly.
+function drawWordTag(m, index, locked) {
   const p = pointAtDist(m.d);
   const n = normalAtDist(m.d);
-  // Alternate which side of the track the tag sits on, or they collide
-  const side = index % 2 === 0 ? 1 : -1;
-  const fs = Math.max(11, R * 0.62);
+  const side = index % 2 === 0 ? -1 : 1;
+  const fs = Math.max(13, R * 0.72);
   ctx.font = `bold ${fs}px ${MONO}`;
-  const totalW = ctx.measureText(m.word).width;
-  const padX = 6, padY = 4;
-  const bw = totalW + padX * 2, bh = fs + padY * 2;
-  let bx = p.x + n.x * side * (R + bh * 0.75) - bw / 2;
-  let by = p.y + n.y * side * (R + bh * 0.75) - bh / 2;
-  bx = Math.max(4, Math.min(W - bw - 4, bx));
-  by = Math.max(4, Math.min(H - bh - 4, by));
+  const tw = ctx.measureText(m.word).width;
+  const padX = fs * 0.55, padY = fs * 0.38;
+  const bw = tw + padX * 2, bh = fs + padY * 2;
+  const off = R * 1.7 + bh * 0.5;
+  let bx = p.x + n.x * side * off - bw / 2;
+  let by = p.y + n.y * side * off - bh / 2;
+  bx = Math.max(stage.x + 4, Math.min(stage.x + stage.w - bw - 4, bx));
+  by = Math.max(stage.y + 4, Math.min(stage.y + stage.h - bh - 4, by));
 
-  roundRect(bx, by, bw, bh, 5);
-  ink(locked ? PAL.sun : PAL.cream, LW * 0.8);
+  ctx.save();
+  ctx.shadowColor = "rgba(0,0,0,0.3)";
+  ctx.shadowBlur = fs * 0.35;
+  ctx.shadowOffsetY = fs * 0.12;
+  roundRect(bx, by, bw, bh, bh * 0.32);
+  ctx.fillStyle = locked ? "#FFF0BC" : UI_CREAM;
+  ctx.fill();
+  ctx.restore();
+
+  // Tail pointing back at the ant it belongs to
+  const cx = bx + bw / 2, cy = by + bh / 2;
+  const a = Math.atan2(p.y - cy, p.x - cx);
+  ctx.beginPath();
+  ctx.moveTo(cx + Math.cos(a - 0.42) * bh * 0.44, cy + Math.sin(a - 0.42) * bh * 0.44);
+  ctx.lineTo(p.x - Math.cos(a) * R * 0.7, p.y - Math.sin(a) * R * 0.7);
+  ctx.lineTo(cx + Math.cos(a + 0.42) * bh * 0.44, cy + Math.sin(a + 0.42) * bh * 0.44);
+  ctx.closePath();
+  ctx.fillStyle = locked ? "#FFF0BC" : UI_CREAM;
+  ctx.fill();
+
+  roundRect(bx, by, bw, bh, bh * 0.32);
+  ctx.strokeStyle = locked ? "#C8912B" : "#B99A63";
+  ctx.lineWidth = Math.max(1.6, fs * 0.11);
+  ctx.stroke();
 
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
   let x = bx + padX;
-  const ly = by + fs + padY - 3;
+  const ly = by + fs + padY - fs * 0.2;
   const done = m.word.slice(0, m.typed);
   const next = m.word.slice(m.typed, m.typed + 1);
   const rest = m.word.slice(m.typed + 1);
-  if (done) { ctx.fillStyle = "#3E8B3E"; ctx.fillText(done, x, ly); x += ctx.measureText(done).width; }
+  if (done) { ctx.fillStyle = "#4C9A2A"; ctx.fillText(done, x, ly); x += ctx.measureText(done).width; }
   if (next) {
     const nw = ctx.measureText(next).width;
     if (locked) {
-      ctx.fillStyle = "rgba(214,69,60,0.28)";
+      ctx.fillStyle = "rgba(216,53,42,0.22)";
       roundRect(x - 2, ly - fs + 2, nw + 4, fs + 2, 3);
       ctx.fill();
     }
-    ctx.fillStyle = INK; ctx.fillText(next, x, ly); x += nw;
+    ctx.fillStyle = UI_INK; ctx.fillText(next, x, ly); x += nw;
   }
-  if (rest) { ctx.fillStyle = "rgba(46,32,24,0.72)"; ctx.fillText(rest, x, ly); }
+  if (rest) { ctx.fillStyle = "rgba(92,67,38,0.72)"; ctx.fillText(rest, x, ly); }
 }
 
-function drawShots() {
-  for (const s of shots) drawMarble(s.x, s.y, R * 0.42, PAL.cream, s.spin, 0);
+function drawBerries() {
+  for (const b of shots) {
+    // A little spark trail so the shot reads at speed
+    ctx.save();
+    ctx.globalAlpha = 0.5;
+    ctx.strokeStyle = "#FFE9A8";
+    ctx.lineWidth = R * 0.14;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(b.x - (b.dx || 0) * 0.05, b.y - (b.dy || 0) * 0.05);
+    ctx.lineTo(b.x, b.y);
+    ctx.stroke();
+    ctx.restore();
+    Sprites.draw(ctx, "berry" + ((b.hue ?? 0) % 6), b.x, b.y, R * 1.15);
+  }
+}
+
+function drawGopher() {
+  const g = gopherPos();
+  const h = stage.h * 0.23;
+  Sprites.draw(ctx, gopherMood.pose, g.x, g.y - h * 0.5, h, false);
 }
 
 function drawPops() {
   for (const p of pops) {
     const k = 1 - p.life / p.maxLife;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, p.r * (0.9 + k * 1.5), 0, Math.PI * 2);
-    ctx.strokeStyle = `rgba(255, 243, 214, ${(1 - k) * 0.9})`;
-    ctx.lineWidth = LW * 1.6 * (1 - k) + 0.5;
-    ctx.stroke();
+    const puff = ["puffA", "puffB", "puffC", "puffStars"][p.variant % 4];
+    Sprites.draw(ctx, puff, p.x, p.y, R * (2.2 + k * 1.9), false, Math.max(0, 1 - k));
   }
 }
 
@@ -1124,59 +1027,12 @@ function drawParticles() {
   for (const p of particles) {
     const k = Math.max(0, p.life / p.maxLife);
     ctx.globalAlpha = k;
-    circle(p.x, p.y, p.r);
-    ctx.fillStyle = p.colour; ctx.fill();
-    ctx.strokeStyle = INK; ctx.lineWidth = LW * 0.5; ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fillStyle = p.colour;
+    ctx.fill();
   }
   ctx.globalAlpha = 1;
-}
-
-function drawGopher(t) {
-  const g = gopherPos();
-  const s = R * 2.5;
-  const bob = Math.sin(t * 2.4) * s * 0.05;
-  const squash = 1 + Math.sin(t * 2.4) * 0.05;
-  const blink = (t % 3.4) > 3.16;
-  const throwing = gopherThrow > 0;
-
-  // Mound of fresh dirt he is standing in
-  ctx.beginPath();
-  ctx.moveTo(g.x - s * 1.4, g.y + s * 0.34);
-  ctx.quadraticCurveTo(g.x - s, g.y - s * 0.16, g.x, g.y - s * 0.18);
-  ctx.quadraticCurveTo(g.x + s, g.y - s * 0.16, g.x + s * 1.4, g.y + s * 0.34);
-  ctx.closePath();
-  ink(PAL.dirt);
-
-  ctx.save();
-  ctx.translate(g.x, g.y - s * 0.3 + bob);
-  ellipse(0, s * 0.12, s * 0.6 * squash, s * 0.56 / squash); ink(PAL.fur);
-  ellipse(0, s * 0.2, s * 0.36, s * 0.36); ink(PAL.belly, LW * 0.7);
-
-  // Throwing arm snaps forward when a marble is flicked
-  const arm = throwing ? -0.55 : Math.sin(t * 3.1) * 0.16;
-  hose(s * 0.46, -s * 0.05, s * 0.95, s * 0.2 + arm * s, s * 1.0, s * 0.28 + arm * s * 1.4, s * 0.16, PAL.fur);
-  hose(-s * 0.46, -s * 0.05, -s * 0.92, s * 0.28, -s * 0.86, s * 0.36, s * 0.16, PAL.fur);
-  circle(s * 1.02, s * 0.32 + arm * s * 1.4, s * 0.19); ink(PAL.white, LW * 0.85);
-  circle(-s * 0.88, s * 0.4, s * 0.19); ink(PAL.white, LW * 0.85);
-
-  ellipse(0, -s * 0.62, s * 0.6 / squash, s * 0.55 * squash); ink(PAL.fur);
-  circle(-s * 0.5, -s * 1.0, s * 0.18); ink(PAL.furDark, LW * 0.85);
-  circle(s * 0.5, -s * 1.0, s * 0.18); ink(PAL.furDark, LW * 0.85);
-  const look = Math.sin(t * 0.7);
-  pieEye(-s * 0.23, -s * 0.74, s * 0.18, look, -0.1, blink);
-  pieEye(s * 0.23, -s * 0.74, s * 0.18, look, -0.1, blink);
-  ellipse(0, -s * 0.4, s * 0.33, s * 0.24); ink(PAL.belly, LW * 0.85);
-  ellipse(0, -s * 0.5, s * 0.1, s * 0.08); ink(INK, LW * 0.6);
-  roundRect(-s * 0.13, -s * 0.38, s * 0.11, s * 0.19, s * 0.03); ink(PAL.white, LW * 0.7);
-  roundRect(s * 0.02, -s * 0.38, s * 0.11, s * 0.19, s * 0.03); ink(PAL.white, LW * 0.7);
-  ctx.strokeStyle = INK; ctx.lineWidth = LW * 0.55; ctx.lineCap = "round";
-  for (let i = -1; i <= 1; i++) for (const dir of [-1, 1]) {
-    ctx.beginPath();
-    ctx.moveTo(dir * s * 0.27, -s * 0.44 + i * s * 0.08);
-    ctx.quadraticCurveTo(dir * s * 0.52, -s * 0.48 + i * s * 0.12, dir * s * 0.68, -s * 0.44 + i * s * 0.15);
-    ctx.stroke();
-  }
-  ctx.restore();
 }
 
 function drawGuide() {
@@ -1192,19 +1048,179 @@ function drawGuide() {
     showSpace: false,
     wrong: wrongKey.t > 0 ? wrongKey.key : null,
     wrongAlpha: Math.max(0, wrongKey.t / WRONG_FLASH) * vis,
-    opacity: 0.15 * vis, highlight: 0.8 * vis, mono: MONO,
+    // The other three games lay the guide over near-black space, where a faint
+    // white reads cleanly. Here it sits over a sunlit painting, so it is drawn
+    // in dark ink and carried a little heavier — white at 16% simply vanishes
+    // into the grass, and a busy background swallows a light touch besides.
+    ink: "36,24,10",
+    opacity: 0.26 * vis, highlight: 0.95 * vis, mono: MONO,
   });
 }
 
-// Cartoon title cards: cream lettering with a heavy ink shadow
-function cardText(text, x, y, size, fill) {
+// ---- HUD ----
+// Panels come from the sheet, but each ships with a value painted into it, so
+// the live figure is drawn over a patch of the panel's own cream.
+function panelText(text, x, y, size, colour, align = "center") {
   ctx.font = `bold ${size}px ${MONO}`;
+  ctx.textAlign = align;
+  ctx.textBaseline = "middle";
   ctx.lineJoin = "round";
-  ctx.strokeStyle = INK;
-  ctx.lineWidth = size * 0.22;
+  ctx.strokeStyle = "rgba(60,40,20,0.55)";
+  ctx.lineWidth = size * 0.16;
   ctx.strokeText(text, x, y);
-  ctx.fillStyle = fill;
+  ctx.fillStyle = colour;
   ctx.fillText(text, x, y);
+}
+
+function heart(x, y, s, filled) {
+  ctx.beginPath();
+  ctx.moveTo(x, y + s * 0.34);
+  ctx.bezierCurveTo(x - s * 1.1, y - s * 0.5, x - s * 0.28, y - s * 0.98, x, y - s * 0.36);
+  ctx.bezierCurveTo(x + s * 0.28, y - s * 0.98, x + s * 1.1, y - s * 0.5, x, y + s * 0.34);
+  ctx.closePath();
+  ctx.fillStyle = filled ? "#E23B33" : "rgba(90,70,50,0.35)";
+  ctx.fill();
+  ctx.strokeStyle = "rgba(70,45,25,0.8)";
+  ctx.lineWidth = Math.max(1.4, s * 0.14);
+  ctx.stroke();
+}
+
+function segmentBar(x, y, w, h, frac, colour) {
+  roundRect(x, y, w, h, h * 0.34);
+  ctx.fillStyle = "rgba(60,44,26,0.55)";
+  ctx.fill();
+  const segs = 9;
+  const gap = w * 0.012;
+  const sw = (w - gap * (segs + 1)) / segs;
+  const lit = Math.round(frac * segs);
+  for (let i = 0; i < segs; i++) {
+    roundRect(x + gap + i * (sw + gap), y + h * 0.16, sw, h * 0.68, h * 0.16);
+    ctx.fillStyle = i < lit ? colour : "rgba(255,255,255,0.10)";
+    ctx.fill();
+  }
+}
+
+function drawHUD() {
+  const L = currentLevel();
+  const u = stage.h * 0.001;              // scale everything to the stage
+  const top = stage.y + stage.h * 0.012;
+  const panelH = stage.h * 0.105;
+
+  // Score, top left
+  const spX = stage.x + stage.w * 0.012;
+  const sp = Sprites.drawAt(ctx, "scorePanel", spX, top, panelH);
+  // The sheet ships a specimen figure printed on the plate; blank it in the
+  // plate's own cream before the live score goes down, leaving the star.
+  ctx.fillStyle = SCORE_PLATE;
+  ctx.fillRect(spX + sp.w * 0.20, top + panelH * 0.32, sp.w * 0.75, panelH * 0.58);
+  panelText(score.toLocaleString(), spX + sp.w * 0.58,
+            top + panelH * 0.62, panelH * 0.30, "#5C4326");
+
+  // Combo, beside it
+  const cx0 = stage.x + stage.w * 0.012 + sp.w + stage.w * 0.012;
+  const cp = Sprites.drawAt(ctx, "comboPanel", cx0, top, panelH * 0.92);
+  const into = multiplier >= MAX_MULT ? 1 : (streak % STREAK_PER_MULT) / STREAK_PER_MULT;
+  segmentBar(cx0 + cp.w * 0.06, top + panelH * 0.46, cp.w * 0.64, panelH * 0.26, into, "#7FD13B");
+  ctx.fillStyle = COMBO_BADGE;
+  ctx.fillRect(cx0 + cp.w * 0.735, top + panelH * 0.40 * 0.92,
+               cp.w * 0.205, panelH * 0.92 * 0.38);
+  panelText("x" + multiplier, cx0 + cp.w * 0.85, top + panelH * 0.585, panelH * 0.28, "#FFF3D6");
+
+  // Lives and level, top right
+  const lvW = stage.w * 0.075;
+  const lvX = stage.x + stage.w - lvW - stage.w * 0.012;
+  const lvH = panelH * 1.05;
+  const lvBadge = Sprites.drawAt(ctx, "levelBadge", lvX, top, lvH);
+  ctx.fillStyle = LEVEL_PLATE;
+  ctx.beginPath();
+  ctx.ellipse(lvX + lvBadge.w * 0.503, top + lvH * 0.64,
+              lvBadge.w * 0.30, lvH * 0.26, 0, 0, Math.PI * 2);
+  ctx.fill();
+  panelText(String(Math.max(1, wave)), lvX + lvBadge.w * 0.503,
+            top + lvH * 0.645, panelH * 0.34, "#5C4326");
+
+  const lp = Sprites.frames.livesPanel;
+  if (lp) {
+    const lh = panelH * 0.82;
+    const lw = lp.w / lp.h * lh;
+    const lx = lvX - lw - stage.w * 0.012;
+    Sprites.drawAt(ctx, "livesPanel", lx, top + panelH * 0.08, lh);
+    // Cover the painted hearts, then draw the live count
+    ctx.fillStyle = UI_CREAM;
+    roundRect(lx + lw * 0.1, top + panelH * 0.42, lw * 0.8, lh * 0.42, lh * 0.14);
+    ctx.fill();
+    for (let i = 0; i < LIVES_START; i++) {
+      heart(lx + lw * (0.26 + i * 0.24), top + panelH * 0.64, lh * 0.19, i < lives);
+    }
+  }
+
+  // Burrow health, bottom right — how much the hole can still take
+  const hp = Sprites.frames.holePanel;
+  if (hp) {
+    const hh = stage.h * 0.11;
+    const hw = hp.w / hp.h * hh;
+    const hx = stage.x + stage.w - hw - stage.w * 0.015;
+    const hy = stage.y + stage.h - hh - stage.h * 0.02;
+    Sprites.drawAt(ctx, "holePanel", hx, hy, hh);
+    segmentBar(hx + hw * 0.14, hy + hh * 0.52, hw * 0.72, hh * 0.2,
+               1 - holeFill / L.hole, "#7FD13B");
+  }
+
+  // The live words, bottom left: a readout of what is currently targetable,
+  // so the four in play can be seen without scanning the field.
+  const tp = Sprites.frames.typePanel;
+  if (tp) {
+    const th = stage.h * 0.13;
+    const tw = tp.w / tp.h * th;
+    const tx = stage.x + stage.w * 0.015;
+    const ty = stage.y + stage.h - th - stage.h * 0.02;
+    Sprites.drawAt(ctx, "typePanel", tx, ty, th);
+    ctx.fillStyle = UI_CREAM;
+    roundRect(tx + tw * 0.045, ty + th * 0.42, tw * 0.91, th * 0.44, th * 0.1);
+    ctx.fill();
+
+    const live = chain.filter(m => targetable(m));
+    const fs = th * 0.27;
+    ctx.font = `bold ${fs}px ${MONO}`;
+    const gap = fs * 0.9;
+    let total = 0;
+    for (const m of live) total += ctx.measureText(m.word).width + gap;
+    let x = tx + tw / 2 - (total - gap) / 2;
+    const y = ty + th * 0.65;
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    for (const m of live) {
+      const locked = m === lockTarget;
+      const done = m.word.slice(0, m.typed);
+      const rest = m.word.slice(m.typed);
+      if (done) { ctx.fillStyle = "#4C9A2A"; ctx.fillText(done, x, y); x += ctx.measureText(done).width; }
+      ctx.fillStyle = locked ? UI_INK : "rgba(92,67,38,0.62)";
+      ctx.fillText(rest, x, y);
+      x += ctx.measureText(rest).width;
+      // underline the one being typed
+      if (locked) {
+        const wStart = x - ctx.measureText(m.word).width;
+        ctx.strokeStyle = "#C8912B";
+        ctx.lineWidth = Math.max(1.5, fs * 0.08);
+        ctx.beginPath();
+        ctx.moveTo(wStart, y + fs * 0.62);
+        ctx.lineTo(x, y + fs * 0.62);
+        ctx.stroke();
+      }
+      x += gap;
+    }
+  }
+
+  // Typing stats, centre bottom edge
+  const minutes = Math.max(elapsed / 60, 1 / 60);
+  const wpm = Math.round((typedCorrect / 5) / minutes);
+  const tot = typedCorrect + typedWrong;
+  const acc = tot ? Math.round((typedCorrect / tot) * 100) : 100;
+  panelText(`WPM ${wpm}   ACC ${acc}%   ${L.label}   ${currentWordSet().label.toUpperCase()}`,
+            stage.x + stage.w / 2, stage.y + stage.h - stage.h * 0.012,
+            stage.h * 0.022, "rgba(255,246,214,0.92)");
+  panelText("ESC  pause / settings", stage.x + stage.w - stage.w * 0.012,
+            stage.y + stage.h * 0.012, stage.h * 0.02, "rgba(255,246,214,0.7)", "right");
 }
 
 function drawBanner() {
@@ -1213,53 +1229,9 @@ function drawBanner() {
   const alpha = k > 0.8 ? (1 - k) / 0.2 : Math.min(1, k / 0.35);
   ctx.save();
   ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
-  ctx.textAlign = "center";
-  cardText(banner.text, W / 2, H * 0.34, Math.min(46, W * 0.06), PAL.sun);
-  cardText(banner.sub, W / 2, H * 0.34 + 30, Math.min(16, W * 0.022), PAL.cream);
+  panelText(banner.text, stage.x + stage.w / 2, stage.y + stage.h * 0.36, stage.h * 0.075, "#FFD34D");
+  panelText(banner.sub, stage.x + stage.w / 2, stage.y + stage.h * 0.43, stage.h * 0.028, "#FFF3D6");
   ctx.restore();
-  ctx.textAlign = "left";
-}
-
-function drawHUD() {
-  const pad = 20;
-  ctx.textAlign = "left";
-  ctx.textBaseline = "alphabetic";
-  cardText(String(score), pad, 44, 30, PAL.sun);
-  ctx.font = `600 12px ${MONO}`;
-  ctx.fillStyle = "rgba(46,32,24,0.75)";
-  ctx.fillText("SCORE", pad + 2, 58);
-
-  if (multiplier > 1 || streak > 0) {
-    cardText(`x${multiplier}`, pad, 84, 16, multiplier > 1 ? PAL.red : PAL.cream);
-    const bx = pad + 40, bw = 90, bh = 6, by = 74;
-    const into = multiplier >= MAX_MULT ? 1 : (streak % STREAK_PER_MULT) / STREAK_PER_MULT;
-    roundRect(bx, by, bw, bh, 3); ink("rgba(255,243,214,0.35)", LW * 0.5);
-    roundRect(bx, by, Math.max(2, bw * into), bh, 3); ink(PAL.red, LW * 0.5);
-  }
-
-  ctx.textAlign = "center";
-  cardText(`WAVE ${Math.max(1, wave)}`, W / 2, 40, 20, PAL.cream);
-
-  // How full the burrow is: marbles the gopher has already let through
-  const L = currentLevel();
-  ctx.textAlign = "right";
-  cardText("BURROW", W - pad, 30, 13, PAL.cream);
-  const cw = 15, gap = 5;
-  for (let i = 0; i < L.burrow; i++) {
-    const x = W - pad - (L.burrow - 1 - i) * (cw + gap) - cw / 2;
-    circle(x, 48, cw * 0.45);
-    ink(i < burrowFill ? PAL.red : "rgba(255,243,214,0.28)", LW * 0.7);
-  }
-
-  const minutes = Math.max(elapsed / 60, 1 / 60);
-  const wpm = Math.round((typedCorrect / 5) / minutes);
-  const total = typedCorrect + typedWrong;
-  const acc = total ? Math.round((typedCorrect / total) * 100) : 100;
-  ctx.textAlign = "left";
-  cardText(`WPM ${wpm}   ACC ${acc}%   ${currentLevel().label}   ${currentWordSet().label.toUpperCase()}`,
-           pad, H - 18, 13, PAL.cream);
-  ctx.textAlign = "right";
-  cardText("ESC  pause / settings", W - pad, H - 18, 13, "rgba(255,243,214,0.7)");
   ctx.textAlign = "left";
 }
 
@@ -1322,6 +1294,9 @@ window.addEventListener("pointerdown", () => { ensureAudio(); startMusic(); });
 resize();
 resetGame();
 syncSettingsUI();
+
+// Nothing can be drawn until the sheets are keyed, so the loop waits on them
+Sprites.load().then(() => { resize(); });
 
 // ---- Main loop ----
 // Hybrid scheduler: rAF when it's firing, setTimeout fallback for occluded

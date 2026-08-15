@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Type Arcade</title>
   <meta name="description" content="Arcade games that teach you to touch type.">
-  <link rel="stylesheet" href="hub.css?v=6">
+  <link rel="stylesheet" href="hub.css?v=10">
 </head>
 <body>
   <div class="stars" aria-hidden="true"></div>
@@ -176,35 +176,49 @@
 
     <a class="card card-burrow" href="burrow/">
       <div class="art" aria-hidden="true">
-        <!-- Marbles creeping down the path to the gopher's hole, c. 1932 -->
+        <!-- Ants marching down the garden trail to the gopher's burrow -->
         <svg viewBox="0 0 200 120" role="img">
-          <g stroke="#2E2018" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
-            <path d="M-6 96 Q40 78 96 92 Q150 106 206 88 L206 124 L-6 124 Z" fill="#6FA84B"/>
-            <path d="M2 34 Q60 18 100 46 Q140 74 186 62" fill="none" stroke="#2E2018" stroke-width="20"/>
-            <path d="M2 34 Q60 18 100 46 Q140 74 186 62" fill="none" stroke="#C08A4E" stroke-width="15"/>
-            <g stroke-width="2.6">
-              <circle cx="28" cy="26" r="8" fill="#D6453C"/>
-              <circle cx="52" cy="22" r="8" fill="#D6453C"/>
-              <circle cx="76" cy="29" r="8" fill="#3C7FD6"/>
-              <circle cx="98" cy="45" r="8" fill="#D6453C"/>
-              <circle cx="118" cy="59" r="8" fill="#4FB050"/>
-              <circle cx="140" cy="67" r="8" fill="#F0A62E"/>
-            </g>
-            <ellipse cx="182" cy="84" rx="19" ry="9" fill="#9C6A38"/>
-            <ellipse cx="182" cy="81" rx="13" ry="6" fill="#20150E"/>
-            <g transform="translate(146,80)">
-              <ellipse cx="0" cy="4" rx="17" ry="9" fill="#C08A4E"/>
-              <ellipse cx="0" cy="-6" rx="12" ry="11" fill="#D2985A"/>
-              <circle cx="-9" cy="-16" r="4" fill="#B87C42"/>
-              <circle cx="9" cy="-16" r="4" fill="#B87C42"/>
-              <g stroke-width="2.2">
-                <circle cx="-5" cy="-9" r="4" fill="#FFFDF2"/>
-                <circle cx="5" cy="-9" r="4" fill="#FFFDF2"/>
+          <defs>
+            <!-- One ant; each use is wrapped in a g that supplies its colour.
+                 Three blobs and a pair of antennae is all that survives at card
+                 size — legs and an eye only muddy it into a dark smudge. -->
+            <g id="ant">
+              <path d="M1 -9 L-3 -15 M6 -9 L11 -14" stroke="#2A1D0C" stroke-width="1.8"
+                    fill="none" stroke-linecap="round"/>
+              <g stroke="#2A1D0C" stroke-width="1.8">
+                <ellipse cx="-8" cy="0" rx="6.6" ry="5.8"/>
+                <circle cx="1" cy="-2" r="4.4"/>
+                <circle cx="9" cy="-6" r="5.2"/>
               </g>
-              <circle cx="-5" cy="-8" r="1.9" fill="#2E2018" stroke="none"/>
-              <circle cx="5" cy="-8" r="1.9" fill="#2E2018" stroke="none"/>
-              <ellipse cx="0" cy="-1" rx="6" ry="4" fill="#F4DDAE"/>
-              <ellipse cx="0" cy="-3" rx="2" ry="1.5" fill="#2E2018" stroke="none"/>
+            </g>
+          </defs>
+          <g stroke="#2A1D0C" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round">
+            <rect x="-6" y="-6" width="212" height="132" fill="#8DC63F" stroke="none"/>
+            <path d="M-6 28 Q54 10 100 40 Q142 66 176 76" fill="none" stroke="#2A1D0C" stroke-width="24"/>
+            <path d="M-6 28 Q54 10 100 40 Q142 66 176 76" fill="none" stroke="#D8A05A" stroke-width="19"/>
+            <!-- the burrow they are heading for, at the end of the trail -->
+            <ellipse cx="176" cy="78" rx="19" ry="10" fill="#B8813F"/>
+            <ellipse cx="176" cy="76" rx="12" ry="6" fill="#241505"/>
+            <g fill="#D8352A"><use href="#ant" transform="translate(6,26) rotate(-9)"/></g>
+            <g fill="#E8752A"><use href="#ant" transform="translate(36,21) rotate(-2)"/></g>
+            <g fill="#2E6FD0"><use href="#ant" transform="translate(66,24) rotate(12)"/></g>
+            <g fill="#E8B31C"><use href="#ant" transform="translate(92,34) rotate(24)"/></g>
+            <g fill="#4E9E32"><use href="#ant" transform="translate(114,47) rotate(28)"/></g>
+            <g fill="#8B4FB0"><use href="#ant" transform="translate(122,51) rotate(26)"/></g>
+            <!-- the gopher, dug in between them and the hole -->
+            <g transform="translate(134,90) scale(1.25)">
+              <ellipse cx="0" cy="6" rx="15" ry="8" fill="#8A5A2B"/>
+              <ellipse cx="0" cy="-5" rx="12" ry="11" fill="#A9713A"/>
+              <circle cx="-9" cy="-15" r="4" fill="#8A5A2B"/>
+              <circle cx="9" cy="-15" r="4" fill="#8A5A2B"/>
+              <g stroke-width="2">
+                <circle cx="-5" cy="-8" r="4" fill="#FFFDF2"/>
+                <circle cx="5" cy="-8" r="4" fill="#FFFDF2"/>
+              </g>
+              <circle cx="-4" cy="-7" r="1.9" fill="#2A1D0C" stroke="none"/>
+              <circle cx="6" cy="-7" r="1.9" fill="#2A1D0C" stroke="none"/>
+              <ellipse cx="0" cy="0" rx="6" ry="4" fill="#F0D3A0"/>
+              <ellipse cx="0" cy="-2" rx="2" ry="1.5" fill="#2A1D0C" stroke="none"/>
             </g>
           </g>
         </svg>
@@ -212,12 +226,13 @@
       <div class="body">
         <h2>Type Burrow <span class="badge">NEW</span></h2>
         <p class="genre">Marble popper</p>
-        <p class="desc">Marbles creep toward a gopher's hole. Popping one closes the
-          line &mdash; land three of a colour together and they burst too.</p>
+        <p class="desc">A column of ants marches on the gopher's burrow. Typing one
+          away closes the column &mdash; land three of a colour together and they
+          scatter too.</p>
         <ul class="tags">
           <li>Cascades</li>
           <li>Read, don't rush</li>
-          <li>1930s cartoon</li>
+          <li>Painted garden</li>
         </ul>
         <span class="play">Play &rarr;</span>
       </div>
@@ -226,8 +241,8 @@
 
   <section class="drills">
     <h3>Built for practice</h3>
-    <p>Both games share the same word sets, so you can drill a specific part of
-      the keyboard and then take it into either game.</p>
+    <p>All four games share the same word sets, so you can drill a specific part of
+      the keyboard and then take it into any of them.</p>
     <ul>
       <li><strong>Home row</strong> &mdash; anchor your fingers on asdf&nbsp;jkl;</li>
       <li><strong>Left hand</strong> / <strong>Right hand</strong> &mdash; isolate one side</li>

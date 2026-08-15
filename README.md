@@ -36,15 +36,19 @@ decision.
 
 ### Type Burrow — marble popper
 
-A line of marbles creeps down a garden path toward a gopher's hole, drawn as a
-1932 cartoon. Typing a marble's word pops it and the line closes the gap — and
-if that brings three of a colour together they burst too, which can cascade.
-Marbles that reach the hole fill the burrow; fill it and the gopher is overrun.
+A column of ants marches down a garden trail toward a gopher's burrow. Typing an
+ant's word sends a berry after it and the column closes the gap — and if that
+brings three of a colour together they scatter too, which can cascade. Ants that
+reach the burrow wear it down; when it gives out you lose one of three lives.
 
-Only the marbles nearest the hole carry words, so targeting is never ambiguous;
-the rest show their colour, which is what you plan on. Popping the front marble
-can never cascade, because nothing sits ahead of it — so the most urgent marble
-and the most valuable one are rarely the same, which is the whole game.
+Only the ants nearest the burrow carry words, so targeting is never ambiguous;
+the rest show only their colour, which is what you plan on. Taking the front ant
+can never cascade, because nothing sits ahead of it — so the most urgent ant and
+the most valuable one are rarely the same, which is the whole game.
+
+The playfield is a painted garden rather than a drawn one, so the route is
+letterboxed to the painting's aspect ratio and the ants walk the trail the
+picture actually shows.
 
 ## How to play
 
@@ -145,7 +149,8 @@ index.html, hub.css     the arcade landing page
 blaster/                Type Blaster (index.html, game.js, style.css)
 squadron/               Type Squadron (index.html, game.js, style.css)
 sentinel/               Type Sentinel (index.html, game.js, style.css)
-burrow/                 Type Burrow (index.html, game.js, style.css)
+burrow/                 Type Burrow (index.html, game.js, sprites.js, style.css)
+burrow/images/          the painted background and sprite sheets Burrow draws from
 shared/words.js         word sets, shared by all four games
 shared/keyboard.js      on-screen keyboard guide, shared by all four
 ```
@@ -171,9 +176,18 @@ here — the genre terms *multidirectional shooter*, *formation shooter*, *city 
 and *marble popper* are the accurate descriptions and are what you will find
 throughout.
 
-Everything here is original work. There are no dependencies, no bundled fonts
-or sound files, and no third-party assets of any kind — the games draw to a
-canvas and set type in whatever monospace font your system already has.
+There are no dependencies, no bundled fonts and no sound files; every game draws
+to a canvas and sets type in whatever monospace font your system already has.
+Blaster, Squadron and Sentinel draw all of their graphics procedurally. Type
+Burrow is the exception: it renders from the painted sheets in `burrow/images/`,
+which are the only image assets in the project.
+
+Those sheets arrive on a cream ground rather than with transparency, so
+`burrow/sprites.js` keys them at load — a flood fill inward from the sheet edge,
+which removes only background that is connected to the edge and therefore leaves
+cream *inside* a sprite alone. A second pass converts the drop shadows the
+artist painted onto the cream into real translucent shadows, so the sprites sit
+on the grass instead of dragging a pale smudge around with them.
 
 ## Contributing
 
