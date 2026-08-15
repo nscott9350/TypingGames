@@ -1273,13 +1273,17 @@ function drawWordLabel(a, locked) {
   const next = a.word.slice(a.typed, a.typed + 1);
   const rest = a.word.slice(a.typed + 1);
   const totalW = ctx.measureText(a.word).width;
-  const ly = a.y + a.radius + fs + 10;
-  const startX = a.x - totalW / 2;
 
-  // Backing plate keeps words readable over bright nebula and explosions
+  // Backing plate keeps words readable over bright nebula and explosions.
+  // It is also kept inside the viewport: a rock hugging an edge is still
+  // targetable, so its word has to be readable or the player sees something
+  // they cannot shoot and it looks stuck there.
   const padX = 9, padY = 6;
-  const bx = startX - padX, by = ly - fs - padY + 2;
   const bw = totalW + padX * 2, bh = fs + padY * 2;
+  const bx = Math.max(6, Math.min(W - bw - 6, a.x - bw / 2));
+  const by = Math.max(6, Math.min(H - bh - 6, a.y + a.radius + 12));
+  const startX = bx + padX;
+  const ly = by + fs + padY - 4;
   ctx.fillStyle = locked ? "rgba(12, 10, 4, 0.82)" : "rgba(5, 8, 16, 0.72)";
   roundRect(bx, by, bw, bh, 6);
   ctx.fill();

@@ -1645,12 +1645,15 @@ function drawWordLabel(e, locked, T) {
   const next = e.word.slice(e.typed, e.typed + 1);
   const rest = e.word.slice(e.typed + 1);
   const totalW = ctx.measureText(e.word).width;
-  const ly = e.y + e.r + fs + 8;
-  const startX = e.x - totalW / 2;
 
+  // Kept inside the viewport: a ship at the edge is still targetable, so its
+  // word has to stay readable or the player sees something they cannot shoot.
   const padX = 8, padY = 5;
-  const bx = startX - padX, by = ly - fs - padY + 2;
   const bw = totalW + padX * 2, bh = fs + padY * 2;
+  const bx = Math.max(6, Math.min(W - bw - 6, e.x - bw / 2));
+  const by = Math.max(6, Math.min(H - bh - 6, e.y + e.r + 10));
+  const startX = bx + padX;
+  const ly = by + fs + padY - 3;
   // Near-opaque black plate: it both keeps the word legible over the glow and
   // gives the neon border something dark to sit against.
   ctx.fillStyle = locked ? "rgba(6, 0, 14, 0.92)" : "rgba(4, 0, 10, 0.85)";
