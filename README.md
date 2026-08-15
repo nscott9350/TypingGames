@@ -28,6 +28,7 @@ your ship — type the rescue word before the timer runs out to break free.
 | --- | --- |
 | any letter | start a run, or lock onto the word beginning with that letter |
 | letters | each correct letter fires a shot at your locked target |
+| `Space` | *(Squadron)* juke sideways out of danger, burning any shots you roll through |
 | `Esc` | pause and open settings |
 | `Q` | quit the current run (from the pause screen, press twice to confirm) |
 | `M` | return to the main menu (from the summary screen) |

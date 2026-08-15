@@ -28,6 +28,10 @@ const MAX_PARTICLES = 700;
 const MAX_ENEMIES = 20;
 const STREAK_PER_MULT = 20;
 const MAX_MULT = 5;
+const JUKE_TIME = 0.16;      // how long the sideways burst lasts
+const JUKE_DIST = 140;       // px covered by one juke
+const JUKE_IFRAMES = 0.5;    // untouchable window it buys
+const JUKE_COOLDOWN = 2.2;   // long enough that it stays a decision
 const ENTRY_GROUP = 4;          // ships per entry flight
 const BEAM_CHARGE = 1.7;        // seconds before a tractor beam catches
 
@@ -282,6 +286,8 @@ const sfx = {
   beam: () => blip(300, 0.5, "sine", 0.05, 420),
   captured: () => blip(180, 0.7, "sawtooth", 0.1, -110),
   rescue: () => { blip(600, 0.1, "triangle", 0.06); setTimeout(() => blip(900, 0.1, "triangle", 0.06), 90); setTimeout(() => blip(1350, 0.2, "triangle", 0.06), 180); },
+  juke: () => blip(520, 0.16, "sine", 0.05, 620),
+  jukeBlocked: () => blip(180, 0.06, "square", 0.025),
   levelUp: () => { blip(720, 0.09, "triangle", 0.05); setTimeout(() => blip(1080, 0.15, "triangle", 0.05), 80); },
   wave: () => { [0, 100, 200, 320].forEach((d, i) => setTimeout(() => blip([523, 659, 784, 1047][i], 0.18, "triangle", 0.06), d)); },
 };
@@ -354,7 +360,7 @@ let state = "menu"; // menu | playing | paused | gameover
 let player, enemies, bullets, enemyBullets, particles, shockwaves, lockTarget;
 let formation, capture, banner;
 let score, lives, elapsed, wave, waveTime, waveClearTimer, diveTimer, beamCooldown;
-let invuln, grace, shake, flash;
+let invuln, grace, shake, flash, juke;
 let typedCorrect, typedWrong, kills, streak, bestStreak, multiplier;
 
 function resetGame() {
@@ -378,6 +384,7 @@ function resetGame() {
   beamCooldown = 14;
   invuln = 0;
   grace = 0;
+  juke = { t: 0, dir: 0, cool: 0, iframes: 0 };
   shake = 0;
   flash = 0;
   typedCorrect = 0;
@@ -674,6 +681,17 @@ window.addEventListener("keydown", (e) => {
   }
   if (state === "playing" && e.key === "Escape") { openSettings("playing"); return; }
   if (state !== "playing") return;
+
+  // Space is a juke. It is deliberately the one non-letter control: hitting
+  // space with a thumb, without looking, is itself a touch-typing skill.
+  // Checked every way a space arrives: `key` is " " on modern browsers,
+  // "Spacebar" on some older ones, and `code`/`keyCode` cover layouts where
+  // `key` is unreliable.
+  if (e.key === " " || e.code === "Space" || e.key === "Spacebar" || e.keyCode === 32) {
+    e.preventDefault();
+    tryJuke();
+    return;
+  }
   if (!/^[a-z]$/i.test(e.key)) return;
 
   const letter = e.key.toLowerCase();
@@ -828,22 +846,50 @@ function update(dt) {
   // position is cosmetic for aiming — it can duck aside freely and never miss.
   // That is what makes automatic evasion possible without weakening the
   // shooting, and the player has no dodge key of their own.
+  if (juke.cool > 0) juke.cool -= dt;
+  if (juke.iframes > 0) juke.iframes -= dt;
+
   if (!player.captured) {
-    let aim = lockTarget ? lockTarget.x : W / 2;
-
-    // Never chase a target that is diving at us. Tracking a diver's column
-    // means following it into the ram, and the "closest target" lock rule
-    // actively steers players onto divers.
-    if (lockTarget && lockTarget.state === "diving" && lockTarget.y > H * 0.42) {
-      aim = player.x;
-    }
-
-    const evade = evasionOffset();
     const margin = 40;
-    player.targetX = Math.max(margin, Math.min(W - margin, aim + evade));
-    // Snap harder the more urgent the threat
-    const agility = 6.5 + Math.min(10, Math.abs(evade) / 18);
-    player.x += (player.targetX - player.x) * Math.min(1, dt * agility);
+    if (juke.t > 0) {
+      // A juke overrides the usual tracking outright: the whole point is to
+      // break away from where the ship was heading.
+      juke.t -= dt;
+      player.x += juke.dir * (JUKE_DIST / JUKE_TIME) * dt;
+      player.x = Math.max(margin, Math.min(W - margin, player.x));
+      player.targetX = player.x;
+      addParticle({
+        kind: "spark", x: player.x, y: player.y,
+        vx: -juke.dir * 40, vy: 0,
+        life: 0.16, maxLife: 0.3, r: 3, color: NEON.lime, drag: 3,
+      });
+      // The roll burns off any fire it passes through. Without this the juke
+      // is redundant with the automatic evasion, which already handles simple
+      // dodging — this gives it a job of its own: clearing a crowded screen.
+      for (let i = enemyBullets.length - 1; i >= 0; i--) {
+        const b = enemyBullets[i];
+        if (Math.hypot(b.x - player.x, b.y - player.y) < PLAYER_R + 26) {
+          enemyBullets.splice(i, 1);
+          burst(b.x, b.y, 5, [NEON.lime, "#FFFFFF"], 6, 0.5);
+          score += 5 * multiplier;
+        }
+      }
+    } else {
+      let aim = lockTarget ? lockTarget.x : W / 2;
+
+      // Never chase a target that is diving at us. Tracking a diver's column
+      // means following it into the ram, and the "closest target" lock rule
+      // actively steers players onto divers.
+      if (lockTarget && lockTarget.state === "diving" && lockTarget.y > H * 0.42) {
+        aim = player.x;
+      }
+
+      const evade = evasionOffset();
+      player.targetX = Math.max(margin, Math.min(W - margin, aim + evade));
+      // Snap harder the more urgent the threat
+      const agility = 6.5 + Math.min(10, Math.abs(evade) / 18);
+      player.x += (player.targetX - player.x) * Math.min(1, dt * agility);
+    }
     player.y += (H - PLAYER_BOTTOM - player.y) * Math.min(1, dt * 5);
   }
 
@@ -900,6 +946,56 @@ function update(dt) {
     } else {
       beamCooldown = 5;
     }
+  }
+}
+
+// ---- Juke ----
+// The player supplies the timing; the game supplies the direction, since
+// there is no way to aim a dodge from the keyboard without a second key.
+function nearestThreat() {
+  let best = null, bestD = Infinity;
+  for (const b of enemyBullets) {
+    const d = Math.hypot(b.x - player.x, b.y - player.y);
+    if (d < bestD) { bestD = d; best = b; }
+  }
+  for (const e of enemies) {
+    if (e.state !== "diving" || e.dying) continue;
+    const d = Math.hypot(e.x - player.x, e.y - player.y);
+    if (d < bestD) { bestD = d; best = e; }
+  }
+  return { threat: best, dist: bestD };
+}
+
+function jukeDirection() {
+  const { threat, dist } = nearestThreat();
+  let dir = threat && dist < 340
+    ? (threat.x > player.x ? -1 : 1)   // away from what is coming
+    : (player.x > W / 2 ? -1 : 1);     // nothing close: head for open space
+  // Never juke into a wall — a dodge that pins you is worse than none
+  if (player.x + dir * JUKE_DIST < 46) dir = 1;
+  if (player.x + dir * JUKE_DIST > W - 46) dir = -1;
+  return dir;
+}
+
+function tryJuke() {
+  if (player.captured) return;
+  if (juke.cool > 0) { sfx.jukeBlocked(); return; }
+  juke.dir = jukeDirection();
+  juke.t = JUKE_TIME;
+  juke.iframes = JUKE_IFRAMES;
+  juke.cool = JUKE_COOLDOWN;
+  sfx.juke();
+  shockwave(player.x, player.y, 90, NEON.lime, 2);
+  for (let i = 0; i < 12; i++) {
+    addParticle({
+      kind: "spark",
+      x: player.x, y: player.y + (Math.random() - 0.5) * 16,
+      vx: -juke.dir * (60 + Math.random() * 160), vy: (Math.random() - 0.5) * 50,
+      life: 0.18 + Math.random() * 0.22, maxLife: 0.4,
+      r: 1.4 + Math.random() * 2,
+      color: Math.random() < 0.5 ? NEON.lime : "#D6FFA8",
+      drag: 2.2,
+    });
   }
 }
 
@@ -1029,7 +1125,7 @@ function updateEnemies(dt, L) {
     // Only ships committed to a dive can ram the player. Arrivals and returns
     // are scripted flight paths the player has no way to dodge, so letting
     // them collide would cost lives through no fault of the typist.
-    if (e.state === "diving" && !e.dying && !player.captured && invuln <= 0 && grace <= 0 &&
+    if (e.state === "diving" && !e.dying && !player.captured && invuln <= 0 && grace <= 0 && juke.iframes <= 0 &&
         Math.hypot(e.x - player.x, e.y - player.y) < e.r + PLAYER_R) {
       explodeEnemy(e);
       if (lockTarget === e) lockTarget = null;
@@ -1081,7 +1177,7 @@ function updateBullets(dt) {
       enemyBullets.splice(i, 1);
       continue;
     }
-    if (!player.captured && invuln <= 0 && grace <= 0 &&
+    if (!player.captured && invuln <= 0 && grace <= 0 && juke.iframes <= 0 &&
         Math.hypot(b.x - player.x, b.y - player.y) < PLAYER_R + 4) {
       enemyBullets.splice(i, 1);
       loseLife();
@@ -1674,6 +1770,23 @@ function drawHUD() {
     ctx.font = `11px ${MONO}`;
     ctx.fillStyle = "rgba(190, 175, 235, 0.8)";
     ctx.fillText(`${streak} streak`, barX + barW + 10, my + 11);
+  }
+
+  // Juke readiness — a bar that refills, so the cooldown is never a guess
+  {
+    const jy = (multiplier > 1 || streak > 0) ? 92 : 74;
+    const ready = juke.cool <= 0;
+    ctx.font = `bold 11px ${MONO}`;
+    ctx.fillStyle = ready ? NEON.lime : "rgba(190, 175, 235, 0.55)";
+    ctx.fillText("SPACE", pad, jy + 9);
+    const bx = pad + 46, bw = 62, bh = 5, by = jy + 3;
+    ctx.fillStyle = "rgba(190, 175, 235, 0.22)";
+    roundRect(bx, by, bw, bh, 3);
+    ctx.fill();
+    const fill = ready ? 1 : 1 - juke.cool / JUKE_COOLDOWN;
+    ctx.fillStyle = ready ? NEON.lime : "rgba(124, 255, 61, 0.45)";
+    roundRect(bx, by, Math.max(2, bw * fill), bh, 3);
+    ctx.fill();
   }
 
   // Wave, centred
