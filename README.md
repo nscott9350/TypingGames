@@ -46,6 +46,12 @@ the rest show only their colour, which is what you plan on. Taking the front ant
 can never cascade, because nothing sits ahead of it — so the most urgent ant and
 the most valuable one are rarely the same, which is the whole game.
 
+How many words are in play is the difficulty's real lever: five on the lower
+settings, seven on Master. It sounds like a readability setting and is actually
+the choice dial — with only four words showing, a cascade is on offer about a
+third of the time and most turns collapse into taking the front ant; at seven it
+is closer to half.
+
 The playfield is a painted garden rather than a drawn one, so the route is
 letterboxed to the painting's aspect ratio and the ants walk the trail the
 picture actually shows.

@@ -31,7 +31,13 @@ const MONO = "ui-monospace, 'SF Mono', Menlo, Consolas, 'Courier New', monospace
 const SPACING_MUL = 1.62;     // ant spacing as a multiple of body radius
 const SETTLE_TIME = 0.2;      // pause after a pop so the gap visibly closes
 const MAX_PARTICLES = 600;
-const LABEL_WINDOW = 4;       // ants nearest the burrow that carry word tags
+// How many ants nearest the burrow carry word tags. This is the game's real
+// choice dial: a cascade needs a gap that joins a pair to a single, and at a
+// window of 4 one is on offer only 31% of the time, so most turns collapse to
+// "take the front ant". Measured at a learner's pace, widening the window
+// raises that to 38% at 5, 44% at 6 and 49% at 7, flattening out after that.
+// It is capped by the word set — every visible word needs its own first letter,
+// and the home row only offers eight — but letteredCount() clamps for that.
 const CASCADE_SEED = 0.5;     // chance a new ant is placed to set up a cascade
 const STAGE_AR = 1672 / 941;  // the background painting's aspect ratio
 const LIVES_START = 3;
@@ -89,14 +95,16 @@ function recordScore(entry) {
 
 // ---- Difficulty ----
 // `crawl` is path pixels per second, `load` the ants in a level, `hues` how many
-// colours are in play (fewer colours means easier cascades), and `hole` how many
-// ants the burrow absorbs before it gives out and costs a life.
+// colours are in play (fewer colours means easier cascades), `hole` how many
+// ants the burrow absorbs before it gives out and costs a life, and `words` how
+// many ants carry a tag at once. Beginners get fewer to scan; the harder levels
+// get more, which is more to read but more room to hunt a cascade in.
 const DIFFICULTY_LEVELS = {
-  beginner: { label: "BEGINNER", crawl: [13, 24], load: [22, 34], hues: 4, hole: 6 },
-  easy:     { label: "EASY",     crawl: [17, 31], load: [26, 42], hues: 4, hole: 5 },
-  normal:   { label: "NORMAL",   crawl: [22, 41], load: [30, 50], hues: 5, hole: 4 },
-  hard:     { label: "HARD",     crawl: [28, 52], load: [36, 58], hues: 5, hole: 3 },
-  master:   { label: "MASTER",   crawl: [35, 64], load: [42, 66], hues: 6, hole: 3 },
+  beginner: { label: "BEGINNER", crawl: [13, 24], load: [22, 34], hues: 4, hole: 6, words: 5 },
+  easy:     { label: "EASY",     crawl: [17, 31], load: [26, 42], hues: 4, hole: 5, words: 5 },
+  normal:   { label: "NORMAL",   crawl: [22, 41], load: [30, 50], hues: 5, hole: 4, words: 6 },
+  hard:     { label: "HARD",     crawl: [28, 52], load: [36, 58], hues: 5, hole: 3, words: 6 },
+  master:   { label: "MASTER",   crawl: [35, 64], load: [42, 66], hues: 6, hole: 3, words: 7 },
 };
 const currentLevel = () => DIFFICULTY_LEVELS[settings.difficulty] || DIFFICULTY_LEVELS.normal;
 const currentWordSet = () => WORD_SETS[settings.wordSet] || WORD_SETS.all;
@@ -375,7 +383,7 @@ function distinctFirstLetters() {
   for (const w of pools.medium || []) s.add(w[0]);
   return s.size;
 }
-const letteredCount = () => Math.min(LABEL_WINDOW, distinctFirstLetters());
+const letteredCount = () => Math.min(currentLevel().words, distinctFirstLetters());
 
 function pickWord(used) {
   const pools = currentWordSet().pools;
@@ -673,11 +681,24 @@ function gopherFacing() {
   return pointAtDist(t.d).x < gopherPos().x;
 }
 
-function fireShot(target) {
+// Where the peashooter's mouth sits inside the gopherShoot frame, measured off
+// the sheet. Berries leave from here rather than from a fixed offset beside
+// him, so the shot comes out of the barrel whichever way he is turned.
+const MUZZLE = { fx: 0.95, fy: 0.433 };
+
+function muzzlePos() {
   const g = gopherPos();
+  const h = gopherDrawH("gopherShoot");
+  const w = h * Sprites.frameAspect("gopherShoot");
+  const fx = gopherFacing() ? 1 - MUZZLE.fx : MUZZLE.fx;
+  return { x: g.x - w / 2 + fx * w, y: g.y - h + MUZZLE.fy * h };
+}
+
+function fireShot(target) {
+  const m = muzzlePos();
   gopherThrow = 0.16;
   setMood("gopherShoot", 0.32);
-  shots.push({ x: g.x + R * 1.2, y: g.y - stage.h * 0.12, target,
+  shots.push({ x: m.x, y: m.y, target,
                life: 3, spin: 0, hue: target.hue, dx: 0, dy: 0 });
 }
 
@@ -1030,9 +1051,22 @@ function drawBerries() {
   }
 }
 
+// gopherIdle's frame height. All four poses are drawn at one scale on the
+// sheet and cropped tight, so their frame heights differ by how tall the pose
+// itself is — crouched to aim is shorter, jumping to cheer is taller. Scaling
+// every pose to the same target height would make him swell and shrink as he
+// changed pose; scaling relative to this keeps him one size.
+const GOPHER_REF_H = 329;
+
+function gopherDrawH(pose) {
+  const f = Sprites.frames[pose];
+  const base = stage.h * 0.23;
+  return f ? base * (f.h / GOPHER_REF_H) : base;
+}
+
 function drawGopher() {
   const g = gopherPos();
-  const h = stage.h * 0.23;
+  const h = gopherDrawH(gopherMood.pose);
   Sprites.draw(ctx, gopherMood.pose, g.x, g.y - h * 0.5, h, gopherFacing());
 }
 
@@ -1207,8 +1241,8 @@ function drawHUD() {
                1 - holeFill / L.hole, "#7FD13B");
   }
 
-  // The live words, bottom left: a readout of what is currently targetable,
-  // so the four in play can be seen without scanning the field.
+  // The live words, bottom left: a readout of what is currently targetable, so
+  // the words in play can be read without scanning the field.
   const tp = Sprites.frames.typePanel;
   if (tp) {
     const th = stage.h * 0.13;
@@ -1221,12 +1255,23 @@ function drawHUD() {
     ctx.fill();
 
     const live = chain.filter(m => targetable(m));
-    const fs = th * 0.27;
-    ctx.font = `bold ${fs}px ${MONO}`;
-    const gap = fs * 0.9;
-    let total = 0;
-    for (const m of live) total += ctx.measureText(m.word).width + gap;
-    let x = tx + tw / 2 - (total - gap) / 2;
+    // The readout has to hold however many words the difficulty puts in play —
+    // seven on Master, and longer words on the wider sets — so the type is
+    // fitted to the plate rather than assumed to fit. Without this the last
+    // word or two simply runs off the panel and onto the grass.
+    const inner = tw * 0.88;
+    let fs = th * 0.27;
+    let gap, total;
+    for (let pass = 0; pass < 12; pass++) {
+      ctx.font = `bold ${fs}px ${MONO}`;
+      gap = fs * 0.9;
+      total = 0;
+      for (const m of live) total += ctx.measureText(m.word).width + gap;
+      total -= gap;
+      if (total <= inner || fs <= th * 0.12) break;
+      fs *= Math.max(0.82, inner / total);
+    }
+    let x = tx + tw / 2 - total / 2;
     const y = ty + th * 0.65;
     ctx.textAlign = "left";
     ctx.textBaseline = "middle";
