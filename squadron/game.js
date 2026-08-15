@@ -855,6 +855,18 @@ function loseLife() {
   if (lives <= 0) endGame("dead");
 }
 
+// Is anything close enough to hit us the moment we become vulnerable again?
+function playerIsOverlapped() {
+  for (const e of enemies) {
+    if (e.state !== "diving" || e.dying) continue;
+    if (Math.hypot(e.x - player.x, e.y - player.y) < e.r + PLAYER_R + 8) return true;
+  }
+  for (const b of enemyBullets) {
+    if (Math.hypot(b.x - player.x, b.y - player.y) < PLAYER_R + 10) return true;
+  }
+  return false;
+}
+
 // ---- Update ----
 function update(dt) {
   elapsed += dt;
@@ -865,7 +877,12 @@ function update(dt) {
     banner.life -= dt;
     if (banner.life <= 0) banner = null;
   }
-  if (invuln > 0) invuln -= dt;
+  if (invuln > 0) {
+    invuln -= dt;
+    // Same guard as Blaster: a diver or shot still overlapping us when the
+    // shield lapses would hit on the next frame with no chance to react.
+    if (invuln <= 0 && playerIsOverlapped()) invuln = 0.12;
+  }
   if (grace > 0) grace -= dt;
   if (wrongKey.t > 0) wrongKey.t -= dt;
   if (shake > 0) shake = Math.max(0, shake - dt * 20);
@@ -1186,6 +1203,17 @@ function updateEnemies(dt, L) {
       }
     }
 
+    // Same shield rule as Blaster: a diver that reaches us while the post-hit
+    // shield is up burns against it instead of lingering to hit the moment it
+    // lapses. No score or streak credit.
+    if (invuln > 0 && e.state === "diving" && !e.dying && !player.captured &&
+        Math.hypot(e.x - player.x, e.y - player.y) < e.r + PLAYER_R) {
+      if (lockTarget === e) lockTarget = null;
+      explodeEnemy(e);
+      enemies.splice(i, 1);
+      continue;
+    }
+
     // Only ships committed to a dive can ram the player. Arrivals and returns
     // are scripted flight paths the player has no way to dodge, so letting
     // them collide would cost lives through no fault of the typist.
@@ -1239,6 +1267,13 @@ function updateBullets(dt) {
     b.y += b.vy * dt;
     if (b.y > H + 20 || b.y < -20 || b.x < -20 || b.x > W + 20) {
       enemyBullets.splice(i, 1);
+      continue;
+    }
+    // Shots burn against the post-hit shield too, for the same reason
+    if (invuln > 0 && !player.captured &&
+        Math.hypot(b.x - player.x, b.y - player.y) < PLAYER_R + 6) {
+      enemyBullets.splice(i, 1);
+      burst(b.x, b.y, 5, [NEON.cyan, "#FFFFFF"], 5, 0.5);
       continue;
     }
     if (!player.captured && invuln <= 0 && grace <= 0 && juke.iframes <= 0 &&

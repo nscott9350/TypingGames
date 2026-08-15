@@ -733,6 +733,15 @@ function fireBullet(target) {
   ship.thrust = 1;
 }
 
+// Is anything close enough to hit us the moment we become vulnerable again?
+function shipIsOverlapped() {
+  for (const a of asteroids) {
+    if (a.dying) continue;
+    if (Math.hypot(a.x - ship.x, a.y - ship.y) < a.radius * 0.85 + SHIP_RADIUS + 8) return true;
+  }
+  return false;
+}
+
 // ---- Update ----
 function update(dt) {
   elapsed += dt;
@@ -754,7 +763,15 @@ function update(dt) {
   while (da < -Math.PI) da += Math.PI * 2;
   ship.angle += da * Math.min(1, dt * 14);
 
-  if (invuln > 0) invuln -= dt;
+  if (invuln > 0) {
+    invuln -= dt;
+    // Never let the shield lapse while a rock is still sitting on us. Rocks
+    // pass straight through during invulnerability, so one that is overlapping
+    // when the shield drops lands a hit on the very next frame — and this ship
+    // cannot move, so there is nothing the player could have done. Hold the
+    // grace open until we are actually clear.
+    if (invuln <= 0 && shipIsOverlapped()) invuln = 0.12;
+  }
   if (wrongKey.t > 0) wrongKey.t -= dt;
   if (shake > 0) shake = Math.max(0, shake - dt * 20);
   if (flash > 0) flash = Math.max(0, flash - dt * 1.8);
@@ -808,6 +825,19 @@ function update(dt) {
     // Safety net: an offset flyby aimed wide of a small window may never
     // cross the viewport at all; don't let it drift forever.
     if (!a.entered && a.age > 30) {
+      asteroids.splice(i, 1);
+      continue;
+    }
+
+    // While the post-hit shield is up, a rock that reaches the ship burns up
+    // against it rather than drifting through. Otherwise it can sit on the
+    // ship for the whole grace period and land a hit the moment the shield
+    // drops — and this ship cannot move aside. Deliberately no score and no
+    // streak credit: this is mercy, not a reward.
+    if (invuln > 0 && !a.dying &&
+        Math.hypot(a.x - ship.x, a.y - ship.y) < a.radius * 0.85 + SHIP_RADIUS) {
+      if (lockTarget === a) lockTarget = null;
+      explodeAsteroid(a);
       asteroids.splice(i, 1);
       continue;
     }
