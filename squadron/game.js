@@ -889,25 +889,42 @@ function update(dt) {
         }
       }
     } else {
-      let aim = lockTarget ? lockTarget.x : W / 2;
+      // The ship only ever moves for a reason. Anything it does on its own
+      // between words is movement the player did not ask for and cannot see
+      // coming, so the default is to hold station.
+      let aim = player.x;
+      let agility = 6.5;
 
-      // Straight after a juke, stay where the dodge put us. Sliding back to
-      // the target's column walks right back into the shot that is still
-      // inbound, which made the dodge self-defeating.
-      if (juke.hold > 0) aim = player.x;
-
-      // Never chase a target that is diving at us. Tracking a diver's column
-      // means following it into the ram, and the "closest target" lock rule
-      // actively steers players onto divers.
-      if (lockTarget && lockTarget.state === "diving" && lockTarget.y > H * 0.42) {
+      if (juke.hold > 0) {
+        // Straight after a juke, stay where the dodge put us. Sliding back to
+        // the target's column walks right back into the shot that is still
+        // inbound, which made the dodge self-defeating.
         aim = player.x;
+      } else if (lockTarget) {
+        // Never chase a target that is diving at us. Tracking a diver's column
+        // means following it into the ram, and the "closest target" lock rule
+        // actively steers players onto divers.
+        aim = (lockTarget.state === "diving" && lockTarget.y > H * 0.42)
+          ? player.x
+          : lockTarget.x;
+      } else {
+        // No target. Recentring here is what made finishing a word dangerous:
+        // the middle is where the formation sits and where divers and their
+        // shots converge, so the ship was driving itself into the busiest part
+        // of the screen every time a word was completed. Only ease back toward
+        // the middle once nothing is near, and slowly.
+        const { dist } = nearestThreat();
+        if (dist > 300) {
+          aim = W / 2;
+          agility = 1.6;
+        }
       }
 
       // From Hard up the ship stops dodging for you: that is what space is for
       const evade = currentLevel().autoEvade ? evasionOffset() : 0;
       player.targetX = Math.max(margin, Math.min(W - margin, aim + evade));
       // Snap harder the more urgent the threat
-      const agility = 6.5 + Math.min(10, Math.abs(evade) / 18);
+      agility += Math.min(10, Math.abs(evade) / 18);
       player.x += (player.targetX - player.x) * Math.min(1, dt * agility);
     }
     player.y += (H - PLAYER_BOTTOM - player.y) * Math.min(1, dt * 5);
