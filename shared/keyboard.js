@@ -114,28 +114,36 @@ function drawKeyboardGuide(ctx, opts) {
       const color = FINGER_COLOR[KEY_FINGER[key]] || "#B9A8E8";
       const isNext = next === key;
       const isOption = !isNext && optionSet.has(key);
-      ctx.globalAlpha = isNext ? highlight : isOption ? optAlpha : opacity;
 
-      ctx.fillStyle = isNext ? color : isOption ? `${color}33` : "rgba(255,255,255,0.05)";
+      // Fill stays at the overlay's weight even for the lit key. A solid block
+      // of colour over the play field reads as an object in the scene rather
+      // than as guidance; the outline and letter carry the signal instead.
+      ctx.globalAlpha = isOption ? optAlpha : opacity;
+      ctx.fillStyle = isNext || isOption ? color : "rgba(255,255,255,0.05)";
       kbRoundRect(ctx, rx, ry, u * 0.9, keyH, u * 0.1);
       ctx.fill();
 
       // Every key keeps a tint of its finger colour, so the hand map stays
-      // legible even when nothing is highlighted.
-      ctx.strokeStyle = isNext ? "#FFFFFF" : color;
-      ctx.lineWidth = isNext ? 2.5 : 1.5;
+      // legible even when nothing is highlighted. The lit key keeps its own
+      // finger colour rather than turning white, since which finger to use is
+      // the thing worth learning.
+      ctx.globalAlpha = isNext ? highlight : isOption ? optAlpha : opacity;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = isNext ? 3 : 1.5;
       kbRoundRect(ctx, rx, ry, u * 0.9, keyH, u * 0.1);
       ctx.stroke();
 
       if (HOME_KEYS.has(key) && !isNext) {
+        ctx.globalAlpha = opacity;
         ctx.fillStyle = color;
         const bw = BUMP_KEYS.has(key) ? u * 0.26 : u * 0.36;
         const bh = BUMP_KEYS.has(key) ? 3.5 : 2;
         ctx.fillRect(rx + u * 0.45 - bw / 2, ry + keyH - u * 0.14, bw, bh);
       }
 
+      ctx.globalAlpha = isNext ? highlight : isOption ? optAlpha : opacity;
       ctx.font = `${isNext ? "bold " : ""}${Math.round(u * 0.4)}px ${mono}`;
-      ctx.fillStyle = isNext ? "#0B0212" : "#FFFFFF";
+      ctx.fillStyle = "#FFFFFF";
       ctx.fillText(key.toUpperCase(), rx + u * 0.45, ry + keyH / 2 + 1);
 
       rx += u;
