@@ -326,7 +326,7 @@ function stopMusic() {
 // ---- Game state ----
 let state = "menu";
 let chain, shots, pops, particles, lockTarget;
-let headDist, remaining, settleTimer, cascadeDepth;
+let headDist, remaining, settleTimer, cascadeDepth, bursts;
 let score, elapsed, wave, waveClearTimer, holeFill, lives;
 let shake, flash, banner;
 let typedCorrect, typedWrong, popped, cascaded, streak, bestStreak, multiplier;
@@ -337,6 +337,7 @@ function resetGame() {
   shots = [];
   pops = [];
   particles = [];
+  bursts = [];
   lockTarget = null;
   headDist = 0;
   remaining = 0;
@@ -480,6 +481,8 @@ function resolveMatches() {
         cascaded++;
       }
       removed += run;
+      const mid = pointAtDist(gone[(gone.length / 2) | 0].d);
+      bursts.push({ x: mid.x, y: mid.y, life: 0.8, maxLife: 0.8, depth: cascadeDepth });
       sfx.cascade(cascadeDepth);
       setMood("gopherCheer", 0.9);
       shake = Math.max(shake, 5 + cascadeDepth * 2);
@@ -669,6 +672,10 @@ function fireShot(target) {
 function update(dt) {
   elapsed += dt;
   if (banner) { banner.life -= dt; if (banner.life <= 0) banner = null; }
+  for (let i = bursts.length - 1; i >= 0; i--) {
+    bursts[i].life -= dt;
+    if (bursts[i].life <= 0) bursts.splice(i, 1);
+  }
   if (shake > 0) shake = Math.max(0, shake - dt * 20);
   if (flash > 0) flash = Math.max(0, flash - dt * 1.8);
   if (wrongKey.t > 0) wrongKey.t -= dt;
@@ -884,6 +891,7 @@ function draw(dt) {
     drawGopher();
     drawPops();
     drawParticles();
+    drawBursts();
   }
   ctx.restore();
 
@@ -1021,6 +1029,26 @@ function drawPops() {
     const puff = ["puffA", "puffB", "puffC", "puffStars"][p.variant % 4];
     Sprites.draw(ctx, puff, p.x, p.y, R * (2.2 + k * 1.9), false, Math.max(0, 1 - k));
   }
+}
+
+// The sheet's starburst, fired over the middle of a run that just cleared.
+// It pops up quickly and drifts as it fades, so a cascade is visible where it
+// happened rather than only as a number in the corner.
+function drawBursts() {
+  for (const b of bursts) {
+    const k = 1 - b.life / b.maxLife;
+    const rise = k * R * 1.6;
+    const scale = 0.7 + Math.min(1, k * 4) * 0.45 + Math.min(1, b.depth / 4) * 0.3;
+    const h = R * 3.2 * scale;
+    const w = h * Sprites.frameAspect("comboBurst");
+    // A cascade near the anthill or the burrow would otherwise fire half
+    // off-stage, which is exactly when the player most wants to see it.
+    const x = Math.max(stage.x + w / 2, Math.min(stage.x + stage.w - w / 2, b.x));
+    const y = Math.max(stage.y + h / 2, Math.min(stage.y + stage.h - h / 2, b.y - rise));
+    Sprites.draw(ctx, "comboBurst", x, y, h, false,
+                 Math.min(1, b.life / (b.maxLife * 0.45)));
+  }
+  ctx.globalAlpha = 1;
 }
 
 function drawParticles() {
