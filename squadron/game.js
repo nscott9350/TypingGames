@@ -81,12 +81,15 @@ function recordScore(entry) {
 // ---- Difficulty ----
 // Ranges run from wave 1 to wave 8; `beamWave` is the first wave on which a
 // boss may fire a tractor beam, and `rescue` is how long you get to escape it.
+// `grace` is how long a correct keystroke keeps the ship untouchable. Typing
+// well is the player's only defence, so on the lower levels landing shots
+// should protect you; the top levels earn their name by removing that.
 const DIFFICULTY_LEVELS = {
-  beginner: { label: "BEGINNER", cols: [4, 5], rows: [2, 2], entry: 2.0, dive: [7.0, 5.0], bullet: 120, fire: 0.25, beamWave: 99, rescue: 6.0 },
-  easy:     { label: "EASY",     cols: [4, 6], rows: [2, 3], entry: 1.8, dive: [6.0, 4.0], bullet: 145, fire: 0.40, beamWave: 5,  rescue: 5.5 },
-  normal:   { label: "NORMAL",   cols: [5, 7], rows: [2, 3], entry: 1.6, dive: [5.0, 3.0], bullet: 175, fire: 0.55, beamWave: 3,  rescue: 5.0 },
-  hard:     { label: "HARD",     cols: [6, 7], rows: [3, 3], entry: 1.4, dive: [4.0, 2.2], bullet: 205, fire: 0.70, beamWave: 2,  rescue: 4.5 },
-  master:   { label: "MASTER",   cols: [6, 8], rows: [3, 3], entry: 1.2, dive: [3.0, 1.6], bullet: 240, fire: 0.85, beamWave: 2,  rescue: 4.0 },
+  beginner: { label: "BEGINNER", cols: [4, 5], rows: [2, 2], entry: 2.0, dive: [7.0, 5.0], bullet: 120, fire: 0.25, beamWave: 99, rescue: 6.0, grace: 0.80 },
+  easy:     { label: "EASY",     cols: [4, 6], rows: [2, 3], entry: 1.8, dive: [6.0, 4.0], bullet: 145, fire: 0.40, beamWave: 5,  rescue: 5.5, grace: 0.55 },
+  normal:   { label: "NORMAL",   cols: [5, 7], rows: [2, 3], entry: 1.6, dive: [5.0, 3.0], bullet: 175, fire: 0.55, beamWave: 3,  rescue: 5.0, grace: 0.30 },
+  hard:     { label: "HARD",     cols: [6, 7], rows: [3, 3], entry: 1.4, dive: [4.0, 2.2], bullet: 205, fire: 0.70, beamWave: 2,  rescue: 4.5, grace: 0 },
+  master:   { label: "MASTER",   cols: [6, 8], rows: [3, 3], entry: 1.2, dive: [3.0, 1.6], bullet: 240, fire: 0.85, beamWave: 2,  rescue: 4.0, grace: 0 },
 };
 const currentLevel = () => DIFFICULTY_LEVELS[settings.difficulty] || DIFFICULTY_LEVELS.normal;
 const currentWordSet = () => WORD_SETS[settings.wordSet] || WORD_SETS.all;
@@ -351,7 +354,7 @@ let state = "menu"; // menu | playing | paused | gameover
 let player, enemies, bullets, enemyBullets, particles, shockwaves, lockTarget;
 let formation, capture, banner;
 let score, lives, elapsed, wave, waveTime, waveClearTimer, diveTimer, beamCooldown;
-let invuln, shake, flash;
+let invuln, grace, shake, flash;
 let typedCorrect, typedWrong, kills, streak, bestStreak, multiplier;
 
 function resetGame() {
@@ -374,6 +377,7 @@ function resetGame() {
   diveTimer = 3;
   beamCooldown = 14;
   invuln = 0;
+  grace = 0;
   shake = 0;
   flash = 0;
   typedCorrect = 0;
@@ -730,6 +734,9 @@ function correctLetter(target) {
   typedCorrect++;
   bumpStreak();
   score += 10 * multiplier;
+  // Landing a shot buys a moment of safety on the gentler difficulties
+  const g = currentLevel().grace;
+  if (g > 0) grace = Math.max(grace, g);
   fireBullet(target);
   sfx.shoot(Math.min(12, streak % STREAK_PER_MULT));
   if (target.typed >= target.word.length) {
@@ -789,6 +796,7 @@ function loseLife() {
   streak = 0;
   multiplier = 1;
   invuln = INVULN_TIME;
+  grace = 0;
   shake = 16;
   flash = 0.5;
   burst(player.x, player.y, 20, [NEON.orange, "#ffffff", "#FF3355"], 32);
@@ -808,6 +816,7 @@ function update(dt) {
     if (banner.life <= 0) banner = null;
   }
   if (invuln > 0) invuln -= dt;
+  if (grace > 0) grace -= dt;
   if (shake > 0) shake = Math.max(0, shake - dt * 20);
   if (flash > 0) flash = Math.max(0, flash - dt * 1.8);
   if (player.muzzle > 0) player.muzzle = Math.max(0, player.muzzle - dt);
@@ -815,12 +824,26 @@ function update(dt) {
   // Formation breathes side to side
   formation.sway = Math.sin(elapsed * 0.55) * Math.min(46, W * 0.05);
 
-  // Player slides under its target; drifts to centre when idle
+  // Player movement. Shots home to their target, so the ship's horizontal
+  // position is cosmetic for aiming — it can duck aside freely and never miss.
+  // That is what makes automatic evasion possible without weakening the
+  // shooting, and the player has no dodge key of their own.
   if (!player.captured) {
-    player.targetX = lockTarget ? lockTarget.x : W / 2;
+    let aim = lockTarget ? lockTarget.x : W / 2;
+
+    // Never chase a target that is diving at us. Tracking a diver's column
+    // means following it into the ram, and the "closest target" lock rule
+    // actively steers players onto divers.
+    if (lockTarget && lockTarget.state === "diving" && lockTarget.y > H * 0.42) {
+      aim = player.x;
+    }
+
+    const evade = evasionOffset();
     const margin = 40;
-    player.targetX = Math.max(margin, Math.min(W - margin, player.targetX));
-    player.x += (player.targetX - player.x) * Math.min(1, dt * 6.5);
+    player.targetX = Math.max(margin, Math.min(W - margin, aim + evade));
+    // Snap harder the more urgent the threat
+    const agility = 6.5 + Math.min(10, Math.abs(evade) / 18);
+    player.x += (player.targetX - player.x) * Math.min(1, dt * agility);
     player.y += (H - PLAYER_BOTTOM - player.y) * Math.min(1, dt * 5);
   }
 
@@ -878,6 +901,40 @@ function update(dt) {
       beamCooldown = 5;
     }
   }
+}
+
+// How far sideways the ship wants to be from whatever is about to hit it.
+// Returns a signed pixel offset: closer and more overhead threats push harder.
+function evasionOffset() {
+  const REACT_Y = 190;   // only threats this far above the ship matter
+  let push = 0;
+
+  for (const b of enemyBullets) {
+    const dy = player.y - b.y;
+    if (dy < 0 || dy > REACT_Y) continue;      // already past us, or too far
+    if (b.vy <= 0) continue;                   // not coming down
+    const dx = player.x - b.x;
+    const span = 95;
+    if (Math.abs(dx) > span) continue;
+    const urgency = 1 - dy / REACT_Y;
+    const dir = dx === 0 ? 1 : Math.sign(dx);  // dead overhead: pick a side
+    push += dir * (span - Math.abs(dx)) * urgency * 1.7;
+  }
+
+  for (const e of enemies) {
+    if (e.state !== "diving" || e.dying) continue;
+    const dy = player.y - e.y;
+    if (dy < -60 || dy > REACT_Y) continue;
+    const dx = player.x - e.x;
+    // Wide enough that the ship clears a diver by a real margin rather than
+    // grazing the edge of its collision radius.
+    const span = 165;
+    if (Math.abs(dx) > span) continue;
+    const urgency = 1 - Math.max(0, dy) / REACT_Y;
+    const dir = dx === 0 ? 1 : Math.sign(dx);
+    push += dir * (span - Math.abs(dx)) * urgency * 2.6;
+  }
+  return push;
 }
 
 function updateCapture(dt, L) {
@@ -972,7 +1029,7 @@ function updateEnemies(dt, L) {
     // Only ships committed to a dive can ram the player. Arrivals and returns
     // are scripted flight paths the player has no way to dodge, so letting
     // them collide would cost lives through no fault of the typist.
-    if (e.state === "diving" && !e.dying && !player.captured && invuln <= 0 &&
+    if (e.state === "diving" && !e.dying && !player.captured && invuln <= 0 && grace <= 0 &&
         Math.hypot(e.x - player.x, e.y - player.y) < e.r + PLAYER_R) {
       explodeEnemy(e);
       if (lockTarget === e) lockTarget = null;
@@ -1024,7 +1081,7 @@ function updateBullets(dt) {
       enemyBullets.splice(i, 1);
       continue;
     }
-    if (!player.captured && invuln <= 0 &&
+    if (!player.captured && invuln <= 0 && grace <= 0 &&
         Math.hypot(b.x - player.x, b.y - player.y) < PLAYER_R + 4) {
       enemyBullets.splice(i, 1);
       loseLife();
@@ -1454,10 +1511,22 @@ function drawPlayer(t) {
     ctx.save();
     ctx.globalCompositeOperation = "lighter";
     const pulse = 0.5 + 0.5 * Math.sin(t * 12);
-    ctx.strokeStyle = `rgba(47, 184, 255, ${0.25 + 0.25 * pulse})`;
+    ctx.strokeStyle = `rgba(0, 208, 255, ${0.25 + 0.25 * pulse})`;
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.arc(player.x, player.y, PLAYER_R * 1.9 + pulse * 3, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  } else if (grace > 0 && !player.captured) {
+    // Steady lime ring, distinct from the blinking cyan hit-recovery shield:
+    // this one says "your typing is protecting you right now".
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    const k = Math.min(1, grace / 0.25);
+    ctx.strokeStyle = `rgba(124, 255, 61, ${0.5 * k})`;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(player.x, player.y, PLAYER_R * 1.75, 0, Math.PI * 2);
     ctx.stroke();
     ctx.restore();
   }
