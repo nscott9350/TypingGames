@@ -32,14 +32,24 @@ const WRONG_FLASH = 0.6;     // seconds the struck-out key stays on the guide
 // ---- Settings (persisted to localStorage) ----
 const SETTINGS_KEY = "typeblaster-settings";
 const SCORES_KEY = "typeblaster-scores";
+const SETTINGS_VERSION = 2;
 const DEFAULT_SETTINGS = {
+  v: SETTINGS_VERSION,
   difficulty: "normal", wordSet: "all", musicOn: true, musicVol: 50, sfxVol: 70,
   keyboardGuide: false,
 };
 let settings = { ...DEFAULT_SETTINGS };
 try {
   const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY));
-  if (saved && typeof saved === "object") settings = { ...DEFAULT_SETTINGS, ...saved };
+  if (saved && typeof saved === "object") {
+    // The keyboard guide briefly shipped defaulting to on. Any player who
+    // adjusted an unrelated setting during that window had `true` written to
+    // storage without ever choosing it, and a stored value outranks a default
+    // forever. Drop just that key from pre-v2 saves so the current default
+    // applies, while keeping every preference they actually picked.
+    if (saved.v !== SETTINGS_VERSION) delete saved.keyboardGuide;
+    settings = { ...DEFAULT_SETTINGS, ...saved, v: SETTINGS_VERSION };
+  }
 } catch (e) { /* corrupted or unavailable storage: fall back to defaults */ }
 
 function saveSettings() {

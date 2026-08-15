@@ -70,14 +70,8 @@ const FINGER_DOTS = [
   { f: "rpk", n: 4, col: 9.83, lift: 0.15 },
 ];
 
-// Black or white numerals depending on how light the finger colour is, so the
-// digit stays readable on yellow and on deep purple alike.
-function contrastInk(hex) {
-  const n = parseInt(hex.slice(1), 16);
-  const lum = 0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255);
-  return lum > 140 ? "#0B0212" : "#FFFFFF";
-}
 const DOT_BAND = 1.15;   // in key units, reserved above the top row
+const LAMP_DIM = 0.5;    // lamps run at half weight; the lit key leads
 
 function keyboardGuideHeight(width, showSpace = true) {
   const u = width / 10.6;
@@ -143,33 +137,36 @@ function drawKeyboardGuide(ctx, opts) {
     const on = d.f === activeFinger;
     const cx = x + d.col * u;
     const cy = y + gap + u * DOT_BAND * 0.5 + d.lift * u;
+    // The lamps are a secondary cue — the lit key itself is the primary one —
+    // so they run at half the weight of everything else on the guide.
+    const lampA = (on ? highlight : opacity) * LAMP_DIM;
 
     if (on) {
-      // A soft halo so the lit finger is caught peripherally
-      ctx.globalAlpha = highlight * 0.28;
+      // A soft halo so the lit finger is still caught peripherally
+      ctx.globalAlpha = lampA * 0.3;
       ctx.fillStyle = color;
       ctx.beginPath();
       ctx.arc(cx, cy, dotR * 1.9, 0, Math.PI * 2);
       ctx.fill();
-    }
 
-    // Lit: solid disc with the numeral knocked out of it. Resting: a ring
-    // with the numeral in the finger's own colour.
-    ctx.globalAlpha = on ? highlight : opacity;
-    if (on) {
+      ctx.globalAlpha = lampA * 0.35;
       ctx.fillStyle = color;
       ctx.beginPath();
       ctx.arc(cx, cy, dotR, 0, Math.PI * 2);
       ctx.fill();
     }
+
+    ctx.globalAlpha = lampA;
     ctx.strokeStyle = color;
     ctx.lineWidth = on ? 2.5 : 1.5;
     ctx.beginPath();
     ctx.arc(cx, cy, dotR, 0, Math.PI * 2);
     ctx.stroke();
 
+    // Numeral stays in the finger's own colour: with the disc no longer solid
+    // there is nothing to knock it out of, and colour keeps the two cues tied.
     ctx.font = `bold ${Math.round(u * (on ? 0.34 : 0.3))}px ${mono}`;
-    ctx.fillStyle = on ? contrastInk(color) : color;
+    ctx.fillStyle = color;
     ctx.fillText(String(d.n), cx, cy + 1);
   }
 

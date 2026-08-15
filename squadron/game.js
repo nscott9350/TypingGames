@@ -44,14 +44,24 @@ const BEAM_CHARGE = 1.7;        // seconds before a tractor beam catches
 // ---- Settings & scores (own keys so Blaster's data is untouched) ----
 const SETTINGS_KEY = "typesquadron-settings";
 const SCORES_KEY = "typesquadron-scores";
+const SETTINGS_VERSION = 2;
 const DEFAULT_SETTINGS = {
+  v: SETTINGS_VERSION,
   difficulty: "normal", wordSet: "all", musicOn: true, musicVol: 50, sfxVol: 70,
   keyboardGuide: false,
 };
 let settings = { ...DEFAULT_SETTINGS };
 try {
   const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY));
-  if (saved && typeof saved === "object") settings = { ...DEFAULT_SETTINGS, ...saved };
+  if (saved && typeof saved === "object") {
+    // The keyboard guide briefly shipped defaulting to on. Any player who
+    // adjusted an unrelated setting during that window had `true` written to
+    // storage without ever choosing it, and a stored value outranks a default
+    // forever. Drop just that key from pre-v2 saves so the current default
+    // applies, while keeping every preference they actually picked.
+    if (saved.v !== SETTINGS_VERSION) delete saved.keyboardGuide;
+    settings = { ...DEFAULT_SETTINGS, ...saved, v: SETTINGS_VERSION };
+  }
 } catch (e) { /* corrupted or unavailable storage: fall back to defaults */ }
 
 function saveSettings() {
