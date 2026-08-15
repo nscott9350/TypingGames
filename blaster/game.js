@@ -33,6 +33,7 @@ const SETTINGS_KEY = "typeblaster-settings";
 const SCORES_KEY = "typeblaster-scores";
 const DEFAULT_SETTINGS = {
   difficulty: "normal", wordSet: "all", musicOn: true, musicVol: 50, sfxVol: 70,
+  keyboardGuide: true,
 };
 let settings = { ...DEFAULT_SETTINGS };
 try {
@@ -91,6 +92,14 @@ const currentLevel = () => DIFFICULTY_LEVELS[settings.difficulty] || DIFFICULTY_
 const currentWordSet = () => WORD_SETS[settings.wordSet] || WORD_SETS.all;
 
 let W = 0, H = 0;
+
+// Bottom space reserved for the keyboard guide. Zero when the guide is off.
+function guideBox() {
+  if (!settings.keyboardGuide) return { on: false, h: 0, w: 0, x: 0, y: H };
+  const w = keyboardGuideWidth(W);
+  const h = keyboardGuideHeight(w);
+  return { on: true, h, w, x: (W - w) / 2, y: H - h - 34 };
+}
 
 // ---- Glow sprite cache ----
 // Pre-rendering the radial falloff once per color is far cheaper than
@@ -960,7 +969,10 @@ function draw() {
   }
   drawVignette();
 
-  if (state === "playing" || state === "paused" || state === "gameover") drawHUD();
+  if (state === "playing" || state === "paused" || state === "gameover") {
+    drawGuide();
+    drawHUD();
+  }
 }
 
 function drawStars(t) {
@@ -1280,6 +1292,37 @@ function drawParticles() {
   ctx.restore();
 }
 
+// The key to press now, plus every key that would start a valid lock.
+function guideKeys() {
+  if (lockTarget) return { next: lockTarget.word[lockTarget.typed] || null, options: [] };
+  const opts = [];
+  for (const a of asteroids) if (a.entered && !a.dying) opts.push(a.word[0]);
+  return { next: null, options: opts };
+}
+
+function drawGuide() {
+  const g = guideBox();
+  if (!g.on) return;
+  const { next, options } = guideKeys();
+  drawKeyboardGuide(ctx, {
+    x: g.x, y: g.y, width: g.w,
+    next, options,
+    showSpace: false,          // Blaster has no space action
+    mono: MONO,
+  });
+  if (next) {
+    const label = fingerLabelFor(next);
+    if (label) {
+      ctx.save();
+      ctx.textAlign = "center";
+      ctx.font = `600 11px ${MONO}`;
+      ctx.fillStyle = fingerColorFor(next);
+      ctx.fillText(label.toUpperCase(), W / 2, g.y - 14);
+      ctx.restore();
+    }
+  }
+}
+
 function drawHUD() {
   const pad = 20;
 
@@ -1335,19 +1378,23 @@ function drawHUD() {
   ctx.font = `13px ${MONO}`;
   ctx.textAlign = "left";
   ctx.fillStyle = "rgba(160, 190, 220, 0.8)";
+  // Sit above the keyboard guide when it is showing, not underneath it
+  const gb = guideBox();
+  const infoY = gb.on ? gb.y - 14 : H - 20;
   ctx.fillText(
     `WPM ${wpm}    ACC ${acc}%    ${currentLevel().label}    ${currentWordSet().label.toUpperCase()}`,
-    pad, H - 20
+    pad, infoY
   );
   ctx.textAlign = "right";
   ctx.fillStyle = "rgba(138, 168, 200, 0.55)";
-  ctx.fillText("ESC  pause / settings", W - pad, H - 20);
+  ctx.fillText("ESC  pause / settings", W - pad, infoY);
   ctx.textAlign = "left";
 }
 
 // ---- Settings UI wiring ----
 const diffButtons = Array.from(document.querySelectorAll(".diff-btn"));
 const setButtons = Array.from(document.querySelectorAll(".set-btn"));
+const kbdToggleEl = document.getElementById("kbd-toggle");
 const musicToggleEl = document.getElementById("music-toggle");
 const musicVolEl = document.getElementById("music-vol");
 const musicVolNumEl = document.getElementById("music-vol-num");
@@ -1361,6 +1408,8 @@ function syncSettingsUI() {
   for (const b of setButtons) {
     b.classList.toggle("selected", b.dataset.set === settings.wordSet);
   }
+  kbdToggleEl.textContent = settings.keyboardGuide ? "ON" : "OFF";
+  kbdToggleEl.classList.toggle("off", !settings.keyboardGuide);
   musicToggleEl.textContent = settings.musicOn ? "ON" : "OFF";
   musicToggleEl.classList.toggle("off", !settings.musicOn);
   musicVolEl.value = settings.musicVol;
@@ -1389,6 +1438,12 @@ for (const b of setButtons) {
     syncSettingsUI();
   });
 }
+
+kbdToggleEl.addEventListener("click", () => {
+  settings.keyboardGuide = !settings.keyboardGuide;
+  saveSettings();
+  syncSettingsUI();
+});
 
 musicToggleEl.addEventListener("click", () => {
   settings.musicOn = !settings.musicOn;

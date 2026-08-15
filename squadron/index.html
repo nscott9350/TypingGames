@@ -6,7 +6,7 @@
   <title>Type Squadron</title>
   <!-- Bump ?v= on every deploy: GitHub Pages caches assets for 10 minutes, and
        a page that loads new HTML against a stale script would break. -->
-  <link rel="stylesheet" href="style.css?v=12">
+  <link rel="stylesheet" href="style.css?v=14">
 </head>
 <body>
   <canvas id="game"></canvas>
@@ -75,6 +75,15 @@
       </div>
       <div class="setting-group">
         <div class="setting-label">
+          <span>Keyboard guide</span>
+          <button id="kbd-toggle" class="toggle">ON</button>
+        </div>
+        <p class="hint">Draws the keyboard on screen and lights up the next key,
+          colour-coded by which finger should press it &mdash; so you can learn the
+          reach without looking down.</p>
+      </div>
+      <div class="setting-group">
+        <div class="setting-label">
           <span>Music</span>
           <button id="music-toggle" class="toggle">ON</button>
         </div>
@@ -97,7 +106,8 @@
     </div>
   </div>
 
-  <script src="../shared/words.js?v=12"></script>
-  <script src="game.js?v=12"></script>
+  <script src="../shared/words.js?v=14"></script>
+  <script src="../shared/keyboard.js?v=14"></script>
+  <script src="game.js?v=14"></script>
 </body>
 </html>

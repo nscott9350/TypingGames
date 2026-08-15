@@ -45,6 +45,7 @@ const SETTINGS_KEY = "typesquadron-settings";
 const SCORES_KEY = "typesquadron-scores";
 const DEFAULT_SETTINGS = {
   difficulty: "normal", wordSet: "all", musicOn: true, musicVol: 50, sfxVol: 70,
+  keyboardGuide: true,
 };
 let settings = { ...DEFAULT_SETTINGS };
 try {
@@ -135,6 +136,15 @@ const TYPES = {
 };
 
 let W = 0, H = 0;
+
+// Bottom space reserved for the keyboard guide, so it never sits under the
+// ship or the HUD. Zero when the guide is off.
+function guideBox() {
+  if (!settings.keyboardGuide) return { on: false, h: 0, w: 0, x: 0, y: H };
+  const w = keyboardGuideWidth(W);
+  const h = keyboardGuideHeight(w);
+  return { on: true, h, w, x: (W - w) / 2, y: H - h - 34 };
+}
 
 // ---- Glow sprite cache ----
 // Pre-rendering the radial falloff once per color is far cheaper than building
@@ -370,8 +380,14 @@ let score, lives, elapsed, wave, waveTime, waveClearTimer, diveTimer, beamCooldo
 let invuln, grace, shake, flash, juke;
 let typedCorrect, typedWrong, kills, streak, bestStreak, multiplier;
 
+// The ship rides above the keyboard guide when it is showing
+function playerBaseY() {
+  const g = guideBox();
+  return H - PLAYER_BOTTOM - (g.on ? g.h + 20 : 0);
+}
+
 function resetGame() {
-  player = { x: W / 2, y: H - PLAYER_BOTTOM, targetX: W / 2, muzzle: 0, captured: false, spin: 0 };
+  player = { x: W / 2, y: playerBaseY(), targetX: W / 2, muzzle: 0, captured: false, spin: 0 };
   enemies = [];
   bullets = [];
   enemyBullets = [];
@@ -927,7 +943,7 @@ function update(dt) {
       agility += Math.min(10, Math.abs(evade) / 18);
       player.x += (player.targetX - player.x) * Math.min(1, dt * agility);
     }
-    player.y += (H - PLAYER_BOTTOM - player.y) * Math.min(1, dt * 5);
+    player.y += (playerBaseY() - player.y) * Math.min(1, dt * 5);
   }
 
   // Engine trail
@@ -1331,6 +1347,7 @@ function draw(dt) {
   if (state === "playing" || state === "paused" || state === "gameover") {
     if (capture && capture.phase === "held") drawRescuePrompt(t);
     drawBanner();
+    drawGuide();
     drawHUD();
   }
 }
@@ -1782,6 +1799,43 @@ function drawBanner() {
   ctx.textAlign = "left";
 }
 
+// The key the player must press now, plus every other key that would start a
+// valid lock. Showing the options while unlocked is half the teaching value:
+// it turns "what can I even do" into a visible choice.
+function guideKeys() {
+  if (capture && capture.phase === "held") {
+    return { next: capture.word[capture.typed] || null, options: [] };
+  }
+  if (lockTarget) return { next: lockTarget.word[lockTarget.typed] || null, options: [] };
+  const opts = [];
+  for (const e of enemies) if (targetable(e)) opts.push(e.word[0]);
+  return { next: null, options: opts };
+}
+
+function drawGuide() {
+  const g = guideBox();
+  if (!g.on) return;
+  const { next, options } = state === "playing" || state === "paused"
+    ? guideKeys() : { next: null, options: [] };
+  drawKeyboardGuide(ctx, {
+    x: g.x, y: g.y, width: g.w,
+    next, options,
+    spaceReady: juke.charges > 0,
+    mono: MONO,
+  });
+  if (next) {
+    const label = fingerLabelFor(next);
+    if (label) {
+      ctx.save();
+      ctx.textAlign = "center";
+      ctx.font = `600 11px ${MONO}`;
+      ctx.fillStyle = fingerColorFor(next);
+      ctx.fillText(label.toUpperCase(), W / 2, g.y - 14);
+      ctx.restore();
+    }
+  }
+}
+
 function drawHUD() {
   const pad = 20;
   ctx.font = `600 12px ${MONO}`;
@@ -1867,19 +1921,23 @@ function drawHUD() {
   ctx.textAlign = "left";
   ctx.font = `13px ${MONO}`;
   ctx.fillStyle = "rgba(215, 205, 250, 0.85)";
+  // Sit above the keyboard guide when it is showing, not underneath it
+  const gb = guideBox();
+  const infoY = gb.on ? gb.y - 14 : H - 20;
   ctx.fillText(
     `WPM ${wpm}    ACC ${acc}%    ${currentLevel().label}    ${currentWordSet().label.toUpperCase()}`,
-    pad, H - 20
+    pad, infoY
   );
   ctx.textAlign = "right";
   ctx.fillStyle = "rgba(190, 175, 235, 0.6)";
-  ctx.fillText("ESC  pause / settings", W - pad, H - 20);
+  ctx.fillText("ESC  pause / settings", W - pad, infoY);
   ctx.textAlign = "left";
 }
 
 // ---- Settings UI ----
 const diffButtons = Array.from(document.querySelectorAll(".diff-btn"));
 const setButtons = Array.from(document.querySelectorAll(".set-btn"));
+const kbdToggleEl = document.getElementById("kbd-toggle");
 const musicToggleEl = document.getElementById("music-toggle");
 const musicVolEl = document.getElementById("music-vol");
 const musicVolNumEl = document.getElementById("music-vol-num");
@@ -1889,6 +1947,8 @@ const sfxVolNumEl = document.getElementById("sfx-vol-num");
 function syncSettingsUI() {
   for (const b of diffButtons) b.classList.toggle("selected", b.dataset.diff === settings.difficulty);
   for (const b of setButtons) b.classList.toggle("selected", b.dataset.set === settings.wordSet);
+  kbdToggleEl.textContent = settings.keyboardGuide ? "ON" : "OFF";
+  kbdToggleEl.classList.toggle("off", !settings.keyboardGuide);
   musicToggleEl.textContent = settings.musicOn ? "ON" : "OFF";
   musicToggleEl.classList.toggle("off", !settings.musicOn);
   musicVolEl.value = settings.musicVol;
@@ -1916,6 +1976,12 @@ for (const b of setButtons) {
     syncSettingsUI();
   });
 }
+
+kbdToggleEl.addEventListener("click", () => {
+  settings.keyboardGuide = !settings.keyboardGuide;
+  saveSettings();
+  syncSettingsUI();
+});
 
 musicToggleEl.addEventListener("click", () => {
   settings.musicOn = !settings.musicOn;

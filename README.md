@@ -47,6 +47,22 @@ run is usually two threats — the diving ship, and the shot trailing about a
 second behind it — and after a juke the ship holds its new position rather than
 sliding back into the shot's path.
 
+## Keyboard guide
+
+Both games can draw a keyboard along the bottom of the screen and light up the
+key you need next, so you never have to glance down. It is on by default and can
+be switched off in **Settings**.
+
+Keys are colour-coded by **which finger should press them**, which is the part
+that actually transfers — knowing where `P` lives is far less useful than
+knowing it belongs to the right pinky. The home-row keys carry a marker, with a
+heavier one under `F` and `J` for the raised bumps you use to find home position
+by touch, and the finger for the current key is named just above the keyboard.
+
+When you have no target locked, every key that would start a valid word lights
+up dimly, so choosing what to shoot next is a visible decision rather than a
+hunt across the screen.
+
 ## Practice word sets
 
 Both games share the same word sets, so you can drill one part of the keyboard
@@ -84,6 +100,7 @@ index.html, hub.css     the arcade landing page
 blaster/                Type Blaster (index.html, game.js, style.css)
 squadron/               Type Squadron (index.html, game.js, style.css)
 shared/words.js         word sets, used by both games
+shared/keyboard.js      on-screen keyboard guide, used by both games
 ```
 
 Each game keeps its own settings and high scores under its own `localStorage`
@@ -105,3 +122,23 @@ arcade era. Game mechanics are not protectable, but the titles of the games that
 inspired these are trademarks belonging to their owners, so they are not used
 here — the genre terms *multidirectional shooter* and *formation shooter* are
 the accurate descriptions and are what you will find throughout.
+
+Everything here is original work. There are no dependencies, no bundled fonts
+or sound files, and no third-party assets of any kind — the games draw to a
+canvas and set type in whatever monospace font your system already has.
+
+## Contributing
+
+This is a personal project, built mainly so I have something to practise touch
+typing on. It is shared in case it is useful to someone else, not as a project
+looking for maintainers.
+
+Bug reports and ideas are welcome as issues, and small fixes as pull requests,
+but treat any response from me as a bonus rather than a promise. If you want to
+take it somewhere I would not — different genres, different word sets, a
+different feel entirely — fork it. The licence exists so you can.
+
+## License
+
+[MIT](LICENSE). Do what you like with it, including commercially; just keep the
+copyright notice, and understand that it comes with no warranty.
