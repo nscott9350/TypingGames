@@ -6,8 +6,19 @@
 
 :root {
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Courier New", monospace;
-  --dim: #8fa3c4;
-  --text: #e6f0ff;
+
+  /* The same pure hues the games use, so the front door matches the rooms */
+  --blue: #1E5BFF;
+  --cyan: #00D0FF;
+  --purple: #9D00FF;
+  --magenta: #FF0090;
+  --orange: #FF6A00;
+  --yellow: #FFD400;
+  --lime: #7CFF3D;
+
+  --text: #F2ECFF;
+  --dim: #A99BD6;
+  --bg: #04010C;
 }
 
 html {
@@ -18,30 +29,35 @@ body {
   min-height: 100%;
   font-family: var(--mono);
   color: var(--text);
+  /* Tight saturated pools over a near-black ground, matching the games */
   background:
-    radial-gradient(ellipse 90% 60% at 20% 0%, rgba(157, 0, 255, 0.22), transparent 60%),
-    radial-gradient(ellipse 80% 50% at 85% 25%, rgba(255, 0, 144, 0.16), transparent 60%),
-    radial-gradient(ellipse 70% 50% at 50% 95%, rgba(0, 208, 255, 0.14), transparent 60%),
-    #04010c;
+    radial-gradient(ellipse 60% 40% at 18% 4%, rgba(157, 0, 255, 0.26), transparent 65%),
+    radial-gradient(ellipse 55% 35% at 88% 20%, rgba(255, 0, 144, 0.2), transparent 65%),
+    radial-gradient(ellipse 50% 35% at 60% 60%, rgba(0, 208, 255, 0.16), transparent 65%),
+    radial-gradient(ellipse 55% 40% at 25% 92%, rgba(30, 91, 255, 0.18), transparent 65%),
+    var(--bg);
+  background-attachment: fixed;
   padding: 0 1.25rem 3rem;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Static starfield built from repeating radial gradients */
+/* Starfield with a few coloured stars, as in the games */
 .stars {
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 0;
   background-image:
-    radial-gradient(1.4px 1.4px at 12% 18%, rgba(255,255,255,0.7), transparent),
-    radial-gradient(1.2px 1.2px at 68% 12%, rgba(255,255,255,0.55), transparent),
-    radial-gradient(1.6px 1.6px at 32% 62%, rgba(200,230,255,0.6), transparent),
-    radial-gradient(1.2px 1.2px at 82% 72%, rgba(255,220,240,0.5), transparent),
-    radial-gradient(1.3px 1.3px at 52% 34%, rgba(255,255,255,0.45), transparent),
-    radial-gradient(1.1px 1.1px at 92% 42%, rgba(255,255,255,0.4), transparent),
-    radial-gradient(1.5px 1.5px at 22% 88%, rgba(210,240,255,0.5), transparent),
-    radial-gradient(1.2px 1.2px at 74% 92%, rgba(255,255,255,0.35), transparent);
+    radial-gradient(1.5px 1.5px at 12% 18%, rgba(255,255,255,0.85), transparent),
+    radial-gradient(1.2px 1.2px at 68% 12%, rgba(0,208,255,0.8), transparent),
+    radial-gradient(1.6px 1.6px at 32% 62%, rgba(255,255,255,0.7), transparent),
+    radial-gradient(1.3px 1.3px at 82% 72%, rgba(255,0,144,0.65), transparent),
+    radial-gradient(1.3px 1.3px at 52% 34%, rgba(255,255,255,0.55), transparent),
+    radial-gradient(1.2px 1.2px at 92% 42%, rgba(124,255,61,0.6), transparent),
+    radial-gradient(1.5px 1.5px at 22% 88%, rgba(255,255,255,0.6), transparent),
+    radial-gradient(1.2px 1.2px at 74% 92%, rgba(255,212,0,0.55), transparent),
+    radial-gradient(1.1px 1.1px at 44% 8%, rgba(255,255,255,0.5), transparent),
+    radial-gradient(1.2px 1.2px at 6% 48%, rgba(157,0,255,0.6), transparent);
   background-size: 100% 100%;
 }
 
@@ -61,11 +77,19 @@ body {
   font-size: clamp(2.1rem, 7vw, 4.2rem);
   letter-spacing: 0.26em;
   font-weight: 700;
-  background: linear-gradient(90deg, #7fd4ff 0%, #FFD400 30%, #FF0090 60%, #9D00FF 100%);
+  /* Runs the full arcade spectrum, each stop a pure hue */
+  background: linear-gradient(90deg,
+    var(--cyan) 0%,
+    var(--lime) 22%,
+    var(--yellow) 42%,
+    var(--orange) 58%,
+    var(--magenta) 78%,
+    var(--purple) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  filter: drop-shadow(0 0 30px rgba(160, 120, 255, 0.4));
+  filter: drop-shadow(0 0 26px rgba(255, 0, 144, 0.45))
+          drop-shadow(0 0 60px rgba(157, 0, 255, 0.3));
 }
 
 .hero .sub {
@@ -89,33 +113,40 @@ body {
 }
 
 .card {
+  --accent: var(--cyan);
+  --accent-2: var(--yellow);
   display: flex;
   flex-direction: column;
   text-decoration: none;
   color: inherit;
   border-radius: 14px;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.035);
+  background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.1);
   transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
 }
 
-.card:hover {
-  transform: translateY(-5px);
-  border-color: rgba(255, 255, 255, 0.28);
+.card-squadron {
+  --accent: var(--magenta);
+  --accent-2: var(--lime);
 }
 
-.card-blaster:hover { box-shadow: 0 14px 40px rgba(59, 169, 255, 0.28); }
-.card-squadron:hover { box-shadow: 0 14px 40px rgba(255, 0, 144, 0.28); }
+.card:hover {
+  transform: translateY(-5px);
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  box-shadow: 0 14px 44px color-mix(in srgb, var(--accent) 32%, transparent);
+}
 
 .art {
   padding: 1.4rem 1rem 0.4rem;
   display: flex;
   justify-content: center;
+  /* Plain fallback first: where color-mix is unsupported the whole
+     declaration is dropped, and a shorthand would leave nothing behind. */
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), transparent);
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--accent) 16%, transparent), transparent);
 }
-
-.card-blaster .art { background: linear-gradient(180deg, rgba(20, 40, 70, 0.6), transparent); }
-.card-squadron .art { background: linear-gradient(180deg, rgba(60, 20, 70, 0.6), transparent); }
 
 .art svg {
   width: 100%;
@@ -138,19 +169,19 @@ body {
   align-items: center;
   gap: 0.6rem;
   flex-wrap: wrap;
+  color: var(--accent);
+  text-shadow: 0 0 18px color-mix(in srgb, var(--accent) 45%, transparent);
 }
-
-.card-blaster h2 { color: #7fd4ff; }
-.card-squadron h2 { color: #FF2DB0; }
 
 .badge {
   font-size: 0.6rem;
   letter-spacing: 0.18em;
   font-weight: bold;
-  color: #12061f;
-  background: linear-gradient(90deg, #FFD400, #FF0090);
+  color: #04010C;
+  background: linear-gradient(90deg, var(--yellow), var(--orange));
   padding: 0.18rem 0.5rem;
   border-radius: 999px;
+  box-shadow: 0 0 16px rgba(255, 106, 0, 0.5);
 }
 
 .genre {
@@ -163,7 +194,7 @@ body {
 .desc {
   font-size: 0.88rem;
   line-height: 1.55;
-  color: #c3d3ea;
+  color: #D9CEF5;
 }
 
 .tags {
@@ -178,7 +209,8 @@ body {
   font-size: 0.7rem;
   letter-spacing: 0.06em;
   color: var(--dim);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-color: color-mix(in srgb, var(--accent) 34%, transparent);
   border-radius: 999px;
   padding: 0.2rem 0.6rem;
 }
@@ -189,17 +221,16 @@ body {
   font-size: 0.95rem;
   letter-spacing: 0.14em;
   font-weight: bold;
+  color: var(--accent-2);
+  text-shadow: 0 0 16px color-mix(in srgb, var(--accent-2) 45%, transparent);
 }
-
-.card-blaster .play { color: #7fd4ff; }
-.card-squadron .play { color: #FFD400; }
 
 /* ---- Practice section ---- */
 .drills {
   margin-top: 3rem;
   padding: 1.6rem 1.8rem;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.028);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
@@ -207,14 +238,14 @@ body {
   font-size: 0.78rem;
   letter-spacing: 0.24em;
   text-transform: uppercase;
-  color: var(--dim);
+  color: var(--cyan);
   margin-bottom: 0.8rem;
 }
 
 .drills p {
   font-size: 0.88rem;
   line-height: 1.6;
-  color: #c3d3ea;
+  color: #D9CEF5;
   max-width: 46rem;
 }
 
@@ -225,12 +256,12 @@ body {
   grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
   gap: 0.45rem;
   font-size: 0.85rem;
-  color: #c3d3ea;
+  color: #D9CEF5;
 }
 
 .drills li::before {
   content: "▸ ";
-  color: #FFD400;
+  color: var(--lime);
 }
 
 .drills strong { color: var(--text); }
@@ -248,4 +279,9 @@ footer {
   line-height: 1.9;
 }
 
-footer a { color: #7fd4ff; }
+footer a {
+  color: var(--cyan);
+  text-decoration-color: color-mix(in srgb, var(--cyan) 45%, transparent);
+}
+
+footer a:hover { color: var(--lime); }

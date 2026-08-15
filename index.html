@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Type Arcade</title>
   <meta name="description" content="Arcade games that teach you to touch type.">
-  <link rel="stylesheet" href="hub.css?v=3">
+  <link rel="stylesheet" href="hub.css?v=4">
 </head>
 <body>
   <div class="stars" aria-hidden="true"></div>
@@ -21,18 +21,25 @@
       <div class="art" aria-hidden="true">
         <svg viewBox="0 0 200 120" role="img">
           <defs>
-            <radialGradient id="rock" cx="35%" cy="30%">
-              <stop offset="0%" stop-color="#7f95ad"/>
-              <stop offset="100%" stop-color="#1b2634"/>
+            <radialGradient id="rock" cx="34%" cy="28%">
+              <stop offset="0%" stop-color="#8FA6BE"/>
+              <stop offset="60%" stop-color="#3A4B60"/>
+              <stop offset="100%" stop-color="#111A26"/>
             </radialGradient>
+            <filter id="bglow" x="-60%" y="-60%" width="220%" height="220%">
+              <feGaussianBlur stdDeviation="3" result="b"/>
+              <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
           </defs>
-          <circle cx="46" cy="34" r="21" fill="url(#rock)"/>
-          <circle cx="152" cy="44" r="15" fill="url(#rock)"/>
-          <circle cx="112" cy="20" r="11" fill="url(#rock)"/>
-          <path d="M100 96 L112 76 L100 82 L88 76 Z" fill="#7fd4ff"/>
-          <circle cx="100" cy="70" r="2.6" fill="#ffd97a"/>
-          <circle cx="92" cy="58" r="2" fill="#ffd97a" opacity=".7"/>
-          <circle cx="84" cy="47" r="1.6" fill="#ffd97a" opacity=".45"/>
+          <circle cx="44" cy="32" r="21" fill="url(#rock)" stroke="#9FB4CC" stroke-width="1" stroke-opacity=".55"/>
+          <circle cx="156" cy="42" r="15" fill="url(#rock)" stroke="#9FB4CC" stroke-width="1" stroke-opacity=".5"/>
+          <circle cx="116" cy="18" r="10" fill="url(#rock)" stroke="#9FB4CC" stroke-width="1" stroke-opacity=".45"/>
+          <g filter="url(#bglow)">
+            <path d="M100 98 L111 78 L100 84 L89 78 Z" fill="#00D0FF"/>
+            <circle cx="94" cy="66" r="2.8" fill="#FFD400"/>
+            <circle cx="84" cy="53" r="2.1" fill="#FFD400" opacity=".72"/>
+            <circle cx="74" cy="41" r="1.6" fill="#FFD400" opacity=".42"/>
+          </g>
         </svg>
       </div>
       <div class="body">
@@ -51,21 +58,54 @@
 
     <a class="card card-squadron" href="squadron/">
       <div class="art" aria-hidden="true">
+        <!-- Mirrors the real formation: cyan/blue boss, magenta/purple
+             butterflies, yellow/orange bees, lime player under the beam. -->
         <svg viewBox="0 0 200 120" role="img">
-          <g fill="#FF0090">
-            <ellipse cx="70" cy="26" rx="7" ry="9"/>
-            <ellipse cx="100" cy="26" rx="7" ry="9"/>
-            <ellipse cx="130" cy="26" rx="7" ry="9"/>
+          <defs>
+            <linearGradient id="beam" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#00D0FF" stop-opacity=".55"/>
+              <stop offset="100%" stop-color="#1E5BFF" stop-opacity="0"/>
+            </linearGradient>
+            <filter id="sglow" x="-70%" y="-70%" width="240%" height="240%">
+              <feGaussianBlur stdDeviation="2.6" result="b"/>
+              <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+
+          <path d="M92 26 L108 26 L124 92 L76 92 Z" fill="url(#beam)"/>
+
+          <g filter="url(#sglow)">
+            <!-- boss: cyan body, blue wings -->
+            <g>
+              <path d="M88 20 L78 24 L82 32 L92 30 Z" fill="#1E5BFF"/>
+              <path d="M112 20 L122 24 L118 32 L108 30 Z" fill="#1E5BFF"/>
+              <ellipse cx="100" cy="25" rx="6" ry="9" fill="#00D0FF"/>
+              <path d="M96 15 q2 -6 -1 -9 M104 15 q-2 -6 1 -9" stroke="#6FE9FF" stroke-width="1.4" fill="none"/>
+            </g>
+            <!-- butterflies: magenta body, purple wings -->
+            <g>
+              <ellipse cx="52" cy="26" rx="6" ry="5" fill="#9D00FF"/>
+              <ellipse cx="68" cy="26" rx="6" ry="5" fill="#9D00FF"/>
+              <ellipse cx="60" cy="26" rx="5" ry="8" fill="#FF0090"/>
+              <ellipse cx="132" cy="26" rx="6" ry="5" fill="#9D00FF"/>
+              <ellipse cx="148" cy="26" rx="6" ry="5" fill="#9D00FF"/>
+              <ellipse cx="140" cy="26" rx="5" ry="8" fill="#FF0090"/>
+            </g>
+            <!-- bees: yellow body, orange wings -->
+            <g>
+              <ellipse cx="48" cy="54" rx="5" ry="4" fill="#FF6A00"/>
+              <ellipse cx="62" cy="54" rx="5" ry="4" fill="#FF6A00"/>
+              <ellipse cx="55" cy="54" rx="4.4" ry="7" fill="#FFD400"/>
+              <ellipse cx="93" cy="54" rx="5" ry="4" fill="#FF6A00"/>
+              <ellipse cx="107" cy="54" rx="5" ry="4" fill="#FF6A00"/>
+              <ellipse cx="100" cy="54" rx="4.4" ry="7" fill="#FFD400"/>
+              <ellipse cx="138" cy="54" rx="5" ry="4" fill="#FF6A00"/>
+              <ellipse cx="152" cy="54" rx="5" ry="4" fill="#FF6A00"/>
+              <ellipse cx="145" cy="54" rx="4.4" ry="7" fill="#FFD400"/>
+            </g>
+            <!-- player: lime -->
+            <path d="M100 100 L110 84 L100 88 L90 84 Z" fill="#7CFF3D" stroke="#FFFFFF" stroke-width="1.2"/>
           </g>
-          <g fill="#FFD400">
-            <ellipse cx="55" cy="52" rx="6" ry="8"/>
-            <ellipse cx="85" cy="52" rx="6" ry="8"/>
-            <ellipse cx="115" cy="52" rx="6" ry="8"/>
-            <ellipse cx="145" cy="52" rx="6" ry="8"/>
-          </g>
-          <path d="M100 100 L110 82 L100 87 L90 82 Z" fill="#FFD400" stroke="#FFFFFF" stroke-width="1.5"/>
-          <path d="M92 30 L108 30 L118 74 L82 74 Z" fill="#00D0FF" opacity=".18"/>
-          <circle cx="100" cy="72" r="2.4" fill="#FFFFFF"/>
         </svg>
       </div>
       <div class="body">
