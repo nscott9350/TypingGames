@@ -57,16 +57,26 @@ const BUMP_KEYS = new Set(["f","j"]);
 // Reading a colour is faster than reading the words "left middle" mid-word,
 // and anchoring each lamp over its own key makes the mapping self-evident.
 // `lift` nudges them into a hand's silhouette — middle tallest, pinky lowest.
+// Numbered the way typing courses do it — index 1 out to pinky 4 — so the row
+// reads 4 3 2 1 · 1 2 3 4 and matches whatever else the player is learning from.
 const FINGER_DOTS = [
-  { f: "lp",  col: 0.83, lift: 0.15 },
-  { f: "lr",  col: 1.83, lift: 0.03 },
-  { f: "lm",  col: 2.83, lift: 0.00 },
-  { f: "li",  col: 3.83, lift: 0.09 },
-  { f: "ri",  col: 6.83, lift: 0.09 },
-  { f: "rm",  col: 7.83, lift: 0.00 },
-  { f: "rr",  col: 8.83, lift: 0.03 },
-  { f: "rpk", col: 9.83, lift: 0.15 },
+  { f: "lp",  n: 4, col: 0.83, lift: 0.15 },
+  { f: "lr",  n: 3, col: 1.83, lift: 0.03 },
+  { f: "lm",  n: 2, col: 2.83, lift: 0.00 },
+  { f: "li",  n: 1, col: 3.83, lift: 0.09 },
+  { f: "ri",  n: 1, col: 6.83, lift: 0.09 },
+  { f: "rm",  n: 2, col: 7.83, lift: 0.00 },
+  { f: "rr",  n: 3, col: 8.83, lift: 0.03 },
+  { f: "rpk", n: 4, col: 9.83, lift: 0.15 },
 ];
+
+// Black or white numerals depending on how light the finger colour is, so the
+// digit stays readable on yellow and on deep purple alike.
+function contrastInk(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  const lum = 0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255);
+  return lum > 140 ? "#0B0212" : "#FFFFFF";
+}
 const DOT_BAND = 1.15;   // in key units, reserved above the top row
 
 function keyboardGuideHeight(width, showSpace = true) {
@@ -127,7 +137,7 @@ function drawKeyboardGuide(ctx, opts) {
 
   // ---- Finger lamps ----
   const activeFinger = next ? KEY_FINGER[next] : null;
-  const dotR = u * 0.26;
+  const dotR = u * 0.3;
   for (const d of FINGER_DOTS) {
     const color = FINGER_COLOR[d.f];
     const on = d.f === activeFinger;
@@ -139,22 +149,28 @@ function drawKeyboardGuide(ctx, opts) {
       ctx.globalAlpha = highlight * 0.28;
       ctx.fillStyle = color;
       ctx.beginPath();
-      ctx.arc(cx, cy, dotR * 2.1, 0, Math.PI * 2);
+      ctx.arc(cx, cy, dotR * 1.9, 0, Math.PI * 2);
       ctx.fill();
     }
 
+    // Lit: solid disc with the numeral knocked out of it. Resting: a ring
+    // with the numeral in the finger's own colour.
     ctx.globalAlpha = on ? highlight : opacity;
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.arc(cx, cy, on ? dotR * 1.15 : dotR * 0.42, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.globalAlpha = on ? highlight : opacity;
+    if (on) {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(cx, cy, dotR, 0, Math.PI * 2);
+      ctx.fill();
+    }
     ctx.strokeStyle = color;
     ctx.lineWidth = on ? 2.5 : 1.5;
     ctx.beginPath();
     ctx.arc(cx, cy, dotR, 0, Math.PI * 2);
     ctx.stroke();
+
+    ctx.font = `bold ${Math.round(u * (on ? 0.34 : 0.3))}px ${mono}`;
+    ctx.fillStyle = on ? contrastInk(color) : color;
+    ctx.fillText(String(d.n), cx, cy + 1);
   }
 
   let ry = y + gap + u * DOT_BAND;
