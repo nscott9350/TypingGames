@@ -656,8 +656,21 @@ function wrongLetter(key) {
   sfx.error();
 }
 
+// Stationed on the far side of the burrow from the ants, so the hole he is
+// defending sits between him and the column rather than behind him. At 0.40 he
+// stood on the final approach itself, with his back to everything coming.
 function gopherPos() {
-  return { x: stage.x + stage.w * 0.40, y: stage.y + stage.h * 0.80 };
+  return { x: stage.x + stage.w * 0.605, y: stage.y + stage.h * 0.818 };
+}
+
+// He faces whatever he is aiming at, which is almost always up the trail to his
+// left; early in a wave, when the column is still coming around the far side,
+// he turns to watch it. The sprite is drawn facing right, so facing left is a
+// mirror.
+function gopherFacing() {
+  const t = lockTarget || chain[0];
+  if (!t) return true;
+  return pointAtDist(t.d).x < gopherPos().x;
 }
 
 function fireShot(target) {
@@ -1020,7 +1033,7 @@ function drawBerries() {
 function drawGopher() {
   const g = gopherPos();
   const h = stage.h * 0.23;
-  Sprites.draw(ctx, gopherMood.pose, g.x, g.y - h * 0.5, h, false);
+  Sprites.draw(ctx, gopherMood.pose, g.x, g.y - h * 0.5, h, gopherFacing());
 }
 
 function drawPops() {
