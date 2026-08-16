@@ -6,14 +6,26 @@
 
 :root {
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Courier New", monospace;
-  --hot: #D6453C;
-  --violet: #9B59B6;
-  --gold: #FFD65C;
-  --mint: #6FA84B;
-  --sky: #7FC8DE;
-  --dim: #A08A6A;
-  --text: #FFF3D6;
-  --bg: #2E2018;
+
+  /* Taken from the artwork rather than chosen alongside it: the six ant tints
+     are the ones sprites.js draws with, and the creams and inks are the panel
+     colours sampled off the sheets. The screens and the garden are then the
+     same set of colours, not two palettes that happen to sit together. */
+  --ant-red: #D8352A;
+  --ant-orange: #E8752A;
+  --ant-yellow: #E8B31C;
+  --ant-green: #4E9E32;
+  --ant-blue: #2E6FD0;
+  --ant-purple: #8B4FB0;
+
+  --hot: var(--ant-red);
+  --violet: var(--ant-purple);
+  --gold: #F2C230;          /* the cream plate's warm edge, lifted to read on dark */
+  --mint: #7FD13B;          /* the combo bar's green */
+  --sky: #5B9BE8;           /* the blue ant, lifted the same way */
+  --dim: #B39A70;           /* weathered cream */
+  --text: #F6E7C3;          /* UI_CREAM, straight off the panels */
+  --bg: #241708;            /* the earth inside the burrow */
 }
 
 html, body {
@@ -39,7 +51,7 @@ html, body {
   align-items: center;
   justify-content: center;
   gap: 1.1rem;
-  background: radial-gradient(ellipse at center, rgba(62, 44, 30, 0.92) 0%, rgba(30, 21, 14, 0.96) 70%);
+  background: radial-gradient(ellipse at center, rgba(74, 52, 26, 0.90) 0%, rgba(30, 19, 8, 0.96) 72%);
   backdrop-filter: blur(3px);
   text-align: center;
   padding: 2rem 1.5rem;
@@ -54,11 +66,20 @@ html, body {
   font-size: clamp(1.9rem, 5.2vw, 3.4rem);
   letter-spacing: 0.26em;
   font-weight: 700;
-  background: linear-gradient(90deg, #FFD65C 0%, #D6453C 40%, #9B59B6 70%, #7FC8DE 100%);
+  /* The column itself, in order: the six ants the game is made of, so the
+     title is coloured by the thing that just beat you. */
+  background: linear-gradient(90deg,
+    var(--ant-red) 0%,
+    var(--ant-orange) 20%,
+    var(--ant-yellow) 40%,
+    #5FB233 60%,
+    #3F86E0 80%,
+    #9B5FC0 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  filter: drop-shadow(0 0 22px rgba(214, 69, 60, 0.45));
+  filter: drop-shadow(0 2px 0 rgba(58, 38, 16, 0.55))
+          drop-shadow(0 0 26px rgba(232, 179, 28, 0.28));
 }
 
 .tagline {

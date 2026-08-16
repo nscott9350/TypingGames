@@ -164,6 +164,17 @@ body {
   height: auto;
 }
 
+/* Burrow's card carries a frame of the game itself rather than line art, so it
+   wants a little more room and an edge to sit behind. */
+.art img {
+  width: 100%;
+  max-width: 17rem;
+  height: auto;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+}
+
 .body {
   padding: 1.1rem 1.4rem 1.5rem;
   display: flex;
