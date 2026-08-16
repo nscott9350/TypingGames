@@ -6,7 +6,7 @@
   <title>Type Burrow</title>
   <!-- Bump ?v= on every deploy: GitHub Pages caches assets for 10 minutes, and
        a page that loads new HTML against a stale script would break. -->
-  <link rel="stylesheet" href="style.css?v=15">
+  <link rel="stylesheet" href="style.css?v=18">
 </head>
 <body>
   <canvas id="game"></canvas>
@@ -16,7 +16,7 @@
     <p class="tagline">Gopher vs. Ants &mdash; a marble popper for touch typists</p>
     <ul class="howto">
       <li>Ants march down the path toward Gordo's burrow</li>
-      <li>Type a word's <strong>first letter</strong> to aim, finish it to send a berry</li>
+      <li>Each ant in reach wears a <strong>letter</strong> &mdash; press it and that ant's word appears</li>
       <li>The column closes up &mdash; land <strong>three of a colour together</strong> and they scatter too</li>
       <li>Cascades are worth far more than speed. Read the column before you type</li>
     </ul>
@@ -56,8 +56,9 @@
         </div>
         <p class="hint">Higher settings march the column along faster, send more
           ants per wave, add a colour to juggle, give the burrow less room before
-          it gives out, and put more words in play at once &mdash; more to read,
-          but more room to find a cascade in.</p>
+          it gives out, and put more ants in reach at once &mdash; eight at
+          Beginner, twelve at Master, which is more to read but far more room to
+          find a cascade in.</p>
       </div>
       <div class="setting-group">
         <div class="setting-label">Word set</div>
@@ -68,9 +69,9 @@
           <button class="set-btn chip" data-set="left">Left hand</button>
           <button class="set-btn chip" data-set="right">Right hand</button>
         </div>
-        <p class="hint">The ants nearest the burrow carry the words, each with a
-          different starting letter so a keypress is never ambiguous. The rest show
-          only their colour, which is what you plan cascades on.</p>
+        <p class="hint">Ants in reach wear a single letter, each one different so a
+          keypress is never ambiguous; press it and that ant spells out its word.
+          The rest show only their colour, which is what you plan cascades on.</p>
       </div>
       <div class="setting-group">
         <div class="setting-label">Keyboard guide</div>
@@ -108,9 +109,9 @@
     </div>
   </div>
 
-  <script src="../shared/words.js?v=15"></script>
-  <script src="../shared/keyboard.js?v=15"></script>
-  <script src="sprites.js?v=15"></script>
-  <script src="game.js?v=15"></script>
+  <script src="../shared/words.js?v=18"></script>
+  <script src="../shared/keyboard.js?v=18"></script>
+  <script src="sprites.js?v=18"></script>
+  <script src="game.js?v=18"></script>
 </body>
 </html>

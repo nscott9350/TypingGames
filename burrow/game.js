@@ -40,6 +40,7 @@ const MAX_PARTICLES = 600;
 // and the home row only offers eight — but letteredCount() clamps for that.
 const CASCADE_SEED = 0.5;     // chance a new ant is placed to set up a cascade
 const STAGE_AR = 1672 / 941;  // the background painting's aspect ratio
+const MAX_WORD = 7;           // longest practice word a bloomed tag will carry
 const LIVES_START = 3;
 const STREAK_PER_MULT = 20;
 const MAX_MULT = 5;
@@ -100,11 +101,11 @@ function recordScore(entry) {
 // many ants carry a tag at once. Beginners get fewer to scan; the harder levels
 // get more, which is more to read but more room to hunt a cascade in.
 const DIFFICULTY_LEVELS = {
-  beginner: { label: "BEGINNER", crawl: [13, 24], load: [22, 34], hues: 4, hole: 6, words: 5 },
-  easy:     { label: "EASY",     crawl: [17, 31], load: [26, 42], hues: 4, hole: 5, words: 5 },
-  normal:   { label: "NORMAL",   crawl: [22, 41], load: [30, 50], hues: 5, hole: 4, words: 6 },
-  hard:     { label: "HARD",     crawl: [28, 52], load: [36, 58], hues: 5, hole: 3, words: 6 },
-  master:   { label: "MASTER",   crawl: [35, 64], load: [42, 66], hues: 6, hole: 3, words: 7 },
+  beginner: { label: "BEGINNER", crawl: [13, 24], load: [22, 34], hues: 4, hole: 6, words: 8 },
+  easy:     { label: "EASY",     crawl: [17, 31], load: [26, 42], hues: 4, hole: 5, words: 9 },
+  normal:   { label: "NORMAL",   crawl: [22, 41], load: [30, 50], hues: 5, hole: 4, words: 10 },
+  hard:     { label: "HARD",     crawl: [28, 52], load: [36, 58], hues: 5, hole: 3, words: 11 },
+  master:   { label: "MASTER",   crawl: [35, 64], load: [42, 66], hues: 6, hole: 3, words: 12 },
 };
 const currentLevel = () => DIFFICULTY_LEVELS[settings.difficulty] || DIFFICULTY_LEVELS.normal;
 const currentWordSet = () => WORD_SETS[settings.wordSet] || WORD_SETS.all;
@@ -371,7 +372,7 @@ function stopMusic() {
 // ---- Game state ----
 let state = "menu";
 let chain, shots, pops, particles, lockTarget;
-let headDist, remaining, settleTimer, cascadeDepth, bursts;
+let headDist, remaining, settleTimer, cascadeDepth, bursts, antSeq;
 let score, elapsed, wave, waveClearTimer, holeFill, lives;
 let shake, flash, banner;
 let typedCorrect, typedWrong, popped, cascaded, streak, bestStreak, multiplier;
@@ -383,6 +384,7 @@ function resetGame() {
   pops = [];
   particles = [];
   bursts = [];
+  antSeq = 0;
   lockTarget = null;
   headDist = 0;
   remaining = 0;
@@ -424,14 +426,26 @@ const letteredCount = () => Math.min(currentLevel().words, distinctFirstLetters(
 
 function pickWord(used) {
   const pools = currentWordSet().pools;
-  // Short words only: the tag has to sit beside an ant without colliding
-  for (const key of ["short", "medium"]) {
-    const pool = (pools[key] || []).filter(w => w.length <= 5);
-    const cands = pool.filter(w => !used.has(w[0]));
-    if (cands.length) return cands[(Math.random() * cands.length) | 0];
+  // Only the locked ant spells itself out now, so a word no longer has to fit
+  // in the gap between two ants and the five-letter cap can go. Short and
+  // medium are drawn from one pool rather than short-first, or nearly every
+  // target comes out three letters long and there is little to practise.
+  const pool = (pools.short || []).concat(pools.medium || [])
+                 .filter(w => w.length <= MAX_WORD);
+  const cands = pool.filter(w => !used.has(w[0]));
+  if (!cands.length) {
+    // Out of unused first letters: better to label fewer ants than to put two
+    // words starting with the same key on the board.
+    return null;
   }
-  const any = (pools.short || []).concat(pools.medium || []);
-  return any.length ? any[(Math.random() * any.length) | 0] : "pop";
+  // Weighted by length, because the sets hold far more short words than long
+  // ones and sampling them flat leaves seven targets in ten at three or four
+  // letters — barely practice, and a waste of the room the badges just freed.
+  let total = 0;
+  for (const w of cands) total += w.length * w.length;
+  let r = Math.random() * total;
+  for (const w of cands) { r -= w.length * w.length; if (r <= 0) return w; }
+  return cands[cands.length - 1];
 }
 
 function refreshLabels() {
@@ -442,6 +456,7 @@ function refreshLabels() {
     const m = chain[i];
     if (m.dead || m.d < 0) continue;
     if (!m.word) m.word = pickWord(used);
+    if (!m.word) break;
     used.add(m.word[0]);
     m.lettered = true;
     assigned++;
@@ -481,6 +496,10 @@ function newAnt(hues) {
   }
   return {
     hue, word: null, typed: 0, lettered: false,
+    // Which side of the trail this ant's badge sits on. Fixed when it spawns:
+    // taking it from the chain index instead made every badge hop across the
+    // path each time an ant ahead of it was taken.
+    tagSide: (antSeq++ % 2) ? 1 : -1,
     d: -SPACING * (chain.length ? 1 : 0), dead: false, spin: Math.random() * 6,
     squash: 0,
   };
@@ -993,8 +1012,50 @@ function drawColumn() {
     ctx.restore();
   }
   for (let i = chain.length - 1; i >= 0; i--) {
-    if (targetable(chain[i])) drawWordTag(chain[i], i, chain[i] === lockTarget);
+    const m = chain[i];
+    if (targetable(m) && m !== lockTarget) drawLetterBadge(m);
   }
+  // The locked word goes last so it sits over everything, and it is the only
+  // full word on the trail.
+  if (lockTarget && targetable(lockTarget)) drawWordTag(lockTarget);
+}
+
+// One letter per addressable ant — the key that locks it.
+//
+// A word beside every ant needed about 53px against the 26px of trail the ants
+// leave between them, so the tags overlapped their neighbours and only six
+// could be shown at all. A single glyph fits that gap, which is what lets ten
+// or twelve ants be addressable at once and lets the words themselves get long
+// enough to be worth typing.
+function drawLetterBadge(m) {
+  const p = pointAtDist(m.d);
+  const n = normalAtDist(m.d);
+  const r = R * 0.6;
+  const off = R * 1.5;
+  const cx = Math.max(stage.x + r, Math.min(stage.x + stage.w - r, p.x + n.x * m.tagSide * off));
+  const cy = Math.max(stage.y + r, Math.min(stage.y + stage.h - r, p.y + n.y * m.tagSide * off));
+
+  ctx.save();
+  ctx.shadowColor = "rgba(0,0,0,0.28)";
+  ctx.shadowBlur = r * 0.5;
+  ctx.shadowOffsetY = r * 0.16;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fillStyle = UI_CREAM;
+  ctx.fill();
+  ctx.restore();
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.strokeStyle = "#B99A63";
+  ctx.lineWidth = Math.max(1.3, r * 0.14);
+  ctx.stroke();
+
+  ctx.font = `bold ${Math.round(r * 1.3)}px ${MONO}`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = UI_INK;
+  ctx.fillText(m.word[0].toUpperCase(), cx, cy + r * 0.06);
 }
 
 // A speech bubble drawn to match the sheet's tag, but sized to the word.
@@ -1011,11 +1072,14 @@ function roundRect(x, y, w, h, r) {
 }
 
 // The sheet's tag has "ant" baked into it, so it cannot be reused directly.
-function drawWordTag(m, index, locked) {
+function drawWordTag(m) {
+  const locked = true;
   const p = pointAtDist(m.d);
   const n = normalAtDist(m.d);
-  const side = index % 2 === 0 ? -1 : 1;
-  const fs = Math.max(13, R * 0.72);
+  const side = m.tagSide;
+  // Alone on the trail now, so it can be read at a glance from wherever the
+  // eye already is rather than sized to avoid its neighbours.
+  const fs = Math.max(15, R * 0.86);
   ctx.font = `bold ${fs}px ${MONO}`;
   const tw = ctx.measureText(m.word).width;
   const padX = fs * 0.55, padY = fs * 0.38;
@@ -1278,8 +1342,10 @@ function drawHUD() {
                1 - holeFill / L.hole, "#7FD13B");
   }
 
-  // The live words, bottom left: a readout of what is currently targetable, so
-  // the words in play can be read without scanning the field.
+  // Bottom left. With ten or twelve ants addressable there is no listing them
+  // all, and no need: each one wears its key out on the trail. So the panel
+  // answers the question the trail cannot — which keys are live right now —
+  // and hands over to the word itself once something is locked.
   const tp = Sprites.frames.typePanel;
   if (tp) {
     const th = stage.h * 0.13;
@@ -1291,46 +1357,46 @@ function drawHUD() {
     roundRect(tx + tw * 0.045, ty + th * 0.42, tw * 0.91, th * 0.44, th * 0.1);
     ctx.fill();
 
-    const live = chain.filter(m => targetable(m));
-    // The readout has to hold however many words the difficulty puts in play —
-    // seven on Master, and longer words on the wider sets — so the type is
-    // fitted to the plate rather than assumed to fit. Without this the last
-    // word or two simply runs off the panel and onto the grass.
     const inner = tw * 0.88;
-    let fs = th * 0.27;
-    let gap, total;
-    for (let pass = 0; pass < 12; pass++) {
-      ctx.font = `bold ${fs}px ${MONO}`;
-      gap = fs * 0.9;
-      total = 0;
-      for (const m of live) total += ctx.measureText(m.word).width + gap;
-      total -= gap;
-      if (total <= inner || fs <= th * 0.12) break;
-      fs *= Math.max(0.82, inner / total);
-    }
-    let x = tx + tw / 2 - total / 2;
+    const cx = tx + tw / 2;
     const y = ty + th * 0.65;
-    ctx.textAlign = "left";
     ctx.textBaseline = "middle";
-    for (const m of live) {
-      const locked = m === lockTarget;
-      const done = m.word.slice(0, m.typed);
-      const rest = m.word.slice(m.typed);
-      if (done) { ctx.fillStyle = "#4C9A2A"; ctx.fillText(done, x, y); x += ctx.measureText(done).width; }
-      ctx.fillStyle = locked ? UI_INK : "rgba(92,67,38,0.62)";
-      ctx.fillText(rest, x, y);
-      x += ctx.measureText(rest).width;
-      // underline the one being typed
-      if (locked) {
-        const wStart = x - ctx.measureText(m.word).width;
-        ctx.strokeStyle = "#C8912B";
-        ctx.lineWidth = Math.max(1.5, fs * 0.08);
-        ctx.beginPath();
-        ctx.moveTo(wStart, y + fs * 0.62);
-        ctx.lineTo(x, y + fs * 0.62);
-        ctx.stroke();
+
+    if (lockTarget && targetable(lockTarget)) {
+      // Mirrors the bloomed tag, for anyone who prefers to read down here.
+      const w = lockTarget.word;
+      let fs = th * 0.34;
+      ctx.font = `bold ${fs}px ${MONO}`;
+      if (ctx.measureText(w).width > inner) {
+        fs *= inner / ctx.measureText(w).width;
+        ctx.font = `bold ${fs}px ${MONO}`;
       }
-      x += gap;
+      const done = w.slice(0, lockTarget.typed);
+      const rest = w.slice(lockTarget.typed);
+      ctx.textAlign = "left";
+      let x = cx - ctx.measureText(w).width / 2;
+      if (done) { ctx.fillStyle = "#4C9A2A"; ctx.fillText(done, x, y); x += ctx.measureText(done).width; }
+      ctx.fillStyle = UI_INK;
+      ctx.fillText(rest, x, y);
+    } else {
+      // The live keys, in the order they stand on the trail — front ant first,
+      // so the row doubles as a picture of the column.
+      const keys = chain.filter(m => targetable(m)).map(m => m.word[0].toUpperCase());
+      let fs = th * 0.3;
+      let gap;
+      for (let pass = 0; pass < 12; pass++) {
+        ctx.font = `bold ${fs}px ${MONO}`;
+        gap = fs * 0.5;
+        const total = keys.length * ctx.measureText("W").width + (keys.length - 1) * gap;
+        if (total <= inner || fs <= th * 0.12) break;
+        fs *= Math.max(0.84, inner / total);
+      }
+      const cw = ctx.measureText("W").width;
+      const total = keys.length * cw + Math.max(0, keys.length - 1) * gap;
+      ctx.textAlign = "center";
+      ctx.fillStyle = "rgba(92,67,38,0.78)";
+      let x = cx - total / 2 + cw / 2;
+      for (const k of keys) { ctx.fillText(k, x, y); x += cw + gap; }
     }
   }
 
