@@ -34,6 +34,20 @@ Unlike the other two you are defending something other than yourself, so which
 warhead to shoot next — the lowest, or the one over a cluster — is the real
 decision.
 
+### Sentinel 3030 — formation shooter
+
+The same shape of game as Squadron, painted rather than drawn. Hostiles warp
+into formation above a ship's console and break off to dive; each carries a
+call sign on its own name plate, and the plates are colour-matched to the
+creature above them, so a tag says which hostile it belongs to before the word
+has been read.
+
+Thirteen designs and three capital ships share the three roles Squadron
+already had, one design per role per wave — so the types stay tellable apart
+while the whole roster gets an outing across a run. The HUD docks into the
+console printed across the foot of the background, which leaves the entire
+starfield above as playfield.
+
 ### Type Burrow — marble popper
 
 A column of ants marches down a garden trail toward a gopher's burrow. Typing an
@@ -91,7 +105,7 @@ sliding back into the shot's path.
 
 ## Keyboard guide
 
-All four games can fade a keyboard across the play field and light up the key you
+All five games can fade a keyboard across the play field and light up the key you
 need next, so you never have to glance down. It is drawn large and faint,
 behind the action, and sits in the part of the screen you are already watching —
 a small keyboard tucked along the bottom edge would still cost you the glance
@@ -128,7 +142,7 @@ hunt across the screen.
 
 ## Practice word sets
 
-All four games share the same word sets, so you can drill one part of the
+All five games share the same word sets, so you can drill one part of the
 keyboard and then take it into any of them. Choose in **Settings**:
 
 - **Home row** — words using only `a s d f g h j k l`
@@ -165,8 +179,10 @@ squadron/               Type Squadron (index.html, game.js, style.css)
 sentinel/               Type Sentinel (index.html, game.js, style.css)
 burrow/                 Type Burrow (index.html, game.js, sprites.js, style.css)
 burrow/images/          the painted background and sprite sheets Burrow draws from
-shared/words.js         word sets, shared by all four games
-shared/keyboard.js      on-screen keyboard guide, shared by all four
+sentinel3030/           Sentinel 3030 (index.html, game.js, sprites.js, style.css)
+sentinel3030/images/    its painted background and sprite sheets
+shared/words.js         word sets, shared by all five games
+shared/keyboard.js      on-screen keyboard guide, shared by all five
 ```
 
 Each game keeps its own settings and high scores under its own `localStorage`
@@ -193,11 +209,12 @@ throughout.
 There are no dependencies, no bundled fonts and no sound files; every game draws
 to a canvas and sets type in whatever monospace font your system already has.
 Blaster, Squadron and Sentinel draw all of their graphics procedurally. Type
-Burrow is the exception: it renders from the painted sheets in `burrow/images/`,
-which are the only image assets in the project.
+Burrow and Sentinel 3030 are the exceptions: they render from the painted
+sheets in `burrow/images/` and `sentinel3030/images/`.
 
-Those sheets arrive on a cream ground rather than with transparency, so
-`burrow/sprites.js` keys them at load — a flood fill inward from the sheet edge,
+Sentinel 3030's sheets arrive with real alpha and are simply sliced. Burrow's
+arrive on a cream ground rather than with transparency, so `burrow/sprites.js`
+keys them at load — a flood fill inward from the sheet edge,
 which removes only background that is connected to the edge and therefore leaves
 cream *inside* a sprite alone. A second pass converts the drop shadows the
 artist painted onto the cream into real translucent shadows, so the sprites sit

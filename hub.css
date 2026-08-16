@@ -141,6 +141,11 @@ body {
   --accent-2: #7CFF3D;
 }
 
+.card-s3030 {
+  --accent: #00D0FF;
+  --accent-2: #FF0090;
+}
+
 .card:hover {
   transform: translateY(-5px);
   border-color: color-mix(in srgb, var(--accent) 55%, transparent);
