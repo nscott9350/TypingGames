@@ -42,6 +42,16 @@ const CASCADE_SEED = 0.5;     // chance a new ant is placed to set up a cascade
 const STAGE_AR = 1672 / 941;  // the background painting's aspect ratio
 const MAX_WORD = 7;           // longest practice word a bloomed tag will carry
 const LIVES_START = 3;
+// After the last life goes, the column is allowed to finish its march into the
+// burrow before the summary appears. Losing is the ants' moment; cutting
+// straight to a stats panel throws it away.
+// They set off at a walk and build to a stampede: a full column at a flat
+// multiple of the crawl would take a quarter of a minute to file in, which
+// stops being a flourish and starts being a wait.
+const OVERRUN_RUSH = 2.6;     // multiple of the crawl the moment the last life goes
+const OVERRUN_RAMP = 1.6;     // added multiple per second after that
+const OVERRUN_HOLD = 0.8;     // beat after the final ant is in
+const OVERRUN_MAX = 7;        // cap, so a very long column cannot stall the screen
 const STREAK_PER_MULT = 20;
 const MAX_MULT = 5;
 const WRONG_FLASH = 0.6;
@@ -376,7 +386,7 @@ let state = "menu";
 let chain, shots, pops, particles, lockTarget;
 let headDist, remaining, settleTimer, cascadeDepth, bursts, antSeq;
 let score, elapsed, wave, waveClearTimer, holeFill, lives;
-let shake, flash, banner;
+let shake, flash, banner, overrun;
 let typedCorrect, typedWrong, popped, cascaded, streak, bestStreak, multiplier;
 let wrongKey, assist, gopherThrow;
 
@@ -387,6 +397,7 @@ function resetGame() {
   particles = [];
   bursts = [];
   antSeq = 0;
+  overrun = null;
   lockTarget = null;
   headDist = 0;
   remaining = 0;
@@ -760,6 +771,23 @@ function fireShot(target) {
                life: 3, spin: 0, hue: target.hue, dx: 0, dy: 0 });
 }
 
+// The last life is gone, but the ants still on the trail have not arrived yet.
+// Hand the level over to them: stop the spawns, stop taking input, and let the
+// column walk itself into the burrow before the summary comes up.
+function beginOverrun() {
+  if (state === "overrun") return;
+  state = "overrun";
+  overrun = { t: 0, hold: OVERRUN_HOLD };
+  remaining = 0;
+  lockTarget = null;
+  settleTimer = 0;
+  // Nothing left to type: drop the keys so the trail stops offering a move
+  // that no longer exists.
+  for (const m of chain) m.lettered = false;
+  banner = { text: "OVERRUN", sub: "THE BURROW IS LOST", life: 2.6, maxLife: 2.6 };
+  setMood("gopherAlert", OVERRUN_MAX);
+}
+
 // ---- Update ----
 function update(dt) {
   elapsed += dt;
@@ -787,8 +815,18 @@ function update(dt) {
 
   const L = currentLevel();
 
+  if (state === "overrun") {
+    overrun.t += dt;
+    // Empty trail, or taking too long: let the summary come up.
+    if (!chain.length || overrun.t > OVERRUN_MAX) {
+      overrun.hold -= dt;
+      if (overrun.hold <= 0) { endGame("dead"); return; }
+    }
+  }
+
   // Feed the column in from the anthill while the wave still has ants to send
-  while (remaining > 0 && (chain.length === 0 || targetDist(chain.length - 1) > -SPACING * 1.5)) {
+  while (state === "playing" && remaining > 0 &&
+         (chain.length === 0 || targetDist(chain.length - 1) > -SPACING * 1.5)) {
     chain.push(newAnt(L.hues));
     remaining--;
   }
@@ -801,13 +839,27 @@ function update(dt) {
     headDist += crawlSpeed() * dt;
   }
 
-  // Ease each ant toward its slot; this is what makes the gap visibly close
-  for (let i = 0; i < chain.length; i++) {
-    const m = chain[i];
-    const want = targetDist(i);
-    m.d += (want - m.d) * Math.min(1, dt * 14);
-    m.spin += dt * 1.6;
-    if (m.squash > 0) m.squash = Math.max(0, m.squash - dt * 4);
+  if (state === "overrun") {
+    // There are no slots to close up to any more, so the column simply walks
+    // in keeping the spacing it had. Easing toward index-based slots would
+    // collapse the whole queue forward the moment the front ant dropped in and
+    // thirty ants would vanish inside a second, which is not them getting in —
+    // it is them disappearing.
+    const v = crawlSpeed() * OVERRUN_RUSH * (1 + overrun.t * OVERRUN_RAMP);
+    for (const m of chain) {
+      m.d += v * dt;
+      m.spin += dt * 3.2;                     // scurrying, not strolling
+      if (m.squash > 0) m.squash = Math.max(0, m.squash - dt * 4);
+    }
+  } else {
+    // Ease each ant toward its slot; this is what makes the gap visibly close
+    for (let i = 0; i < chain.length; i++) {
+      const m = chain[i];
+      const want = targetDist(i);
+      m.d += (want - m.d) * Math.min(1, dt * 14);
+      m.spin += dt * 1.6;
+      if (m.squash > 0) m.squash = Math.max(0, m.squash - dt * 4);
+    }
   }
 
   // Anything that reaches the end drops in
@@ -822,18 +874,21 @@ function update(dt) {
     sfx.drop();
     streak = 0;
     multiplier = 1;
-    // The burrow absorbs a few before it gives out, and that costs a life
+    // The burrow absorbs a few before it gives out, and that costs a life.
+    // During the overrun there is nothing left to lose, so the arrivals are
+    // just arrivals.
+    if (state === "overrun") continue;
     if (holeFill >= L.hole) {
       holeFill = 0;
       lives--;
       shake = 22;
       flash = 0.6;
       sfx.overrun();
-      if (lives <= 0) { endGame("dead"); return; }
+      if (lives <= 0) { beginOverrun(); return; }
     }
   }
 
-  refreshLabels();
+  if (state === "playing") refreshLabels();
   updateShots(dt);
   updatePops(dt);
   updateParticles(dt);
@@ -1414,8 +1469,9 @@ function drawHUD() {
   if (hp) {
     const hh = hud.hh, hw = hud.hw, hx = hud.hx, hy = hud.hy;
     Sprites.drawAt(ctx, "holePanel", hx, hy, hh);
-    segmentBar(hx + hw * 0.14, hy + hh * 0.52, hw * 0.72, hh * 0.2,
-               1 - holeFill / L.hole, "#7FD13B");
+    const left = state === "overrun" ? 0
+               : Math.max(0, Math.min(1, 1 - holeFill / L.hole));
+    segmentBar(hx + hw * 0.14, hy + hh * 0.52, hw * 0.72, hh * 0.2, left, "#7FD13B");
   }
 
   // Bottom left. With ten or twelve ants addressable there is no listing them
@@ -1570,7 +1626,7 @@ function loop(now) {
   clearTimeout(fallbackId);
   const dt = Math.min(0.05, (now - lastTime) / 1000);
   lastTime = now;
-  if (state === "playing") update(dt);
+  if (state === "playing" || state === "overrun") update(dt);
   draw();
   rafId = requestAnimationFrame(loop);
   fallbackId = setTimeout(() => loop(performance.now()), 50);
