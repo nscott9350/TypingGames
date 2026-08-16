@@ -131,6 +131,7 @@ function guideBox() {
 // to its aspect ratio and everything is positioned in fractions of it. Cropping
 // to fill would cut off part of the route the ants have to walk.
 let stage = { x: 0, y: 0, w: 0, h: 0 };
+let hud = null;
 
 function layoutStage() {
   const winAR = W / H;
@@ -232,6 +233,7 @@ function resize() {
   R = Math.max(11, stage.h * 0.038);      // ant body radius, tuned to the art
   SPACING = R * SPACING_MUL;
   buildPath();
+  layoutHud();
   carryAcrossResize(prevW, prevX, prevY);
 }
 
@@ -1032,8 +1034,17 @@ function drawLetterBadge(m) {
   const n = normalAtDist(m.d);
   const r = R * 0.6;
   const off = R * 1.5;
-  const cx = Math.max(stage.x + r, Math.min(stage.x + stage.w - r, p.x + n.x * m.tagSide * off));
-  const cy = Math.max(stage.y + r, Math.min(stage.y + stage.h - r, p.y + n.y * m.tagSide * off));
+  // Prefer the ant's own side, but flip to the other if the panels are in the
+  // way there — the top of the trail runs beneath the score and combo.
+  const at = (side) => ({ x: p.x + n.x * side * off - r, y: p.y + n.y * side * off - r,
+                          w: r * 2, h: r * 2 });
+  let box = at(m.tagSide);
+  if (hitsHud(box)) {
+    const other = at(-m.tagSide);
+    box = hitsHud(other) ? pushClearOfHud(box) : other;
+  }
+  const cx = Math.max(stage.x + r, Math.min(stage.x + stage.w - r, box.x + r));
+  const cy = Math.max(stage.y + r, Math.min(stage.y + stage.h - r, box.y + r));
 
   ctx.save();
   ctx.shadowColor = "rgba(0,0,0,0.28)";
@@ -1085,10 +1096,17 @@ function drawWordTag(m) {
   const padX = fs * 0.55, padY = fs * 0.38;
   const bw = tw + padX * 2, bh = fs + padY * 2;
   const off = R * 1.7 + bh * 0.5;
-  let bx = p.x + n.x * side * off - bw / 2;
-  let by = p.y + n.y * side * off - bh / 2;
-  bx = Math.max(stage.x + 4, Math.min(stage.x + stage.w - bw - 4, bx));
-  by = Math.max(stage.y + 4, Math.min(stage.y + stage.h - bh - 4, by));
+  // Same dodge as the badges, and it matters more here: this is the word the
+  // player is actually typing, so it must never end up behind a panel.
+  const at = (sd) => ({ x: p.x + n.x * sd * off - bw / 2, y: p.y + n.y * sd * off - bh / 2,
+                        w: bw, h: bh });
+  let box = at(side);
+  if (hitsHud(box)) {
+    const other = at(-side);
+    box = hitsHud(other) ? pushClearOfHud(box) : other;
+  }
+  let bx = Math.max(stage.x + 4, Math.min(stage.x + stage.w - bw - 4, box.x));
+  let by = Math.max(stage.y + 4, Math.min(stage.y + stage.h - bh - 4, box.y));
 
   ctx.save();
   ctx.shadowColor = "rgba(0,0,0,0.3)";
@@ -1276,15 +1294,78 @@ function segmentBar(x, y, w, h, frac, colour) {
   }
 }
 
-function drawHUD() {
-  const L = currentLevel();
-  const u = stage.h * 0.001;              // scale everything to the stage
+// The panels' geometry, worked out once per resize. Both the HUD that draws
+// them and the trail labels that have to keep out of them read from here, so
+// the two cannot drift apart.
+function layoutHud() {
+  const wOf = (key, h) => {
+    const f = Sprites.frames[key];
+    return f ? f.w / f.h * h : 0;
+  };
   const top = stage.y + stage.h * 0.012;
   const panelH = stage.h * 0.105;
 
+  const spX = stage.x + stage.w * 0.012, spW = wOf("scorePanel", panelH);
+  const cX = spX + spW + stage.w * 0.012, cW = wOf("comboPanel", panelH * 0.92);
+
+  const lvW = stage.w * 0.075;
+  const lvX = stage.x + stage.w - lvW - stage.w * 0.012;
+  const lvH = panelH * 1.05, lvBW = wOf("levelBadge", lvH);
+  const lh = panelH * 0.82, lw = wOf("livesPanel", lh);
+  const lx = lvX - lw - stage.w * 0.012;
+
+  const hh = stage.h * 0.11, hw = wOf("holePanel", hh);
+  const hx = stage.x + stage.w - hw - stage.w * 0.015;
+  const hy = stage.y + stage.h - hh - stage.h * 0.02;
+
+  const th = stage.h * 0.13, tw = wOf("typePanel", th);
+  const tx = stage.x + stage.w * 0.015;
+  const ty = stage.y + stage.h - th - stage.h * 0.02;
+
+  hud = {
+    top, panelH, spX, spW, cX, cW, lvX, lvW, lvH, lvBW, lx, lw, lh,
+    hx, hy, hw, hh, tx, ty, tw, th,
+    boxes: [
+      { x: spX, y: top, w: (cX + cW) - spX, h: panelH },
+      { x: lx, y: top, w: (lvX + Math.max(lvW, lvBW)) - lx, h: lvH },
+      { x: tx, y: ty, w: tw, h: th },
+      { x: hx, y: hy, w: hw, h: hh },
+    ],
+  };
+}
+
+// Nudge a box clear of the panels along whichever axis costs least. The trail
+// passes beneath the score and combo at the top and behind the readout at the
+// bottom, so without this the keys on those stretches are simply buried and
+// the ants there cannot be aimed at.
+function pushClearOfHud(r) {
+  if (!hud) return r;
+  for (const b of hud.boxes) {
+    if (r.x + r.w <= b.x || r.x >= b.x + b.w) continue;
+    if (r.y + r.h <= b.y || r.y >= b.y + b.h) continue;
+    const opts = [b.y - (r.y + r.h), (b.y + b.h) - r.y,
+                  b.x - (r.x + r.w), (b.x + b.w) - r.x];
+    const best = opts.reduce((a, v) => Math.abs(v) < Math.abs(a) ? v : a);
+    if (best === opts[0] || best === opts[1]) r.y += best; else r.x += best;
+  }
+  return r;
+}
+
+function hitsHud(r) {
+  if (!hud) return false;
+  return hud.boxes.some(b => r.x + r.w > b.x && r.x < b.x + b.w &&
+                             r.y + r.h > b.y && r.y < b.y + b.h);
+}
+
+function drawHUD() {
+  if (!hud) return;
+  const L = currentLevel();
+  const { top, panelH } = hud;
+
   // Score, top left
-  const spX = stage.x + stage.w * 0.012;
-  const sp = Sprites.drawAt(ctx, "scorePanel", spX, top, panelH);
+  const spX = hud.spX;
+  const sp = { w: hud.spW };
+  Sprites.drawAt(ctx, "scorePanel", spX, top, panelH);
   // The sheet ships a specimen figure printed on the plate; blank it in the
   // plate's own cream before the live score goes down, leaving the star.
   ctx.fillStyle = SCORE_PLATE;
@@ -1293,8 +1374,9 @@ function drawHUD() {
             top + panelH * 0.62, panelH * 0.30, "#5C4326");
 
   // Combo, beside it
-  const cx0 = stage.x + stage.w * 0.012 + sp.w + stage.w * 0.012;
-  const cp = Sprites.drawAt(ctx, "comboPanel", cx0, top, panelH * 0.92);
+  const cx0 = hud.cX;
+  const cp = { w: hud.cW };
+  Sprites.drawAt(ctx, "comboPanel", cx0, top, panelH * 0.92);
   const into = multiplier >= MAX_MULT ? 1 : (streak % STREAK_PER_MULT) / STREAK_PER_MULT;
   segmentBar(cx0 + cp.w * 0.06, top + panelH * 0.46, cp.w * 0.64, panelH * 0.26, into, "#7FD13B");
   ctx.fillStyle = COMBO_BADGE;
@@ -1303,10 +1385,9 @@ function drawHUD() {
   panelText("x" + multiplier, cx0 + cp.w * 0.85, top + panelH * 0.585, panelH * 0.28, "#FFF3D6");
 
   // Lives and level, top right
-  const lvW = stage.w * 0.075;
-  const lvX = stage.x + stage.w - lvW - stage.w * 0.012;
-  const lvH = panelH * 1.05;
-  const lvBadge = Sprites.drawAt(ctx, "levelBadge", lvX, top, lvH);
+  const lvX = hud.lvX, lvH = hud.lvH;
+  const lvBadge = { w: hud.lvBW };
+  Sprites.drawAt(ctx, "levelBadge", lvX, top, lvH);
   ctx.fillStyle = LEVEL_PLATE;
   ctx.beginPath();
   ctx.ellipse(lvX + lvBadge.w * 0.503, top + lvH * 0.64,
@@ -1317,9 +1398,7 @@ function drawHUD() {
 
   const lp = Sprites.frames.livesPanel;
   if (lp) {
-    const lh = panelH * 0.82;
-    const lw = lp.w / lp.h * lh;
-    const lx = lvX - lw - stage.w * 0.012;
+    const lh = hud.lh, lw = hud.lw, lx = hud.lx;
     Sprites.drawAt(ctx, "livesPanel", lx, top + panelH * 0.08, lh);
     // Cover the painted hearts, then draw the live count
     ctx.fillStyle = UI_CREAM;
@@ -1333,10 +1412,7 @@ function drawHUD() {
   // Burrow health, bottom right — how much the hole can still take
   const hp = Sprites.frames.holePanel;
   if (hp) {
-    const hh = stage.h * 0.11;
-    const hw = hp.w / hp.h * hh;
-    const hx = stage.x + stage.w - hw - stage.w * 0.015;
-    const hy = stage.y + stage.h - hh - stage.h * 0.02;
+    const hh = hud.hh, hw = hud.hw, hx = hud.hx, hy = hud.hy;
     Sprites.drawAt(ctx, "holePanel", hx, hy, hh);
     segmentBar(hx + hw * 0.14, hy + hh * 0.52, hw * 0.72, hh * 0.2,
                1 - holeFill / L.hole, "#7FD13B");
@@ -1348,10 +1424,7 @@ function drawHUD() {
   // and hands over to the word itself once something is locked.
   const tp = Sprites.frames.typePanel;
   if (tp) {
-    const th = stage.h * 0.13;
-    const tw = tp.w / tp.h * th;
-    const tx = stage.x + stage.w * 0.015;
-    const ty = stage.y + stage.h - th - stage.h * 0.02;
+    const th = hud.th, tw = hud.tw, tx = hud.tx, ty = hud.ty;
     Sprites.drawAt(ctx, "typePanel", tx, ty, th);
     ctx.fillStyle = UI_CREAM;
     roundRect(tx + tw * 0.045, ty + th * 0.42, tw * 0.91, th * 0.44, th * 0.1);
