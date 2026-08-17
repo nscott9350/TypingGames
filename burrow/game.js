@@ -1,5 +1,5 @@
 // ============================================================
-// Burrow — Gopher vs. Ants
+// Gopher vs Ants — a marble popper for touch typists
 //
 // A column of ants marches down a garden path toward the gopher's burrow.
 // Typing an ant's word sends a berry after it, and the column closes the gap —

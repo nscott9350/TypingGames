@@ -1,7 +1,7 @@
 // ============================================================
 // Sprite sheets for Squadron 3030.
 //
-// Unlike Burrow's art, these sheets arrive with real alpha — including the
+// Unlike Gopher vs Ants' art, these sheets arrive with real alpha — including
 // soft falloff on every neon glow — so there is no keying step at all. They
 // are simply sliced and drawn.
 //

@@ -1599,7 +1599,7 @@ function drawReticle(e, t) {
 // The word rides the enemy's own name plate. Each plate on the sheet is
 // colour-matched to the creature drawn above it, so the tag says which enemy
 // it belongs to before the word itself has been read — which is exactly what
-// Burrow needed a procedural bubble to fake, and this does better.
+// Gopher vs Ants needed a procedural bubble to fake, and this does better.
 function drawWordLabel(e, locked, T) {
   const key = (design[e.type] || "drone") + "Plate";
   const ph = Math.max(17, e.r * 1.35) * (locked ? 1.16 : 1);

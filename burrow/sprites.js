@@ -1,5 +1,5 @@
 // ============================================================
-// Sprite sheets for Burrow.
+// Sprite sheets for Gopher vs Ants.
 //
 // The art arrives as contact sheets on a cream ground rather than as cut
 // sprites with transparency. Rather than ask for a re-export, the sheets are
