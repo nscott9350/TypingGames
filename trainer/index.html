@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trainer</title>
+  <meta name="description" content="An adaptive touch typing trainer that finds your weak keys and feeds you words that use them.">
+  <!-- Bump ?v= on every deploy: GitHub Pages caches assets for 10 minutes, and
+       a page that loads new HTML against a stale script would break. -->
+  <link rel="stylesheet" href="style.css?v=1">
+  <script data-goatcounter="https://tippitype.goatcounter.com/count"
+          async src="https://gc.zgo.at/count.js"></script>
+</head>
+<body>
+  <header class="bar">
+    <a class="back" href="../">&larr; Arcade</a>
+    <nav class="modes" id="modes" aria-label="Session length">
+      <button type="button" data-seconds="30">30</button>
+      <button type="button" data-seconds="60">60</button>
+      <button type="button" data-seconds="120">120</button>
+      <button type="button" data-seconds="0">&infin;</button>
+    </nav>
+  </header>
+
+  <main>
+    <div class="hud" id="hud">
+      <span class="stat"><b id="statWpm">0</b><i>wpm</i></span>
+      <span class="stat"><b id="statAcc">100</b><i>acc</i></span>
+      <span class="stat"><b id="statClock">30</b><i id="statClockLabel">left</i></span>
+    </div>
+
+    <!-- What the adaptation is doing, in the open. Without this the trainer
+         looks like it is picking words at random and you have to take the
+         adjustment on faith. -->
+    <div class="focus" id="focus" hidden>
+      <span class="focus-label">working on</span>
+      <span class="focus-keys" id="focusKeys"></span>
+    </div>
+
+    <div class="typer" id="typer">
+      <div class="words" id="words"></div>
+    </div>
+
+    <p class="hint" id="hint">Start typing &mdash; <kbd>tab</kbd> restarts, <kbd>esc</kbd> ends the run</p>
+  </main>
+
+  <section class="results" id="results" hidden>
+    <div class="score">
+      <div class="big"><b id="rWpm">0</b><i>wpm</i></div>
+      <div class="big"><b id="rAcc">0</b><i>accuracy</i></div>
+      <div class="big"><b id="rChars">0</b><i>characters</i></div>
+    </div>
+
+    <div class="panel">
+      <h2>Your keyboard right now</h2>
+      <p class="lede" id="rLede"></p>
+      <div class="kb" id="kb" aria-hidden="true"></div>
+      <ul class="legend">
+        <li><span class="swatch cold"></span>faster than your average</li>
+        <li><span class="swatch warm"></span>slower</li>
+        <li><span class="swatch hot"></span>slow or inaccurate &mdash; being targeted</li>
+        <li><span class="swatch none"></span>not enough data yet</li>
+      </ul>
+    </div>
+
+    <div class="panel" id="weakPanel">
+      <h2>Weakest keys</h2>
+      <table class="weak" id="weakTable"></table>
+    </div>
+
+    <div class="actions">
+      <button type="button" id="again">Again <kbd>tab</kbd></button>
+      <button type="button" class="ghost" id="forget">Forget what you've learned about me</button>
+    </div>
+  </section>
+
+  <!-- keyboard.js is canvas code the games draw with; the trainer only wants
+       its finger map and palette, but it reads them from there rather than
+       keeping a second copy that could drift out of step. -->
+  <script src="../shared/keyboard.js?v=1"></script>
+  <script src="../shared/words.js?v=1"></script>
+  <script src="words.js?v=1"></script>
+  <script src="trainer.js?v=1"></script>
+</body>
+</html>

@@ -1,0 +1,437 @@
+/* ============================================================
+   Trainer.
+
+   The arcade's palette, but none of its noise. No starfield, no glow, no
+   gradient pools — the only thing on this page that is allowed to be bright
+   is the text you are typing. Everything else sits well back so there is
+   nothing to look at except the word under the caret.
+   ============================================================ */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Several things here are hidden by attribute and laid out with flex, and a
+   display rule on the class would otherwise win against the default. */
+[hidden] {
+  display: none !important;
+}
+
+:root {
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Courier New", monospace;
+
+  --bg: #05040A;
+  --text: #F2ECFF;
+  --dim: #5F5878;
+  --dimmer: #332F45;
+  --line: #191527;
+
+  --cyan: #00D0FF;
+  --lime: #7CFF3D;
+  --yellow: #FFD400;
+  --orange: #FF6A00;
+  --magenta: #FF0090;
+  --red: #FF3355;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  font-family: var(--mono);
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem 1.5rem 2.5rem;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---- Top bar ---- */
+
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  max-width: 60rem;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.back {
+  color: var(--dim);
+  text-decoration: none;
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  transition: color 0.15s;
+}
+
+.back:hover {
+  color: var(--text);
+}
+
+.modes {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.modes button {
+  font-family: inherit;
+  font-size: 0.85rem;
+  color: var(--dim);
+  background: none;
+  border: none;
+  border-radius: 4px;
+  padding: 0.3rem 0.7rem;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+
+.modes button:hover {
+  color: var(--text);
+}
+
+.modes button.on {
+  color: var(--bg);
+  background: var(--cyan);
+}
+
+/* ---- The typing surface ---- */
+
+main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 1.75rem;
+  max-width: 60rem;
+  width: 100%;
+  margin: 0 auto;
+  padding: 2rem 0;
+}
+
+.hud {
+  display: flex;
+  gap: 2.5rem;
+  align-self: flex-start;
+}
+
+.stat b {
+  font-size: 1.6rem;
+  font-weight: 500;
+  color: var(--cyan);
+  font-variant-numeric: tabular-nums;
+}
+
+.stat i {
+  font-style: normal;
+  font-size: 0.8rem;
+  color: var(--dim);
+  margin-left: 0.4rem;
+}
+
+/* What the adaptation is currently chasing. Deliberately quiet — it is a
+   status line, not a scoreboard, and reading it should never feel more
+   interesting than typing the next word. */
+.focus {
+  align-self: flex-start;
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+  font-size: 0.8rem;
+  color: var(--dim);
+  margin-top: -1rem;
+}
+
+.focus-keys {
+  display: flex;
+  gap: 0.45rem;
+}
+
+.fkey {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.typer {
+  width: 100%;
+  overflow: hidden;
+  /* Exactly three lines: one behind you, the one you are on, one ahead. More
+     lookahead than that and you start reading instead of typing. */
+  height: calc(3 * 1.9 * 1.85rem);
+}
+
+.words {
+  font-size: 1.85rem;
+  line-height: 1.9;
+  color: var(--dim);
+  transition: transform 0.12s ease-out;
+  user-select: none;
+}
+
+.word {
+  display: inline-block;
+  margin-right: 0.6em;
+  border-bottom: 2px solid transparent;
+}
+
+/* A word you left a mistake in stays marked after you have moved past it.
+   Not a penalty — it is so the line above shows you where you are losing it. */
+.word.flawed {
+  border-bottom-color: rgba(255, 51, 85, 0.5);
+}
+
+.char {
+  position: relative;
+}
+
+.char.ok {
+  color: var(--text);
+}
+
+.char.bad {
+  color: var(--red);
+}
+
+.char.cur::before {
+  content: "";
+  position: absolute;
+  left: -0.06em;
+  top: 0.12em;
+  bottom: 0.12em;
+  width: 2px;
+  background: var(--cyan);
+  animation: blink 1.1s steps(1) infinite;
+}
+
+.char.cur.cur-after::before {
+  left: auto;
+  right: -0.06em;
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  50.01%, 100% { opacity: 0; }
+}
+
+.hint {
+  font-size: 0.8rem;
+  color: var(--dimmer);
+  transition: opacity 0.4s;
+}
+
+.hint.faded {
+  opacity: 0;
+}
+
+kbd {
+  font-family: inherit;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 0.05rem 0.3rem;
+  font-size: 0.75rem;
+}
+
+/* ---- Results ---- */
+
+.results {
+  max-width: 60rem;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.score {
+  display: flex;
+  gap: 3.5rem;
+  flex-wrap: wrap;
+}
+
+.big b {
+  display: block;
+  font-size: 3.4rem;
+  font-weight: 500;
+  color: var(--cyan);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.big i {
+  font-style: normal;
+  font-size: 0.8rem;
+  color: var(--dim);
+}
+
+.panel h2 {
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 0.9rem;
+}
+
+.lede {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--text);
+  max-width: 46rem;
+  margin-bottom: 1.4rem;
+}
+
+/* The heatmap. Background carries the one thing it is measuring — how that
+   key is going — so nothing else on the key is allowed to carry color. */
+.kb {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  width: fit-content;
+}
+
+.kbrow {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.kbrow:nth-child(2) { margin-left: 1.1rem; }
+.kbrow:nth-child(3) { margin-left: 2.6rem; }
+
+.kbkey {
+  width: 2.1rem;
+  height: 2.1rem;
+  display: grid;
+  place-items: center;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  border: 1px solid var(--line);
+}
+
+.kbkey.none { background: transparent;                 color: var(--dimmer); }
+.kbkey.cold { background: rgba(0, 208, 255, 0.22);     color: var(--cyan); }
+.kbkey.mid  { background: rgba(242, 236, 255, 0.07);   color: var(--dim); }
+.kbkey.warm { background: rgba(255, 212, 0, 0.22);     color: var(--yellow); }
+.kbkey.hot  { background: rgba(255, 0, 144, 0.28);     color: var(--magenta); }
+
+.legend {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+  margin-top: 1rem;
+  font-size: 0.75rem;
+  color: var(--dim);
+}
+
+.legend li {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.swatch {
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 3px;
+  border: 1px solid var(--line);
+}
+
+.swatch.cold { background: rgba(0, 208, 255, 0.22); }
+.swatch.warm { background: rgba(255, 212, 0, 0.22); }
+.swatch.hot  { background: rgba(255, 0, 144, 0.28); }
+.swatch.none { background: transparent; }
+
+.weak {
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.weak th {
+  text-align: left;
+  font-weight: 400;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--dimmer);
+  padding: 0 1.6rem 0.5rem 0;
+}
+
+.weak td {
+  padding: 0.35rem 1.6rem 0.35rem 0;
+  color: var(--dim);
+  border-top: 1px solid var(--line);
+}
+
+.weak td.k {
+  color: var(--text);
+  font-size: 1.05rem;
+}
+
+.weak td.empty {
+  color: var(--dim);
+  border-top: none;
+}
+
+.dot {
+  display: inline-block;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  margin-right: 0.5rem;
+  vertical-align: baseline;
+}
+
+.actions {
+  display: flex;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.actions button {
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--bg);
+  background: var(--cyan);
+  border: none;
+  border-radius: 5px;
+  padding: 0.6rem 1.2rem;
+  cursor: pointer;
+}
+
+.actions button kbd {
+  border-color: rgba(5, 4, 10, 0.35);
+  margin-left: 0.4rem;
+}
+
+.actions button.ghost {
+  color: var(--dim);
+  background: none;
+  border: 1px solid var(--line);
+}
+
+.actions button.ghost:hover {
+  color: var(--text);
+}
+
+/* While results are up the live stats belong to the run that just ended, so
+   the header row stops competing with the summary for attention. */
+body.showing-results .hud,
+body.showing-results .focus,
+body.showing-results .hint {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .words { font-size: 1.35rem; }
+  .typer { height: calc(3 * 1.9 * 1.35rem); }
+  .score { gap: 2rem; }
+  .big b { font-size: 2.4rem; }
+}

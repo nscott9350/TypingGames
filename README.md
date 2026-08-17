@@ -4,7 +4,7 @@ Arcade games that teach you to touch type. The keyboard is the only input —
 there is no aiming and no movement key. You target by typing, and the words
 are the controls.
 
-**Play: https://nscott9350.github.io/TypingGames/**
+**Play: https://tippitype.com**
 
 ## The games
 
@@ -77,6 +77,57 @@ since sometimes no cascade exists anywhere on the trail.
 The playfield is a painted garden rather than a drawn one, so the route is
 letterboxed to the painting's aspect ratio and the ants walk the trail the
 picture actually shows.
+
+## The trainer — adaptive drill
+
+Not a game. No score, no lives, no combo: a line of words, a caret, and a
+running WPM. It exists for the part the games are bad at, which is working on
+the specific thing you are bad at.
+
+It times every keystroke and records every miss, per letter. A key is counted
+weak if it is **slow relative to the rest of your own keyboard**, or if you
+miss it — either signal alone is enough. Both matter, because they fail in
+opposite directions: judge on accuracy alone and the winning move is to type
+slowly, which is the habit that keeps people at 40wpm; judge on speed alone and
+it rewards hammering through mistakes. Everything is measured against your own
+median key rather than a target, so the drill reads the same at 30wpm and 90.
+
+Weak keys then bias what you are given. Every word in the pool is scored on the
+letters it contains — its average weakness, plus a weight on its worst letter,
+so a word earns its place for the hard reach inside it rather than for being
+long. In practice a weak key turns up in roughly **four times** as many words as
+chance would give it, and the text stays real English throughout.
+
+Three words in ten are still picked at random. That is not variety for its own
+sake: drill only the keys you are currently bad at and the rest of the keyboard
+stops being measured, its averages go stale, and the trainer ends up chasing
+what it believed ten minutes ago.
+
+Everything is a recency-weighted average with a half-life of about eight
+presses of that key, so "your weak keys" means the last few minutes, not a
+lifetime record — which keys are failing changes with fatigue and warm-up. New
+keys are shrunk toward neutral until there is enough evidence to trust them, so
+one unlucky miss cannot hijack the session.
+
+The end-of-run screen shows a heatmap of the whole keyboard, and the weakest
+keys with the finger each belongs to, the ms per press, and the miss rate.
+
+| Key | Action |
+| --- | --- |
+| letters | type the word |
+| `Space` | next word (letters you skipped count as misses) |
+| `Backspace` | rub out a letter within the current word |
+| `Tab` | restart |
+| `Esc` | end the run and show the summary |
+
+Sessions are 30, 60 or 120 seconds, or endless. What it has learned is kept in
+`localStorage` and carries across sessions; **Forget what you've learned about
+me** on the summary screen wipes it.
+
+The trainer draws on a larger pool than the games — the shared sets carry `q`
+in five words and `z` in twelve, which is a loop rather than a drill once the
+trainer starts hunting for them, so `trainer/words.js` adds depth on the rare
+and awkward letters.
 
 ## How to play
 
@@ -155,8 +206,15 @@ is never ambiguous. Narrow sets therefore cap how many targets can appear at
 once — the home row only offers eight distinct starting letters, so the
 Squadrons form a smaller, tighter formation on that setting.
 
+Or let the [Trainer](#the-trainer--adaptive-drill) choose instead of picking a
+set yourself — it weights words toward whichever keys you are currently slow or
+inaccurate on.
+
 Runs track WPM, accuracy and your best streak, and each difficulty keeps its own
-top-ten table. Everything is stored locally in your browser; nothing is uploaded.
+top-ten table. Everything is stored locally in your browser; no scores, no
+keystrokes and nothing you type are ever uploaded. The site counts page visits
+anonymously (GoatCounter — no cookies, no personal data) and that is the whole
+of it.
 
 ## Running locally
 
@@ -181,9 +239,14 @@ burrow/                 Gopher vs Ants (index.html, game.js, sprites.js, style.c
 burrow/images/          the painted background and sprite sheets it draws from
 squadron3030/           Squadron 3030 (index.html, game.js, sprites.js, style.css)
 squadron3030/images/    its painted background and sprite sheets
+trainer/                Trainer (index.html, trainer.js, words.js, style.css)
 shared/words.js         word sets, shared by all five games
 shared/keyboard.js      on-screen keyboard guide, shared by all five
 ```
+
+The trainer is DOM and CSS rather than canvas, since it is setting text rather
+than drawing a scene. It reads the finger map out of `shared/keyboard.js` rather
+than keeping a second copy that could drift.
 
 Each game keeps its own settings and high scores under its own `localStorage`
 keys, so they never interfere with one another.

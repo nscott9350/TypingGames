@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Type Arcade</title>
   <meta name="description" content="Arcade games that teach you to touch type.">
-  <link rel="stylesheet" href="hub.css?v=17">
+  <link rel="stylesheet" href="hub.css?v=18">
   <script data-goatcounter="https://tippitype.goatcounter.com/count"
           async src="https://gc.zgo.at/count.js"></script>
 </head>
@@ -19,6 +19,71 @@
   </header>
 
   <main class="games">
+    <a class="card card-trainer" href="trainer/">
+      <div class="art" aria-hidden="true">
+        <!-- The trainer's own heatmap: most of the board resting, a couple of
+             keys running hot because that is what it is currently drilling. -->
+        <svg viewBox="0 0 200 120" role="img">
+          <g fill="rgba(255,255,255,0.10)">
+            <rect x="40" y="18" width="28" height="7" rx="3"/>
+            <rect x="74" y="18" width="20" height="7" rx="3"/>
+            <rect x="100" y="18" width="34" height="7" rx="3"/>
+          </g>
+          <rect x="137" y="14" width="2.5" height="15" fill="#00D0FF"/>
+
+          <g fill="rgba(255,255,255,0.09)" stroke="rgba(255,255,255,0.14)" stroke-width="1">
+            <rect x="13.75" y="44" width="15" height="15" rx="2.5"/>
+            <rect x="31.25" y="44" width="15" height="15" rx="2.5"/>
+            <rect x="48.75" y="44" width="15" height="15" rx="2.5"/>
+            <rect x="66.25" y="44" width="15" height="15" rx="2.5"/>
+            <rect x="83.75" y="44" width="15" height="15" rx="2.5"/>
+            <rect x="101.25" y="44" width="15" height="15" rx="2.5"/>
+            <rect x="118.75" y="44" width="15" height="15" rx="2.5"/>
+            <rect x="136.25" y="44" width="15" height="15" rx="2.5"/>
+            <rect x="153.75" y="44" width="15" height="15" rx="2.5"/>
+            <rect x="22.5" y="61.5" width="15" height="15" rx="2.5"/>
+            <rect x="40" y="61.5" width="15" height="15" rx="2.5"/>
+            <rect x="57.5" y="61.5" width="15" height="15" rx="2.5"/>
+            <rect x="92.5" y="61.5" width="15" height="15" rx="2.5"/>
+            <rect x="110" y="61.5" width="15" height="15" rx="2.5"/>
+            <rect x="145" y="61.5" width="15" height="15" rx="2.5"/>
+            <rect x="162.5" y="61.5" width="15" height="15" rx="2.5"/>
+            <rect x="31.25" y="79" width="15" height="15" rx="2.5"/>
+            <rect x="48.75" y="79" width="15" height="15" rx="2.5"/>
+            <rect x="66.25" y="79" width="15" height="15" rx="2.5"/>
+            <rect x="101.25" y="79" width="15" height="15" rx="2.5"/>
+            <rect x="118.75" y="79" width="15" height="15" rx="2.5"/>
+            <rect x="136.25" y="79" width="15" height="15" rx="2.5"/>
+          </g>
+
+          <!-- Hot: what it is feeding you. Cold: the keys you already own. -->
+          <g stroke-width="1">
+            <rect x="171.25" y="44" width="15" height="15" rx="2.5"
+                  fill="rgba(255,0,144,0.45)" stroke="#FF0090"/>
+            <rect x="83.75" y="79" width="15" height="15" rx="2.5"
+                  fill="rgba(255,0,144,0.45)" stroke="#FF0090"/>
+            <rect x="75" y="61.5" width="15" height="15" rx="2.5"
+                  fill="rgba(255,212,0,0.35)" stroke="#FFD400"/>
+            <rect x="127.5" y="61.5" width="15" height="15" rx="2.5"
+                  fill="rgba(0,208,255,0.28)" stroke="#00D0FF"/>
+          </g>
+        </svg>
+      </div>
+      <div class="body">
+        <h2>Trainer <span class="badge">NEW</span></h2>
+        <p class="genre">Adaptive drill &mdash; not a game</p>
+        <p class="desc">Times and scores every key you press, works out which ones
+          are actually holding you back, then quietly feeds you more words that
+          use them.</p>
+        <ul class="tags">
+          <li>Finds your weak keys</li>
+          <li>Real words</li>
+          <li>No score, no timer pressure</li>
+        </ul>
+        <span class="play">Train &rarr;</span>
+      </div>
+    </a>
+
     <a class="card card-blaster" href="blaster/">
       <div class="art" aria-hidden="true">
         <svg viewBox="0 0 200 120" role="img">
@@ -228,10 +293,14 @@
     </ul>
     <p class="stat-note">Every run tracks WPM, accuracy and your best streak, and
       keeps a top-ten table per difficulty.</p>
+    <p class="stat-note">Or skip the drill sets entirely and let the
+      <a href="trainer/">Trainer</a> pick for you &mdash; it watches which keys you
+      are slow or inaccurate on and weights what it shows you toward those.</p>
   </section>
 
   <footer>
-    <p>Built with plain HTML, CSS and canvas &mdash; no frameworks, no tracking.</p>
+    <p>Built with plain HTML, CSS and canvas &mdash; no frameworks, no accounts.
+      Visits are counted anonymously; nothing you type ever leaves your browser.</p>
     <p><a href="https://github.com/nscott9350/TypingGames">Source on GitHub</a></p>
   </footer>
 </body>
