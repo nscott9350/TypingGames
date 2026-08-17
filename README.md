@@ -8,7 +8,7 @@ are the controls.
 
 ## The games
 
-### Type Blaster — multidirectional shooter
+### Blaster — multidirectional shooter
 
 Rocks drift in from every edge of the screen, each carrying a word. Type a
 word's first letter to lock on; your ship rotates to aim, every correct letter
@@ -22,7 +22,7 @@ peel off to dive at you and shoot. Your ship slides along the bottom of the
 screen. Clear a wave to advance. Bosses can open a tractor beam that captures
 your ship — type the rescue word before the timer runs out to break free.
 
-### Type Sentinel — city defence
+### Sentinel — city defence
 
 Warheads fall from the night sky toward six cities, and you are the only thing
 between them. Type a warhead's word to intercept it; every interception leaves a
@@ -48,7 +48,7 @@ while the whole roster gets an outing across a run. The HUD docks into the
 console printed across the foot of the background, which leaves the entire
 starfield above as playfield.
 
-### Type Burrow — marble popper
+### Burrow — marble popper
 
 A column of ants marches down a garden trail toward a gopher's burrow. Typing an
 ant's word sends a berry after it and the column closes the gap — and if that
@@ -174,10 +174,10 @@ Then open http://localhost:8642.
 
 ```
 index.html, hub.css     the arcade landing page
-blaster/                Type Blaster (index.html, game.js, style.css)
+blaster/                Blaster (index.html, game.js, style.css)
 squadron/               Squadron 1981 (index.html, game.js, style.css)
-sentinel/               Type Sentinel (index.html, game.js, style.css)
-burrow/                 Type Burrow (index.html, game.js, sprites.js, style.css)
+sentinel/               Sentinel (index.html, game.js, style.css)
+burrow/                 Burrow (index.html, game.js, sprites.js, style.css)
 burrow/images/          the painted background and sprite sheets Burrow draws from
 squadron3030/           Squadron 3030 (index.html, game.js, sprites.js, style.css)
 squadron3030/images/    its painted background and sprite sheets
@@ -208,7 +208,7 @@ throughout.
 
 There are no dependencies, no bundled fonts and no sound files; every game draws
 to a canvas and sets type in whatever monospace font your system already has.
-Blaster, Squadron 1981 and Sentinel draw all of their graphics procedurally. Type
+Blaster, Squadron 1981 and Sentinel draw all of their graphics procedurally.
 Burrow and Squadron 3030 are the exceptions: they render from the painted
 sheets in `burrow/images/` and `squadron3030/images/`.
 

@@ -1,5 +1,5 @@
 // ============================================================
-// Type Blaster — a multidirectional shooter for touch typists
+// Blaster — a multidirectional shooter for touch typists
 // ============================================================
 
 const canvas = document.getElementById("game");

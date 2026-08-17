@@ -1,5 +1,5 @@
 // ============================================================
-// Type Sentinel — a city defence shooter for touch typists
+// Sentinel — a city defence shooter for touch typists
 // ============================================================
 
 const canvas = document.getElementById("game");

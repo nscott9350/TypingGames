@@ -1,5 +1,5 @@
 // ============================================================
-// Sprite sheets for Type Squadron 3030.
+// Sprite sheets for Squadron 3030.
 //
 // Unlike Burrow's art, these sheets arrive with real alpha — including the
 // soft falloff on every neon glow — so there is no keying step at all. They
