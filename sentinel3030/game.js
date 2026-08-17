@@ -1861,7 +1861,12 @@ const VAL = {
   lives:  [0.300, 0.48, 0.900, 0.86],
   combo:  [0.305, 0.24, 0.822, 0.78],
   comboX: [0.845, 0.20, 1.000, 0.82],
-  target: [0.060, 0.34, 0.940, 0.86],
+  // Measured off the sheet rather than eyeballed: the dark slot runs from
+  // 0.486 to 0.886 of the panel's height, so centring on 0.60 sat the word
+  // high enough to crowd the TARGET header above it. Horizontally the slot's
+  // own edges are unreliable — the panel has star specks printed inside it —
+  // so the anchor is the header's bright glyphs, whose centre is 0.5065.
+  target: [0.095, 0.486, 0.918, 0.886],
 };
 
 function panelSlot(key, x, y, h, region) {
