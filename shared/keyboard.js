@@ -8,7 +8,7 @@
 // vision without moving your eyes.
 //
 // The point is not to show where a letter lives, it is to show which finger
-// owns it. Looking down teaches you the map; colour-coding by finger teaches
+// owns it. Looking down teaches you the map; color-coding by finger teaches
 // you the habit, which is the thing that actually transfers.
 // ============================================================
 
@@ -54,7 +54,7 @@ const BUMP_KEYS = new Set(["f","j"]);
 
 // Eight finger lamps, one per typing finger, each parked directly above the
 // home key that finger rests on: a s d f and j k l plus the semicolon column.
-// Reading a colour is faster than reading the words "left middle" mid-word,
+// Reading a color is faster than reading the words "left middle" mid-word,
 // and anchoring each lamp over its own key makes the mapping self-evident.
 // `lift` nudges them into a hand's silhouette — middle tallest, pinky lowest.
 // Numbered the way typing courses do it — index 1 out to pinky 4 — so the row
@@ -80,7 +80,7 @@ function keyboardGuideHeight(width, showSpace = true) {
   return u * DOT_BAND + 3 * (keyH + gap) + (showSpace ? keyH * 0.72 + gap : 0) + gap * 2;
 }
 
-// Centred across the play field and sized to it, rather than a strip pinned
+// Centered across the play field and sized to it, rather than a strip pinned
 // to an edge. Nothing needs to reserve space for this: it is a watermark and
 // the game draws over the top of it.
 function keyboardGuideLayout(canvasWidth, canvasHeight, showSpace = true) {
@@ -120,7 +120,7 @@ function drawKeyboardGuide(ctx, opts) {
   // the space bar. It defaults to white, which is right over the near-black
   // playfields the shooters use. A game played over a light background passes
   // a dark ink instead, otherwise the guide dissolves into the scenery: the
-  // finger colours are saturated enough to survive either way, but a white
+  // finger colors are saturated enough to survive either way, but a white
   // letter at 16% alpha over sunlit grass is simply not there.
   const { x, y, width, next = null, options = [], spaceReady = false,
           showSpace = true, opacity = 0.16, highlight = 0.9,
@@ -171,8 +171,8 @@ function drawKeyboardGuide(ctx, opts) {
     ctx.arc(cx, cy, dotR, 0, Math.PI * 2);
     ctx.stroke();
 
-    // Numeral stays in the finger's own colour: with the disc no longer solid
-    // there is nothing to knock it out of, and colour keeps the two cues tied.
+    // Numeral stays in the finger's own color: with the disc no longer solid
+    // there is nothing to knock it out of, and color keeps the two cues tied.
     ctx.font = `bold ${Math.round(u * (on ? 0.34 : 0.3))}px ${mono}`;
     ctx.fillStyle = color;
     ctx.fillText(String(d.n), cx, cy + 1);
@@ -203,9 +203,9 @@ function drawKeyboardGuide(ctx, opts) {
       kbRoundRect(ctx, rx, ry, u * 0.9, keyH, u * 0.1);
       ctx.fill();
 
-      // Every key keeps a tint of its finger colour, so the hand map stays
+      // Every key keeps a tint of its finger color, so the hand map stays
       // legible even when nothing is highlighted. The lit key keeps its own
-      // finger colour rather than turning white, since which finger to use is
+      // finger color rather than turning white, since which finger to use is
       // the thing worth learning.
       ctx.globalAlpha = strokeA;
       ctx.strokeStyle = color;

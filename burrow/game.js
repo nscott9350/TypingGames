@@ -3,7 +3,7 @@
 //
 // A column of ants marches down a garden path toward the gopher's burrow.
 // Typing an ant's word sends a berry after it, and the column closes the gap —
-// if that brings three of a colour together they go too, which can cascade.
+// if that brings three of a color together they go too, which can cascade.
 // So the fastest ant to type is rarely the right one: the game is read before
 // it is reflex.
 //
@@ -106,7 +106,7 @@ function recordScore(entry) {
 
 // ---- Difficulty ----
 // `crawl` is path pixels per second, `load` the ants in a level, `hues` how many
-// colours are in play (fewer colours means easier cascades), `hole` how many
+// colors are in play (fewer colors means easier cascades), `hole` how many
 // ants the burrow absorbs before it gives out and costs a life, and `words` how
 // many ants carry a tag at once. Beginners get fewer to scan; the harder levels
 // get more, which is more to read but more room to hunt a cascade in.
@@ -426,7 +426,7 @@ function resetGame() {
 
 // ---- Words ----
 // Only the ants nearest the burrow carry words, and each is given one as it
-// enters that window. Colour is fixed from birth, so a cascade can be planned
+// enters that window. Color is fixed from birth, so a cascade can be planned
 // on the whole line while targeting stays unambiguous among the few that count.
 function distinctFirstLetters() {
   const pools = currentWordSet().pools;
@@ -442,7 +442,7 @@ function pickWord(used) {
   // Only the locked ant spells itself out now, so a word no longer has to fit
   // in the gap between two ants and the five-letter cap can go. Short and
   // medium are drawn from one pool rather than short-first, or nearly every
-  // target comes out three letters long and there is little to practise.
+  // target comes out three letters long and there is little to practice.
   const pool = (pools.short || []).concat(pools.medium || [])
                  .filter(w => w.length <= MAX_WORD);
   const cands = pool.filter(w => !used.has(w[0]));
@@ -477,7 +477,7 @@ function refreshLabels() {
   for (let i = 0; i < chain.length; i++) {
     const m = chain[i];
     if (!used.has(m.word ? m.word[0] : "") || m.d < 0) {
-      // ants beyond the window keep their colour but lose their label
+      // ants beyond the window keep their color but lose their label
       if (m.lettered && !(m.word && used.has(m.word[0]))) m.lettered = false;
     }
   }
@@ -537,7 +537,7 @@ function crawlSpeed() {
 }
 
 // ---- Matching ----
-// Scan for runs of three or more of a colour and pop them. Returns how many
+// Scan for runs of three or more of a color and pop them. Returns how many
 // went. Because spawning never creates a triple, every run found here is one
 // the player produced by clearing something between them.
 function resolveMatches() {
@@ -588,7 +588,7 @@ function popAnt(m) {
 }
 
 // ---- Effects ----
-function burstAt(x, y, colour, n) {
+function burstAt(x, y, color, n) {
   for (let i = 0; i < n; i++) {
     if (particles.length >= MAX_PARTICLES) return;
     const a = Math.random() * Math.PI * 2;
@@ -596,7 +596,7 @@ function burstAt(x, y, colour, n) {
     particles.push({
       x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 40,
       life: 0.3 + Math.random() * 0.4, maxLife: 0.7,
-      r: 2 + Math.random() * 3, colour,
+      r: 2 + Math.random() * 3, color,
     });
   }
 }
@@ -1003,7 +1003,7 @@ function renderScoreList(highlight) {
 
 // ---- Drawing ----
 const UI_CREAM = "#F6E7C3";
-// Plate colours sampled from assets.png, used to blank the specimen values the
+// Plate colors sampled from assets.png, used to blank the specimen values the
 // panels ship with before the live figures are drawn over them.
 const SCORE_PLATE = "#FBDCAA";
 const LEVEL_PLATE = "#FADCAC";
@@ -1080,7 +1080,7 @@ function drawColumn() {
 // One letter per addressable ant — the key that locks it.
 //
 // A word beside every ant needed about 53px against the 26px of trail the ants
-// leave between them, so the tags overlapped their neighbours and only six
+// leave between them, so the tags overlapped their neighbors and only six
 // could be shown at all. A single glyph fits that gap, which is what lets ten
 // or twelve ants be addressable at once and lets the words themselves get long
 // enough to be worth typing.
@@ -1144,7 +1144,7 @@ function drawWordTag(m) {
   const n = normalAtDist(m.d);
   const side = m.tagSide;
   // Alone on the trail now, so it can be read at a glance from wherever the
-  // eye already is rather than sized to avoid its neighbours.
+  // eye already is rather than sized to avoid its neighbors.
   const fs = Math.max(15, R * 0.86);
   ctx.font = `bold ${fs}px ${MONO}`;
   const tw = ctx.measureText(m.word).width;
@@ -1278,7 +1278,7 @@ function drawParticles() {
     ctx.globalAlpha = k;
     ctx.beginPath();
     ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-    ctx.fillStyle = p.colour;
+    ctx.fillStyle = p.color;
     ctx.fill();
   }
   ctx.globalAlpha = 1;
@@ -1309,7 +1309,7 @@ function drawGuide() {
 // ---- HUD ----
 // Panels come from the sheet, but each ships with a value painted into it, so
 // the live figure is drawn over a patch of the panel's own cream.
-function panelText(text, x, y, size, colour, align = "center") {
+function panelText(text, x, y, size, color, align = "center") {
   ctx.font = `bold ${size}px ${MONO}`;
   ctx.textAlign = align;
   ctx.textBaseline = "middle";
@@ -1317,7 +1317,7 @@ function panelText(text, x, y, size, colour, align = "center") {
   ctx.strokeStyle = "rgba(60,40,20,0.55)";
   ctx.lineWidth = size * 0.16;
   ctx.strokeText(text, x, y);
-  ctx.fillStyle = colour;
+  ctx.fillStyle = color;
   ctx.fillText(text, x, y);
 }
 
@@ -1334,7 +1334,7 @@ function heart(x, y, s, filled) {
   ctx.stroke();
 }
 
-function segmentBar(x, y, w, h, frac, colour) {
+function segmentBar(x, y, w, h, frac, color) {
   roundRect(x, y, w, h, h * 0.34);
   ctx.fillStyle = "rgba(60,44,26,0.55)";
   ctx.fill();
@@ -1344,7 +1344,7 @@ function segmentBar(x, y, w, h, frac, colour) {
   const lit = Math.round(frac * segs);
   for (let i = 0; i < segs; i++) {
     roundRect(x + gap + i * (sw + gap), y + h * 0.16, sw, h * 0.68, h * 0.16);
-    ctx.fillStyle = i < lit ? colour : "rgba(255,255,255,0.10)";
+    ctx.fillStyle = i < lit ? color : "rgba(255,255,255,0.10)";
     ctx.fill();
   }
 }
@@ -1529,7 +1529,7 @@ function drawHUD() {
     }
   }
 
-  // Typing stats, centre bottom edge
+  // Typing stats, center bottom edge
   const minutes = Math.max(elapsed / 60, 1 / 60);
   const wpm = Math.round((typedCorrect / 5) / minutes);
   const tot = typedCorrect + typedWrong;

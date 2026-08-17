@@ -1,5 +1,5 @@
 // ============================================================
-// Sentinel — a city defence shooter for touch typists
+// Sentinel — a city defense shooter for touch typists
 // ============================================================
 
 const canvas = document.getElementById("game");
@@ -626,7 +626,7 @@ function wrongLetter(key) {
   sfx.error();
 }
 
-// Interceptors rise from the nearest surviving city, so the defence visibly
+// Interceptors rise from the nearest surviving city, so the defense visibly
 // comes from the thing being defended.
 function batteryFor(x) {
   const alive = aliveCities();

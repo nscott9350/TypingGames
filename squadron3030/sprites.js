@@ -54,7 +54,7 @@ const FRAMES = {
 };
 
 // The thirteen creatures, each with the empty name plate drawn beneath it on
-// the sheet. The plates are colour-matched to their own creature, which is
+// the sheet. The plates are color-matched to their own creature, which is
 // what lets a word tag say which enemy it belongs to before it is read.
 const CREATURES = [
   { key: "crab",     box: [  25,  46, 269, 214], plate: [  54, 262, 213, 55] },
@@ -113,7 +113,7 @@ const Sprites = {
     });
   },
 
-  // Centred on (cx, cy), scaled so the frame's height is `h`.
+  // Centered on (cx, cy), scaled so the frame's height is `h`.
   draw(ctx, key, cx, cy, h, alpha = 1, flip = false) {
     const f = this.frames[key];
     if (!f || !f.img) return { w: 0, h: 0 };

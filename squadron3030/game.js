@@ -133,7 +133,7 @@ const guideMode = () =>
   GUIDE_MODES.includes(settings.keyboardGuide) ? settings.keyboardGuide : "off";
 
 // ---- Palette ----
-// Fully saturated neon against a near-black ground. Electric colour is a
+// Fully saturated neon against a near-black ground. Electric color is a
 // contrast effect as much as a hue one: the darker and less tinted the
 // background, the more these read as emitting light rather than reflecting it.
 // Each entry sits squarely on its own hue rather than between two, so blue
@@ -151,11 +151,11 @@ const NEON = {
 };
 
 // ---- Enemy types ----
-// Every ship is built from two neighbouring pure hues — body and wings — and
+// Every ship is built from two neighboring pure hues — body and wings — and
 // `hot` is a LIGHT TINT OF ITS OWN HUE, never a near-white. Grading a highlight
 // toward white pulls the saturation out of the top of the shape, which is what
 // stops a yellow from looking properly yellow.
-// The three roles are unchanged — same radii, same points, same behaviour —
+// The three roles are unchanged — same radii, same points, same behavior —
 // but each now wears one of the sheet's designs. A wave picks one design per
 // role and holds it, so the types stay tellable apart within a wave while the
 // whole roster of thirteen gets an outing across a run.
@@ -287,7 +287,7 @@ function relayout() {
   player.x = Math.max(PLAYER_R, Math.min(W - PLAYER_R, player.x));
   player.targetX = Math.max(PLAYER_R, Math.min(W - PLAYER_R, player.targetX));
   // The formation's spacing is worked out when a wave starts, so without this
-  // it keeps the old stage's geometry and the ranks drift off-centre for the
+  // it keeps the old stage's geometry and the ranks drift off-center for the
   // rest of the wave.
   if (formation && formation.cols) {
     formation.colSpacing = Math.min(150, (W - 120) / Math.max(1, formation.cols));
@@ -1476,7 +1476,7 @@ function drawStars(dt) {
 
 function drawVignette() {
   // Lighter than before, and neutral black rather than purple: a tinted
-  // vignette dulls the saturated colours it falls across.
+  // vignette dulls the saturated colors it falls across.
   const g = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.45, W / 2, H / 2, Math.max(W, H) * 0.78);
   g.addColorStop(0, "rgba(0,0,0,0)");
   g.addColorStop(1, "rgba(0, 0, 0, 0.42)");
@@ -1523,7 +1523,7 @@ function drawBeam(t) {
   ctx.closePath();
   ctx.fill();
 
-  // Scanning bands travelling down the cone
+  // Scanning bands traveling down the cone
   ctx.strokeStyle = "rgba(230, 255, 250, 0.5)";
   ctx.lineWidth = 2;
   for (let i = 0; i < 5; i++) {
@@ -1570,7 +1570,7 @@ function drawEnemies(t) {
 
 // One sprite, bobbing slightly and banking into its drift. The sheet's art
 // already carries its own glow in the alpha, so nothing is composited
-// additively on top of it — that would only wash the colour out.
+// additively on top of it — that would only wash the color out.
 function drawShip(e, T, t) {
   const key = design[e.type] || "drone";
   const h = T.r * T.scale;
@@ -1597,7 +1597,7 @@ function drawReticle(e, t) {
 }
 
 // The word rides the enemy's own name plate. Each plate on the sheet is
-// colour-matched to the creature drawn above it, so the tag says which enemy
+// color-matched to the creature drawn above it, so the tag says which enemy
 // it belongs to before the word itself has been read — which is exactly what
 // Gopher vs Ants needed a procedural bubble to fake, and this does better.
 function drawWordLabel(e, locked, T) {
@@ -1843,7 +1843,7 @@ function drawGuide() {
 // entire starfield above as uninterrupted playfield.
 //
 // Each panel ships with a specimen value printed on it (000000, x5, three
-// hearts). Those are blanked in the slot's own ground colour, sampled off the
+// hearts). Those are blanked in the slot's own ground color, sampled off the
 // sheet, before the live figure goes down. An earlier pass used
 // destination-out for this, which does not clear the slot — it punches a hole
 // straight through the painting to the page behind it.
@@ -1863,10 +1863,10 @@ const VAL = {
   combo:  [0.305, 0.24, 0.822, 0.78],
   comboX: [0.845, 0.20, 1.000, 0.82],
   // Measured off the sheet rather than eyeballed: the dark slot runs from
-  // 0.486 to 0.886 of the panel's height, so centring on 0.60 sat the word
+  // 0.486 to 0.886 of the panel's height, so centering on 0.60 sat the word
   // high enough to crowd the TARGET header above it. Horizontally the slot's
   // own edges are unreliable — the panel has star specks printed inside it —
-  // so the anchor is the header's bright glyphs, whose centre is 0.5065.
+  // so the anchor is the header's bright glyphs, whose center is 0.5065.
   target: [0.095, 0.486, 0.918, 0.886],
 };
 
@@ -1877,14 +1877,14 @@ function panelSlot(key, x, y, h, region) {
            w: (r[2] - r[0]) * w, h: (r[3] - r[1]) * h, pw: w };
 }
 
-function fitText(text, box, colour, weight = "bold", shrink = 0.78) {
+function fitText(text, box, color, weight = "bold", shrink = 0.78) {
   let fs = box.h * shrink;
   ctx.font = `${weight} ${fs}px ${MONO}`;
   const tw = ctx.measureText(text).width;
   if (tw > box.w) { fs *= box.w / tw; ctx.font = `${weight} ${fs}px ${MONO}`; }
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillStyle = colour;
+  ctx.fillStyle = color;
   ctx.fillText(text, box.x + box.w / 2, box.y + box.h / 2);
   return fs;
 }

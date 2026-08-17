@@ -6,7 +6,7 @@
 // keyed at load: a flood fill runs inward from every border pixel, so only
 // background that is *connected to the edge* is removed. Cream that sits
 // inside a sprite — the gopher's belly, a speech bubble's fill — is untouched,
-// which a naive colour key would have punched holes through.
+// which a naive color key would have punched holes through.
 // ============================================================
 
 const SHEETS = {
@@ -45,7 +45,7 @@ const FRAMES = {
   puffStars:  ["ui", 522, 921, 178, 102],
 };
 
-// The six ants and their berries share an index, so an ant's colour and the
+// The six ants and their berries share an index, so an ant's color and the
 // berry fired at it always match.
 const ANT_X = [37, 259, 487, 717, 951, 1185];
 const BERRY_X = [82, 207, 333, 456, 580, 707];
@@ -65,13 +65,13 @@ const Sprites = {
   //
   // `softShadow` runs a second pass afterwards for sheets where the artist
   // painted a drop shadow onto the cream. Those pixels are not the background
-  // colour, so the first fill leaves them, and over grass they read as a pale
+  // color, so the first fill leaves them, and over grass they read as a pale
   // smudge under each sprite. The pass floods in from the now-transparent
-  // background through light, weakly-coloured pixels and rewrites them as a
+  // background through light, weakly-colored pixels and rewrites them as a
   // translucent dark shadow — so the sprite sits on the ground instead of
-  // floating. Connectivity is what makes the loose colour test safe: eyes,
+  // floating. Connectivity is what makes the loose color test safe: eyes,
   // teeth and bellies are all fenced in by dark outlines, so the fill can
-  // never reach them however close their colour is to the shadow's.
+  // never reach them however close their color is to the shadow's.
   key(img, softShadow = false) {
     const c = document.createElement("canvas");
     c.width = img.width; c.height = img.height;
@@ -86,7 +86,7 @@ const Sprites = {
                         Math.abs(d[i + 1] - bg[1]) < TOL &&
                         Math.abs(d[i + 2] - bg[2]) < TOL;
     // Typed-array stack of pixel indices, marking each pixel before it is
-    // pushed. Pushing neighbours unconditionally lets the same pixel queue up
+    // pushed. Pushing neighbors unconditionally lets the same pixel queue up
     // to four times, which on a sheet this size runs to tens of millions of
     // entries and takes seconds.
     const seen = new Uint8Array(W * H);
@@ -179,7 +179,7 @@ const Sprites = {
     });
   },
 
-  // Draw a frame centred on (cx, cy), scaled so its height is `targetH`.
+  // Draw a frame centered on (cx, cy), scaled so its height is `targetH`.
   // `flip` mirrors it, which is how an ant faces the way it is walking.
   draw(ctx, key, cx, cy, targetH, flip = false, alpha = 1) {
     const f = this.frames[key];

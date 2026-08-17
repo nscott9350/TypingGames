@@ -125,7 +125,7 @@ const guideMode = () =>
   GUIDE_MODES.includes(settings.keyboardGuide) ? settings.keyboardGuide : "off";
 
 // ---- Palette ----
-// Fully saturated neon against a near-black ground. Electric colour is a
+// Fully saturated neon against a near-black ground. Electric color is a
 // contrast effect as much as a hue one: the darker and less tinted the
 // background, the more these read as emitting light rather than reflecting it.
 // Each entry sits squarely on its own hue rather than between two, so blue
@@ -143,7 +143,7 @@ const NEON = {
 };
 
 // ---- Enemy types ----
-// Every ship is built from two neighbouring pure hues — body and wings — and
+// Every ship is built from two neighboring pure hues — body and wings — and
 // `hot` is a LIGHT TINT OF ITS OWN HUE, never a near-white. Grading a highlight
 // toward white pulls the saturation out of the top of the shape, which is what
 // stops a yellow from looking properly yellow.
@@ -215,7 +215,7 @@ function buildBackground() {
   const g = bgCanvas.getContext("2d");
 
   // Near-black ground. The previous mid-purple wash lifted every dark pixel
-  // and greyed the neon out; saturation only reads as "electric" when the
+  // and grayed the neon out; saturation only reads as "electric" when the
   // surrounding value is genuinely low.
   const base = g.createLinearGradient(0, 0, W * 0.3, H);
   base.addColorStop(0, "#0a0418");
@@ -224,7 +224,7 @@ function buildBackground() {
   g.fillStyle = base;
   g.fillRect(0, 0, W, H);
 
-  // Tighter, more saturated pools of colour instead of broad haze
+  // Tighter, more saturated pools of color instead of broad haze
   const clouds = [
     { c: "255, 31, 143", n: 3 },
     { c: "176, 38, 255", n: 3 },
@@ -1445,7 +1445,7 @@ function drawStars(dt) {
 
 function drawVignette() {
   // Lighter than before, and neutral black rather than purple: a tinted
-  // vignette dulls the saturated colours it falls across.
+  // vignette dulls the saturated colors it falls across.
   const g = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.45, W / 2, H / 2, Math.max(W, H) * 0.78);
   g.addColorStop(0, "rgba(0,0,0,0)");
   g.addColorStop(1, "rgba(0, 0, 0, 0.42)");
@@ -1492,7 +1492,7 @@ function drawBeam(t) {
   ctx.closePath();
   ctx.fill();
 
-  // Scanning bands travelling down the cone
+  // Scanning bands traveling down the cone
   ctx.strokeStyle = "rgba(230, 255, 250, 0.5)";
   ctx.lineWidth = 2;
   for (let i = 0; i < 5; i++) {
@@ -1521,7 +1521,7 @@ function drawEnemies(t) {
     // channels, so a white core would drive R, G and B toward 255 together
     // and bleach the hue out of the brightest part of the sprite. Same-hue
     // layers saturate the channels that are already lit and leave the empty
-    // ones dark, which is what keeps the colour identifiably itself.
+    // ones dark, which is what keeps the color identifiably itself.
     drawGlow(e.x, e.y, e.r * 2.9, T.glow, locked ? 0.46 : 0.3);
     drawGlow(e.x, e.y, e.r * 1.5, T.body, locked ? 0.55 : 0.36);
     ctx.restore();
@@ -1568,7 +1568,7 @@ function drawShip(e, T, t) {
   }
 
   // Body: mostly saturated hue with only a small hot highlight, then a bright
-  // rim in the glow colour. Grading straight into white desaturates the whole
+  // rim in the glow color. Grading straight into white desaturates the whole
   // shape and is what made these look pastel.
   const g = ctx.createLinearGradient(0, -r, 0, r);
   g.addColorStop(0, T.hot);
@@ -1965,7 +1965,7 @@ function drawHUD() {
     }
   }
 
-  // Wave, centred
+  // Wave, centered
   ctx.textAlign = "center";
   ctx.font = `600 12px ${MONO}`;
   ctx.fillStyle = "rgba(190, 175, 235, 0.9)";

@@ -22,7 +22,7 @@ peel off to dive at you and shoot. Your ship slides along the bottom of the
 screen. Clear a wave to advance. Bosses can open a tractor beam that captures
 your ship — type the rescue word before the timer runs out to break free.
 
-### Sentinel — city defence
+### Sentinel — city defense
 
 Warheads fall from the night sky toward six cities, and you are the only thing
 between them. Type a warhead's word to intercept it; every interception leaves a
@@ -38,7 +38,7 @@ decision.
 
 The same shape of game as Squadron 1981, painted rather than drawn. Hostiles warp
 into formation above a ship's console and break off to dive; each carries a
-call sign on its own name plate, and the plates are colour-matched to the
+call sign on its own name plate, and the plates are color-matched to the
 creature above them, so a tag says which hostile it belongs to before the word
 has been read.
 
@@ -52,11 +52,11 @@ starfield above as playfield.
 
 A column of ants marches down a garden trail toward a gopher's burrow. Typing an
 ant's word sends a berry after it and the column closes the gap — and if that
-brings three of a colour together they scatter too, which can cascade. Ants that
+brings three of a color together they scatter too, which can cascade. Ants that
 reach the burrow wear it down; when it gives out you lose one of three lives.
 
 Only the ants nearest the burrow carry words, so targeting is never ambiguous;
-the rest show only their colour, which is what you plan on. Taking the front ant
+the rest show only their color, which is what you plan on. Taking the front ant
 can never cascade, because nothing sits ahead of it — so the most urgent ant and
 the most valuable one are rarely the same, which is the whole game.
 
@@ -113,7 +113,7 @@ down that the guide exists to prevent.
 
 **Settings** offers three modes:
 
-| Mode | Behaviour |
+| Mode | Behavior |
 | --- | --- |
 | **Off** | never shown (the default) |
 | **When stuck** | hidden until you miss three keys in a row, then fades in until you get one right |
@@ -123,12 +123,12 @@ down that the guide exists to prevent.
 it stays out of the way while you are managing, and appears the moment you are
 hunting — so there is nothing to lean on except when you actually need it.
 
-Keys are colour-coded by **which finger should press them**, which is the part
+Keys are color-coded by **which finger should press them**, which is the part
 that actually transfers — knowing where `P` lives is far less useful than
 knowing it belongs to the right pinky. Eight lamps sit above the keyboard, one
 per finger, numbered the way typing courses do it — index 1 out to pinky 4, so
 the row reads `4 3 2 1 · 1 2 3 4`. Each sits over the home key its finger rests
-on, and the one you need lights up in that finger's colour. The home-row keys
+on, and the one you need lights up in that finger's color. The home-row keys
 carry a marker too, with a heavier one under `F` and `J` for the raised bumps
 you use to find home position by touch.
 
@@ -202,7 +202,7 @@ may serve you the cached page.
 These are original games, written from scratch, in genres established by the
 arcade era. Game mechanics are not protectable, but the titles of the games that
 inspired these are trademarks belonging to their owners, so they are not used
-here — the genre terms *multidirectional shooter*, *formation shooter*, *city defence*
+here — the genre terms *multidirectional shooter*, *formation shooter*, *city defense*
 and *marble popper* are the accurate descriptions and are what you will find
 throughout.
 
@@ -222,14 +222,14 @@ on the grass instead of dragging a pale smudge around with them.
 
 ## Contributing
 
-This is a personal project, built mainly so I have something to practise touch
+This is a personal project, built mainly so I have something to practice touch
 typing on. It is shared in case it is useful to someone else, not as a project
 looking for maintainers.
 
 Bug reports and ideas are welcome as issues, and small fixes as pull requests,
 but treat any response from me as a bonus rather than a promise. If you want to
 take it somewhere I would not — different genres, different word sets, a
-different feel entirely — fork it. The licence exists so you can.
+different feel entirely — fork it. The license exists so you can.
 
 ## License
 

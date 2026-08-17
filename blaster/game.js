@@ -509,7 +509,7 @@ function spawnAsteroid() {
     cracks.push(seg);
   }
 
-  const hue = 200 + Math.random() * 40 - 20; // cool grey-blue rocks with variation
+  const hue = 200 + Math.random() * 40 - 20; // cool gray-blue rocks with variation
 
   asteroids.push({
     x, y, radius, word,
