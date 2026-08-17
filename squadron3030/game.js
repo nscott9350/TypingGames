@@ -52,8 +52,8 @@ const ENTRY_GROUP = 4;          // ships per entry flight
 const BEAM_CHARGE = 1.7;        // seconds before a tractor beam catches
 
 // ---- Settings & scores (own keys so Blaster's data is untouched) ----
-const SETTINGS_KEY = "typesentinel3030-settings";
-const SCORES_KEY = "typesentinel3030-scores";
+const SETTINGS_KEY = "typesquadron3030-settings";
+const SCORES_KEY = "typesquadron3030-scores";
 const SETTINGS_VERSION = 3;
 const DEFAULT_SETTINGS = {
   v: SETTINGS_VERSION,

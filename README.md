@@ -34,7 +34,7 @@ Unlike the other two you are defending something other than yourself, so which
 warhead to shoot next — the lowest, or the one over a cluster — is the real
 decision.
 
-### Sentinel 3030 — formation shooter
+### Squadron 3030 — formation shooter
 
 The same shape of game as Squadron, painted rather than drawn. Hostiles warp
 into formation above a ship's console and break off to dive; each carries a
@@ -179,8 +179,8 @@ squadron/               Type Squadron (index.html, game.js, style.css)
 sentinel/               Type Sentinel (index.html, game.js, style.css)
 burrow/                 Type Burrow (index.html, game.js, sprites.js, style.css)
 burrow/images/          the painted background and sprite sheets Burrow draws from
-sentinel3030/           Sentinel 3030 (index.html, game.js, sprites.js, style.css)
-sentinel3030/images/    its painted background and sprite sheets
+squadron3030/           Squadron 3030 (index.html, game.js, sprites.js, style.css)
+squadron3030/images/    its painted background and sprite sheets
 shared/words.js         word sets, shared by all five games
 shared/keyboard.js      on-screen keyboard guide, shared by all five
 ```
@@ -209,10 +209,10 @@ throughout.
 There are no dependencies, no bundled fonts and no sound files; every game draws
 to a canvas and sets type in whatever monospace font your system already has.
 Blaster, Squadron and Sentinel draw all of their graphics procedurally. Type
-Burrow and Sentinel 3030 are the exceptions: they render from the painted
-sheets in `burrow/images/` and `sentinel3030/images/`.
+Burrow and Squadron 3030 are the exceptions: they render from the painted
+sheets in `burrow/images/` and `squadron3030/images/`.
 
-Sentinel 3030's sheets arrive with real alpha and are simply sliced. Burrow's
+Squadron 3030's sheets arrive with real alpha and are simply sliced. Burrow's
 arrive on a cream ground rather than with transparency, so `burrow/sprites.js`
 keys them at load — a flood fill inward from the sheet edge,
 which removes only background that is connected to the edge and therefore leaves
