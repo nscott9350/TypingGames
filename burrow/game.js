@@ -1007,7 +1007,7 @@ const UI_CREAM = "#F6E7C3";
 // panels ship with before the live figures are drawn over them.
 const SCORE_PLATE = "#FBDCAA";
 const LEVEL_PLATE = "#FADCAC";
-const COMBO_BADGE = "#301405";
+const COMBO_WOOD = "#A7682D";   // the panel's own wood, behind its printed x5
 const UI_INK = "#5C4326";
 
 let gopherMood = { pose: "gopherIdle", t: 0 };
@@ -1336,8 +1336,8 @@ function heart(x, y, s, filled) {
 
 function segmentBar(x, y, w, h, frac, color) {
   roundRect(x, y, w, h, h * 0.34);
-  ctx.fillStyle = "rgba(60,44,26,0.55)";
-  ctx.fill();
+  ctx.fillStyle = "#3A2612";      // opaque: the panels ship with a full bar
+  ctx.fill();                     // printed on them, and this has to cover it
   const segs = 9;
   const gap = w * 0.012;
   const sw = (w - gap * (segs + 1)) / segs;
@@ -1433,11 +1433,16 @@ function drawHUD() {
   const cp = { w: hud.cW };
   Sprites.drawAt(ctx, "comboPanel", cx0, top, panelH * 0.92);
   const into = multiplier >= MAX_MULT ? 1 : (streak % STREAK_PER_MULT) / STREAK_PER_MULT;
-  segmentBar(cx0 + cp.w * 0.06, top + panelH * 0.46, cp.w * 0.64, panelH * 0.26, into, "#7FD13B");
-  ctx.fillStyle = COMBO_BADGE;
-  ctx.fillRect(cx0 + cp.w * 0.735, top + panelH * 0.40 * 0.92,
-               cp.w * 0.205, panelH * 0.92 * 0.38);
-  panelText("x" + multiplier, cx0 + cp.w * 0.85, top + panelH * 0.585, panelH * 0.28, "#FFF3D6");
+  const cbH = panelH * 0.92;
+  segmentBar(cx0 + cp.w * 0.052, top + cbH * 0.405, cp.w * 0.672, cbH * 0.40, into, "#7FD13B");
+  // Blank the printed x5 by stretching a clean strip of the panel's own wood
+  // down over it, rather than filling flat. The panel is grained and lit, so a
+  // solid rectangle reads as a patch stuck on top of it.
+  const cf = Sprites.frames.comboPanel;
+  ctx.drawImage(cf.img,
+    cf.x + cf.w * 0.690, cf.y + cf.h * 0.290, cf.w * 0.215, cf.h * 0.070,
+    cx0 + cp.w * 0.690, top + cbH * 0.355, cp.w * 0.215, cbH * 0.50);
+  panelText("x" + multiplier, cx0 + cp.w * 0.7975, top + cbH * 0.605, cbH * 0.40, "#FFF3D6");
 
   // Lives and level, top right
   const lvX = hud.lvX, lvH = hud.lvH;
@@ -1471,7 +1476,7 @@ function drawHUD() {
     Sprites.drawAt(ctx, "holePanel", hx, hy, hh);
     const left = state === "overrun" ? 0
                : Math.max(0, Math.min(1, 1 - holeFill / L.hole));
-    segmentBar(hx + hw * 0.14, hy + hh * 0.52, hw * 0.72, hh * 0.2, left, "#7FD13B");
+    segmentBar(hx + hw * 0.165, hy + hh * 0.43, hw * 0.690, hh * 0.275, left, "#7FD13B");
   }
 
   // Bottom left. With ten or twelve ants addressable there is no listing them
