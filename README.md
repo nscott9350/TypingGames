@@ -15,7 +15,7 @@ word's first letter to lock on; your ship rotates to aim, every correct letter
 fires a shot, and the rock breaks apart when the word is finished. Endless, with
 the pressure ramping the longer you survive.
 
-### Type Squadron — formation shooter
+### Squadron 1981 — formation shooter
 
 Swarms fly in along curved entry paths, settle into a formation that sways, then
 peel off to dive at you and shoot. Your ship slides along the bottom of the
@@ -36,13 +36,13 @@ decision.
 
 ### Squadron 3030 — formation shooter
 
-The same shape of game as Squadron, painted rather than drawn. Hostiles warp
+The same shape of game as Squadron 1981, painted rather than drawn. Hostiles warp
 into formation above a ship's console and break off to dive; each carries a
 call sign on its own name plate, and the plates are colour-matched to the
 creature above them, so a tag says which hostile it belongs to before the word
 has been read.
 
-Thirteen designs and three capital ships share the three roles Squadron
+Thirteen designs and three capital ships share the three roles Squadron 1981
 already had, one design per role per wave — so the types stay tellable apart
 while the whole roster gets an outing across a run. The HUD docks into the
 console printed across the foot of the background, which leaves the entire
@@ -84,7 +84,7 @@ picture actually shows.
 | --- | --- |
 | any letter | start a run, or lock onto the word beginning with that letter |
 | letters | each correct letter fires a shot at your locked target |
-| `Space` | *(Squadron)* juke aside, burning any shots you roll through; two charges |
+| `Space` | *(both Squadrons)* juke aside, burning any shots you roll through; two charges |
 | `Esc` | pause and open settings |
 | `Q` | quit the current run (from the pause screen, press twice to confirm) |
 | `M` | return to the main menu (from the summary screen) |
@@ -95,7 +95,7 @@ else, so choosing what to shoot next is part of the game. Where two targets
 start with the same letter, the one closest to you wins. Chaining correct
 letters builds a score multiplier up to 5x; a mistake resets it.
 
-In Squadron the difficulty setting changes the rules, not just the numbers. Up
+In both Squadrons the difficulty setting changes the rules, not just the numbers. Up
 to Normal the ship steers itself around danger and each correct letter briefly
 shields you. From **Hard** upward both assists are switched off and survival is
 down to timing your own space-bar jukes. You carry two charges, since an attack
@@ -152,8 +152,8 @@ keyboard and then take it into any of them. Choose in **Settings**:
 
 Every target on screen is given a different starting letter, so a keypress
 is never ambiguous. Narrow sets therefore cap how many targets can appear at
-once — the home row only offers eight distinct starting letters, so Squadron
-forms a smaller, tighter formation on that setting.
+once — the home row only offers eight distinct starting letters, so the
+Squadrons form a smaller, tighter formation on that setting.
 
 Runs track WPM, accuracy and your best streak, and each difficulty keeps its own
 top-ten table. Everything is stored locally in your browser; nothing is uploaded.
@@ -175,7 +175,7 @@ Then open http://localhost:8642.
 ```
 index.html, hub.css     the arcade landing page
 blaster/                Type Blaster (index.html, game.js, style.css)
-squadron/               Type Squadron (index.html, game.js, style.css)
+squadron/               Squadron 1981 (index.html, game.js, style.css)
 sentinel/               Type Sentinel (index.html, game.js, style.css)
 burrow/                 Type Burrow (index.html, game.js, sprites.js, style.css)
 burrow/images/          the painted background and sprite sheets Burrow draws from
@@ -208,7 +208,7 @@ throughout.
 
 There are no dependencies, no bundled fonts and no sound files; every game draws
 to a canvas and sets type in whatever monospace font your system already has.
-Blaster, Squadron and Sentinel draw all of their graphics procedurally. Type
+Blaster, Squadron 1981 and Sentinel draw all of their graphics procedurally. Type
 Burrow and Squadron 3030 are the exceptions: they render from the painted
 sheets in `burrow/images/` and `squadron3030/images/`.
 

@@ -1,5 +1,6 @@
 // ============================================================
-// Type Squadron — a formation shooter for touch typists
+// Squadron 3030 — a formation shooter for touch typists, drawn from
+// painted sheets rather than procedurally
 // ============================================================
 
 const canvas = document.getElementById("game");

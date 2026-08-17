@@ -1,5 +1,5 @@
 // ============================================================
-// Type Squadron — a formation shooter for touch typists
+// Squadron 1981 — a formation shooter for touch typists
 // ============================================================
 
 const canvas = document.getElementById("game");

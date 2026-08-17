@@ -105,7 +105,7 @@ function kbRoundRect(ctx, x, y, w, h, r) {
  *   width        overall width
  *   next         the key that must be pressed now, or null
  *   options      other currently-valid keys — shown between faint and lit
- *   spaceReady   highlight the space bar (Squadron's juke)
+ *   spaceReady   highlight the space bar (the Squadrons' juke)
  *   showSpace    draw the space bar at all
  *   opacity      how present the unlit keys are (this is a backdrop)
  *   highlight    how present the lit key is
