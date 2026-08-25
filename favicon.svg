@@ -1,9 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <!-- Tippitype / Type Arcade.
-       A bright tile with a dark glyph rather than the site's own near-black
-       ground: a favicon sits on browser chrome that may be light or dark, and a
-       dark-on-dark mark disappears into half of them. The tile brings its own
-       background so it reads against either.
+       A bright tile with the glyph knocked out of it: a favicon sits on browser
+       chrome that may be light or dark, so the tile brings its own background
+       and reads against either.
+
+       The T is white rather than the near-black the site is drawn on. That
+       looks backwards — near-black against a saturated tile seems the safer
+       contrast — but the glyph never touches the cyan corner. By the time the
+       crossbar starts the gradient is already mid-blue, and it runs on into
+       purple, which near-black sits poorly against: white holds 5.2:1 across
+       the glyph against 4.0:1, and 4.4:1 at its worst against 3.6:1.
 
        No intrinsic width/height, so it scales to whatever size asks for it. -->
   <defs>
@@ -15,5 +21,5 @@
   </defs>
   <rect width="64" height="64" rx="14" fill="url(#g)"/>
   <!-- Sharp corners, not rounded: at 16px, rounding a 10px stem eats the stem. -->
-  <path d="M13 15 H51 V25 H37 V49 H27 V25 H13 Z" fill="#04010C"/>
+  <path d="M13 15 H51 V25 H37 V49 H27 V25 H13 Z" fill="#FFFFFF"/>
 </svg>
