@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Tippitype / Type Arcade.
+       A bright tile with a dark glyph rather than the site's own near-black
+       ground: a favicon sits on browser chrome that may be light or dark, and a
+       dark-on-dark mark disappears into half of them. The tile brings its own
+       background so it reads against either.
+
+       No intrinsic width/height, so it scales to whatever size asks for it. -->
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#00D0FF"/>
+      <stop offset="52%" stop-color="#9D00FF"/>
+      <stop offset="100%" stop-color="#FF0090"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#g)"/>
+  <!-- Sharp corners, not rounded: at 16px, rounding a 10px stem eats the stem. -->
+  <path d="M13 15 H51 V25 H37 V49 H27 V25 H13 Z" fill="#04010C"/>
+</svg>

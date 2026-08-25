@@ -232,6 +232,8 @@ Then open http://localhost:8642.
 
 ```
 index.html, hub.css     the arcade landing page
+favicon.svg             the site icon; favicon.ico and apple-touch-icon.png
+                        are generated from it (see below)
 blaster/                Blaster (index.html, game.js, style.css)
 squadron/               Squadron 1981 (index.html, game.js, style.css)
 sentinel/               Sentinel (index.html, game.js, style.css)
@@ -250,6 +252,25 @@ than keeping a second copy that could drift.
 
 Each game keeps its own settings and high scores under its own `localStorage`
 keys, so they never interfere with one another.
+
+## Regenerating the icon
+
+`favicon.svg` is the source; the other two are exports. There is no ImageMagick
+here, so the raster path goes through the macOS built-ins — Quick Look renders
+the SVG and `sips` resizes it. Quick Look honors the SVG's intrinsic size, so
+the copy it rasterizes has to be pinned large or it renders small in the corner
+of the canvas:
+
+```bash
+sed 's|viewBox="0 0 64 64"|& width="512" height="512"|' favicon.svg > /tmp/big.svg
+qlmanage -t -s 512 -o /tmp /tmp/big.svg
+sips -z 180 180 /tmp/big.svg.png --out apple-touch-icon.png
+```
+
+`favicon.ico` bundles 16, 32 and 48px PNGs in an ICO container, which `sips`
+cannot write — it is packed by hand with `struct`. The touch icon is exported
+from a square variant (`rx` removed), because iOS applies its own rounded mask
+and would otherwise round the corners twice.
 
 ## Deploying
 
