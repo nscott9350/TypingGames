@@ -75,12 +75,14 @@ body {
   color: var(--text);
 }
 
-.modes {
+.modes,
+.sources {
   display: flex;
   gap: 0.25rem;
 }
 
-.modes button {
+.modes button,
+.sources button {
   font-family: inherit;
   font-size: 0.85rem;
   color: var(--dim);
@@ -92,13 +94,25 @@ body {
   transition: color 0.15s, background 0.15s;
 }
 
-.modes button:hover {
+.modes button:hover,
+.sources button:hover {
   color: var(--text);
 }
 
-.modes button.on {
+.modes button.on,
+.sources button.on {
   color: var(--bg);
   background: var(--cyan);
+}
+
+/* The source switch leads, so it is lettered rather than numbered and sits
+   apart from the clock. */
+.sources button {
+  letter-spacing: 0.06em;
+}
+
+.sources button.on {
+  background: var(--lime);
 }
 
 /* ---- The typing surface ---- */
@@ -430,13 +444,181 @@ kbd {
    the header row stops competing with the summary for attention. */
 body.showing-results .hud,
 body.showing-results .focus,
-body.showing-results .hint {
+body.showing-results .hint,
+body.showing-results .bookbar,
+body.showing-shelf main {
   display: none;
+}
+
+/* ============================================================
+   The library
+   ============================================================ */
+
+.shelf {
+  max-width: 60rem;
+  width: 100%;
+  margin: 0 auto;
+  padding: 2.5rem 0;
+  flex: 1;
+}
+
+.shelf h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.shelf-lede {
+  margin: 0.6rem 0 2rem;
+  max-width: 42rem;
+  font-size: 0.85rem;
+  line-height: 1.7;
+  color: var(--dim);
+}
+
+.shelf-error {
+  margin-top: 1.5rem;
+  font-size: 0.85rem;
+  color: var(--red);
+}
+
+.shelf-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 0.75rem;
+}
+
+.bookcard {
+  font-family: inherit;
+  text-align: left;
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0.9rem 1rem 1rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.bookcard:hover {
+  border-color: var(--dim);
+  background: rgba(124, 255, 61, 0.04);
+}
+
+.bookcard b {
+  font-size: 0.95rem;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.bookcard i {
+  font-style: normal;
+  font-size: 0.78rem;
+  color: var(--dim);
+}
+
+.bookcard small {
+  font-size: 0.72rem;
+  color: var(--dimmer);
+}
+
+/* ---- How far in you are ---- */
+
+.bar-track,
+.bookcard .bar {
+  display: block;
+  height: 3px;
+  margin: 0.45rem 0 0.15rem;
+  background: var(--line);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.bar-fill,
+.bookcard .fill {
+  display: block;
+  height: 100%;
+  background: var(--lime);
+  border-radius: 2px;
+  transition: width 0.2s ease-out;
+}
+
+.bookbar {
+  width: 100%;
+  max-width: 44rem;
+}
+
+.bookname {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+
+.bookname b {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.bookname i {
+  font-style: normal;
+  font-size: 0.78rem;
+  color: var(--dim);
+}
+
+.bookdone {
+  font-size: 0.9rem;
+  color: var(--lime);
+}
+
+/* ---- Prose ----
+
+   Set smaller than the drill and given more lines. A book has punctuation to
+   look ahead at and sentences that only make sense whole, so three lines of
+   very large type — right for a stream of unrelated words — reads here as
+   being fed the text through a slot. */
+
+.typer.prose {
+  height: calc(7 * 1.75 * 1.25rem);
+  max-width: 44rem;
+}
+
+.words.prose {
+  font-size: 1.25rem;
+  line-height: 1.75;
+  /* Spaces are characters you have to type here, so they have to be drawn
+     rather than collapsed, and the text has to wrap at them. */
+  white-space: pre-wrap;
+}
+
+/* A paragraph break is a keystroke too — Enter — so it is shown rather than
+   left as an invisible thing you are expected to guess at. */
+.char.para::before {
+  content: "\00B6";
+  color: var(--dimmer);
+  padding-left: 0.15em;
+}
+
+.char.ok.para::before {
+  color: var(--dim);
+}
+
+/* Corrected on the second try. The drill marks the whole word once you leave
+   it; in a book there is no word boundary to wait for, so the character
+   itself keeps the mark. */
+.char.fixed {
+  color: var(--dim);
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 51, 85, 0.5);
+  text-underline-offset: 0.2em;
 }
 
 @media (max-width: 640px) {
   .words { font-size: 1.35rem; }
   .typer { height: calc(3 * 1.9 * 1.35rem); }
+  .words.prose { font-size: 1.05rem; }
+  .typer.prose { height: calc(7 * 1.75 * 1.05rem); }
   .score { gap: 2rem; }
   .big b { font-size: 2.4rem; }
 }

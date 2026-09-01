@@ -137,6 +137,40 @@ in five words and `z` in twelve, which is a loop rather than a drill once the
 trainer starts hunting for them, so `trainer/words.js` adds depth on the rare
 and awkward letters.
 
+## The library — type a whole book
+
+The other half of the trainer, reached from **Library** in the top bar. The
+drill picks words to work on your weak keys; this does the opposite. The text
+is fixed, it is somebody else's, and you take it in the order it was written.
+
+What a book gives you that no word list can is everything *between* the words.
+Capitals and the shift that reaches them, commas, apostrophes, quotation marks,
+full stops — about a fifth of real typing, and none of it appears in a drill
+made of lowercase words. Paragraph breaks are a keystroke too: they are drawn
+as a `¶` and you press `Enter` for them.
+
+A wrong character stops you where you are, exactly as it does in the drill —
+which matters more here, because running on would leave you a character out of
+step with the text for the rest of the page. Backspace clears the stop; there
+is never anything behind the caret to fix, since nothing wrong can get past it.
+
+Ten books are bundled, from *Pride and Prejudice* to *The Great Gatsby*. All of
+them are in the public domain, which is the only reason they can ship inside a
+static site — a book still in copyright cannot, whoever asks for it. Nothing is
+uploaded and nothing is fetched from anywhere else: the texts sit in `library/`
+and your place in each of them sits in `localStorage`.
+
+Your place is the point. A book is somewhere to be rather than a score to beat,
+so opening one puts the caret exactly where you left it, however many sessions
+ago, and the shelf shows how far into each you are. Runs still count for WPM
+and accuracy, and every letter still feeds the same per-key model the drill
+uses — a capital counts as its letter, since it is the same reach with a shift
+on the end of it.
+
+A million characters would be a million spans, so only a window of about two
+thousand around the caret is ever in the page, and the text arrives in 32KB
+pieces as you approach them. Opening *Moby-Dick* does not download *Moby-Dick*.
+
 ## How to play
 
 | Key | Action |
@@ -250,6 +284,9 @@ burrow/images/          the painted background and sprite sheets it draws from
 squadron3030/           Squadron 3030 (index.html, game.js, sprites.js, style.css)
 squadron3030/images/    its painted background and sprite sheets
 trainer/                Trainer (index.html, trainer.js, words.js, style.css)
+trainer/book.js         the library: typing a book rather than a word list
+library/                the book texts, in 32KB chunks, plus index.json
+tools/fetch-books.py    what prepared them (see below)
 shared/words.js         word sets, shared by all five games
 shared/keyboard.js      on-screen keyboard guide, shared by all five
 ```
@@ -257,6 +294,10 @@ shared/keyboard.js      on-screen keyboard guide, shared by all five
 The trainer is DOM and CSS rather than canvas, since it is setting text rather
 than drawing a scene. It reads the finger map out of `shared/keyboard.js` rather
 than keeping a second copy that could drift.
+
+The drill and the library share that page and everything under the text — the
+caret, the clock, the per-key model, the summary. `book.js` only decides what
+is on the page and what a keystroke means against it.
 
 Each game keeps its own settings and high scores under its own `localStorage`
 keys, so they never interfere with one another.
@@ -279,6 +320,31 @@ sips -z 180 180 /tmp/big.svg.png --out apple-touch-icon.png
 cannot write — it is packed by hand with `struct`. The touch icon is exported
 from a square variant (`rx` removed), because iOS applies its own rounded mask
 and would otherwise round the corners twice.
+
+## Preparing the library texts
+
+`library/` is generated, and `tools/fetch-books.py` is what generates it:
+
+```bash
+python3 tools/fetch-books.py
+```
+
+It downloads the ten public-domain books from Project Gutenberg, drops that
+project's own header and footer, and reduces what is left to something a US
+keyboard can actually produce. That last part is most of the script. Gutenberg's
+plain text is hard-wrapped at about seventy columns, so the lines have to be
+joined back into paragraphs or every wrap would read as a paragraph break.
+Curly quotes, em dashes, ellipses and accented letters are folded to ASCII —
+an em dash becomes `--`, which is what the older files use anyway. `_italics_`
+is markup rather than prose, so the underscores go, and so do the
+`[Illustration: ...]` notes about pictures that are not here.
+
+Each book's front matter is skipped by starting at a named heading, listed per
+book in the script, because a contents page lists the same chapter titles the
+body uses and only an exact match tells the two apart.
+
+The output is `library/<id>.NNN.txt` in 32KB pieces plus `library/index.json`.
+Books already present are left alone; name one to re-fetch just that one.
 
 ## Deploying
 

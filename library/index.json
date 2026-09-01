@@ -1,0 +1,95 @@
+{
+  "chunk": 32768,
+  "books": [
+    {
+      "id": "pride-and-prejudice",
+      "title": "Pride and Prejudice",
+      "author": "Jane Austen",
+      "year": 1813,
+      "chars": 685910,
+      "chunks": 21,
+      "gutenberg": 1342
+    },
+    {
+      "id": "frankenstein",
+      "title": "Frankenstein",
+      "author": "Mary Shelley",
+      "year": 1818,
+      "chars": 417960,
+      "chunks": 13,
+      "gutenberg": 84
+    },
+    {
+      "id": "moby-dick",
+      "title": "Moby-Dick",
+      "author": "Herman Melville",
+      "year": 1851,
+      "chars": 1211179,
+      "chunks": 37,
+      "gutenberg": 2701
+    },
+    {
+      "id": "tale-of-two-cities",
+      "title": "A Tale of Two Cities",
+      "author": "Charles Dickens",
+      "year": 1859,
+      "chars": 751861,
+      "chunks": 23,
+      "gutenberg": 98
+    },
+    {
+      "id": "alice-in-wonderland",
+      "title": "Alice's Adventures in Wonderland",
+      "author": "Lewis Carroll",
+      "year": 1865,
+      "chars": 142300,
+      "chunks": 5,
+      "gutenberg": 11
+    },
+    {
+      "id": "treasure-island",
+      "title": "Treasure Island",
+      "author": "Robert Louis Stevenson",
+      "year": 1883,
+      "chars": 358504,
+      "chunks": 11,
+      "gutenberg": 120
+    },
+    {
+      "id": "sherlock-holmes",
+      "title": "The Adventures of Sherlock Holmes",
+      "author": "Arthur Conan Doyle",
+      "year": 1892,
+      "chars": 558800,
+      "chunks": 18,
+      "gutenberg": 1661
+    },
+    {
+      "id": "dracula",
+      "title": "Dracula",
+      "author": "Bram Stoker",
+      "year": 1897,
+      "chars": 836027,
+      "chunks": 26,
+      "gutenberg": 345
+    },
+    {
+      "id": "call-of-the-wild",
+      "title": "The Call of the Wild",
+      "author": "Jack London",
+      "year": 1903,
+      "chars": 174929,
+      "chunks": 6,
+      "gutenberg": 215
+    },
+    {
+      "id": "the-great-gatsby",
+      "title": "The Great Gatsby",
+      "author": "F. Scott Fitzgerald",
+      "year": 1925,
+      "chars": 266633,
+      "chunks": 9,
+      "gutenberg": 64317
+    }
+  ]
+}

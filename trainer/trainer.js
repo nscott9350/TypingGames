@@ -242,7 +242,23 @@ const el = {
   weakTable: document.getElementById("weakTable"),
   again: document.getElementById("again"),
   forget: document.getElementById("forget"),
+  sources: document.getElementById("sources"),
+  shelf: document.getElementById("shelf"),
+  shelfList: document.getElementById("shelfList"),
+  shelfError: document.getElementById("shelfError"),
+  bookbar: document.getElementById("bookbar"),
+  bookTitle: document.getElementById("bookTitle"),
+  bookMeta: document.getElementById("bookMeta"),
+  bookFill: document.getElementById("bookFill"),
+  bookDone: document.getElementById("bookDone"),
 };
+
+// Where the text comes from: the adaptive drill, a book out of the library,
+// or the shelf you pick that book from. Only this decides what fills the
+// words element and what a keystroke means against it — the caret, the clock,
+// the per-key model and the summary are the same whichever it is. Book mode
+// lives in book.js.
+let mode = "drill";
 
 let seconds = 60;         // 0 means endless
 let words = [];
@@ -343,6 +359,7 @@ function moveCaret() {
  * shift when scrolled-off words are dropped, and this simply re-reads them.
  */
 function scrollToCaret() {
+  if (!words.length) return;
   const first = words[0].node.offsetTop;
   const top = words[wi].node.offsetTop;
 
@@ -359,6 +376,12 @@ function scrollToCaret() {
 }
 
 function updateFocus() {
+  // A book says how far through it you are instead; the drill's targeting
+  // has nothing to do with a text somebody else chose the words for.
+  if (mode === "book") {
+    el.focus.hidden = true;
+    return;
+  }
   const keys = weakestKeys(4);
   el.focus.hidden = keys.length === 0;
   if (!keys.length) return;
@@ -516,6 +539,8 @@ function backspace() {
 
 function onKey(e) {
   if (e.metaKey || e.ctrlKey || e.altKey) return;
+  // Nothing is being typed at while you are choosing a book.
+  if (mode === "shelf") return;
 
   if (e.key === "Tab") {
     e.preventDefault();
@@ -528,6 +553,11 @@ function onKey(e) {
     return;
   }
   if (done) return;
+
+  if (mode === "book") {
+    bookKey(e);
+    return;
+  }
 
   if (e.key === "Backspace") {
     e.preventDefault();
@@ -571,8 +601,12 @@ function restart() {
   el.hint.classList.remove("faded");
   document.body.classList.remove("showing-results");
 
-  fill();
-  moveCaret();
+  if (mode === "book") {
+    bookRender();
+  } else {
+    fill();
+    moveCaret();
+  }
   updateFocus();
   updateHud();
 }
@@ -583,6 +617,7 @@ function finish() {
   running = false;
   done = true;
   saveModel();
+  if (mode === "book") bookSave();
   updateHud();
   showResults();
   document.body.classList.add("showing-results");
@@ -694,6 +729,7 @@ function showResults() {
   el.rWpm.textContent = wpm();
   el.rAcc.textContent = accuracy() + "%";
   el.rChars.textContent = correctChars;
+  bookNote();
   buildLede();
   buildKeyboard();
   buildWeakTable();
@@ -734,7 +770,12 @@ document.addEventListener("click", () => {
 });
 
 document.addEventListener("keydown", onKey);
-window.addEventListener("resize", scrollToCaret);
+// Both modes hold their line by measuring live layout, so both want to be
+// told when the layout changes under them.
+window.addEventListener("resize", () => {
+  if (mode === "book") bookReflow();
+  else scrollToCaret();
+});
 window.addEventListener("beforeunload", saveModel);
 
 loadPrefs();
