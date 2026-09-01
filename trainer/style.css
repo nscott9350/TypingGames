@@ -136,6 +136,26 @@ main {
   align-self: flex-start;
 }
 
+/* The clock doubles as its own switch. Nothing else on the page needs a
+   control, so it gets no chrome of its own — the number is the button. */
+.stat.clock {
+  font-family: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.stat.clock:hover i {
+  color: var(--text);
+}
+
+/* Switched off, the mark sits back with the labels rather than leading in
+   cyan like a figure you are meant to be reading. */
+.stat.clock.off b {
+  color: var(--dimmer);
+}
+
 .stat b {
   font-size: 1.6rem;
   font-weight: 500;

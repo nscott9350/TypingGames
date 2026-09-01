@@ -10,7 +10,7 @@
   <meta name="description" content="An adaptive touch typing trainer that finds your weak keys and feeds you words that use them.">
   <!-- Bump ?v= on every deploy: GitHub Pages caches assets for 10 minutes, and
        a page that loads new HTML against a stale script would break. -->
-  <link rel="stylesheet" href="style.css?v=4">
+  <link rel="stylesheet" href="style.css?v=5">
   <script data-goatcounter="https://tippitype.goatcounter.com/count"
           async src="https://gc.zgo.at/count.js"></script>
 </head>
@@ -33,7 +33,9 @@
     <div class="hud" id="hud">
       <span class="stat"><b id="statWpm">0</b><i>wpm</i></span>
       <span class="stat"><b id="statAcc">100</b><i>acc</i></span>
-      <span class="stat"><b id="statClock">30</b><i id="statClockLabel">left</i></span>
+      <button type="button" class="stat clock" id="clockToggle" title="Hide the clock">
+        <b id="statClock">30</b><i id="statClockLabel">left</i>
+      </button>
     </div>
 
     <!-- What the adaptation is doing, in the open. Without this the trainer
@@ -54,7 +56,8 @@
       <div class="words" id="words"></div>
     </div>
 
-    <p class="hint" id="hint">Start typing &mdash; <kbd>tab</kbd> restarts, <kbd>esc</kbd> ends the run</p>
+    <p class="hint" id="hint">Start typing &mdash; <kbd>tab</kbd> restarts, <kbd>esc</kbd> ends the run,
+      click the clock to hide it</p>
   </main>
 
   <!-- The shelf. Books are public domain, prepared by tools/fetch-books.py. -->
@@ -110,7 +113,7 @@
   <script src="../shared/keyboard.js?v=1"></script>
   <script src="../shared/words.js?v=1"></script>
   <script src="words.js?v=1"></script>
-  <script src="trainer.js?v=4"></script>
+  <script src="trainer.js?v=5"></script>
   <script src="book.js?v=2"></script>
 </body>
 </html>

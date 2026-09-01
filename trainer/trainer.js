@@ -251,6 +251,7 @@ const el = {
   bookMeta: document.getElementById("bookMeta"),
   bookFill: document.getElementById("bookFill"),
   bookDone: document.getElementById("bookDone"),
+  clockToggle: document.getElementById("clockToggle"),
 };
 
 // Where the text comes from: the adaptive drill, a book out of the library,
@@ -261,6 +262,11 @@ const el = {
 let mode = "drill";
 
 let seconds = 60;         // 0 means endless
+// The clock is the only number on the page that keeps moving while you are
+// not typing, which makes it the only one that can pull your eye off the
+// word. It can be switched off, and staying off is the point of keeping it
+// with the session length rather than resetting each visit.
+let showClock = true;
 let words = [];
 let wi = 0;
 let ci = 0;
@@ -277,12 +283,16 @@ let ticker = null;
 function loadPrefs() {
   try {
     const p = JSON.parse(localStorage.getItem(PREFS_KEY));
-    if (p && [0, 30, 60, 120].includes(p.seconds)) seconds = p.seconds;
+    if (!p) return;
+    if ([0, 30, 60, 120].includes(p.seconds)) seconds = p.seconds;
+    if (typeof p.clock === "boolean") showClock = p.clock;
   } catch (e) {}
 }
 
 function savePrefs() {
-  try { localStorage.setItem(PREFS_KEY, JSON.stringify({ seconds })); } catch (e) {}
+  try {
+    localStorage.setItem(PREFS_KEY, JSON.stringify({ seconds, clock: showClock }));
+  } catch (e) {}
 }
 
 // ============================================================
@@ -415,14 +425,26 @@ function accuracy() {
 function updateHud() {
   el.statWpm.textContent = wpm();
   el.statAcc.textContent = accuracy();
+
   // Endless has nothing to count down to, so the same slot counts up instead.
-  if (seconds === 0) {
-    el.statClock.textContent = Math.floor(elapsed());
-    el.statClockLabel.textContent = "elapsed";
-  } else {
-    el.statClock.textContent = Math.max(0, Math.ceil(seconds - elapsed()));
-    el.statClockLabel.textContent = "left";
-  }
+  const endless = seconds === 0;
+  el.statClockLabel.textContent = endless ? "elapsed" : "left";
+  // Hidden, the slot keeps its label and its width and shows a mark that does
+  // not move. Taking the whole stat out would shift the two either side of it
+  // every time you switched it back on.
+  el.statClock.textContent = !showClock
+    ? "\u2014"
+    : endless
+      ? Math.floor(elapsed())
+      : Math.max(0, Math.ceil(seconds - elapsed()));
+}
+
+function setClockShown(on) {
+  showClock = on;
+  savePrefs();
+  el.clockToggle.classList.toggle("off", !on);
+  el.clockToggle.title = on ? "Hide the clock" : "Show the clock";
+  updateHud();
 }
 
 // ============================================================
@@ -753,6 +775,8 @@ el.modes.addEventListener("click", (e) => {
   if (b) setMode(Number(b.dataset.seconds));
 });
 
+el.clockToggle.addEventListener("click", () => setClockShown(!showClock));
+
 el.again.addEventListener("click", restart);
 
 el.forget.addEventListener("click", () => {
@@ -779,4 +803,5 @@ window.addEventListener("resize", () => {
 window.addEventListener("beforeunload", saveModel);
 
 loadPrefs();
+setClockShown(showClock);
 setMode(seconds);

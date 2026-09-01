@@ -128,9 +128,14 @@ though what you left on screen is perfect.
 | `Tab` | restart |
 | `Esc` | end the run and show the summary |
 
-Sessions are 30, 60 or 120 seconds, or endless. What it has learned is kept in
-`localStorage` and carries across sessions; **Forget what you've learned about
-me** on the summary screen wipes it.
+Sessions are 30, 60 or 120 seconds, or endless. **Click the clock to hide it**
+— it is the only number on the page that keeps moving while you are not
+typing, so it is the only one that can pull your eye off the word. Hidden, the
+slot keeps its label and shows a mark that does not move, and a timed run
+still ends on time. The choice is kept with the session length.
+
+What it has learned is kept in `localStorage` and carries across sessions;
+**Forget what you've learned about me** on the summary screen wipes it.
 
 The trainer draws on a larger pool than the games — the shared sets carry `q`
 in five words and `z` in twelve, which is a loop rather than a drill once the
