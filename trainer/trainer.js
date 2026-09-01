@@ -284,7 +284,14 @@ function appendWord() {
     node.appendChild(c);
   }
   el.words.appendChild(node);
-  words.push({ text, node, typed: new Array(text.length).fill(null) });
+  // `missed` outlives `typed`: a letter you got wrong and then corrected reads
+  // as typed correctly, but the word should still be marked as one you fumbled.
+  words.push({
+    text,
+    node,
+    typed: new Array(text.length).fill(null),
+    missed: new Array(text.length).fill(false),
+  });
 }
 
 function fill() {
@@ -424,6 +431,10 @@ function letter(ch) {
   const target = w.text[ci];
   const ok = ch === target;
 
+  // Every wrong press is a miss on the key you were reaching for, including
+  // the second and third one in a row. Hunting for a key is exactly the thing
+  // the drill is meant to find, and the alternative — counting only the first
+  // fumble — would score a reach you cannot make the same as one you slipped on.
   recordKey(target, ok, skipNextLatency ? null : dt);
   skipNextLatency = !ok;
   lastKeyAt = now;
@@ -432,10 +443,18 @@ function letter(ch) {
   if (ok) {
     hits++;
     correctChars++;
+    w.typed[ci] = true;
+    paintChar(w, ci);
+    ci++;
+  } else {
+    // Hold on the letter you missed rather than carrying the mistake forward.
+    // The letter you needed turns red and the caret stays on it, so the next
+    // attempt is made against the key you actually got wrong — which is the
+    // reach worth practising, and the one the model wants timed.
+    w.typed[ci] = false;
+    w.missed[ci] = true;
+    paintChar(w, ci);
   }
-  w.typed[ci] = ok;
-  paintChar(w, ci);
-  ci++;
   moveCaret();
 }
 
@@ -443,15 +462,22 @@ function space() {
   if (!running || done) return;
 
   const w = words[wi];
-  const clean = ci === w.text.length && w.typed.every((v) => v === true);
+  // Nothing wrong can be left on screen any more, so a word is clean when it
+  // was finished and nothing in it ever had to be corrected.
+  const clean = ci === w.text.length && !w.missed.some((v) => v);
 
   keystrokes++;
   if (clean) {
     hits++;
     correctChars++;
   }
-  // Letters you skipped by hitting space early are misses on those keys.
-  for (let i = ci; i < w.text.length; i++) recordKey(w.text[i], false, null);
+  // Letters you skipped by hitting space early are misses on those keys. The
+  // one under the caret is passed over if it is already showing red, since
+  // holding there has recorded that miss once already.
+  for (let i = ci; i < w.text.length; i++) {
+    if (w.typed[i] === false) continue;
+    recordKey(w.text[i], false, null);
+  }
 
   w.node.classList.add(clean ? "clean" : "flawed");
   lastKeyAt = performance.now();
@@ -466,10 +492,22 @@ function space() {
 }
 
 function backspace() {
-  if (!running || done || ci === 0) return;
+  if (!running || done) return;
+
+  const w = words[wi];
+  // A held mistake is rubbed out where it stands. The caret never moved past
+  // it, so backspace clears the red rather than stepping back over a letter
+  // you got right.
+  if (ci < w.text.length && w.typed[ci] === false) {
+    w.typed[ci] = null;
+    paintChar(w, ci);
+    return;
+  }
+
+  if (ci === 0) return;
   ci--;
-  words[wi].typed[ci] = null;
-  paintChar(words[wi], ci);
+  w.typed[ci] = null;
+  paintChar(w, ci);
   // Rubbing out the letter does not rub out the miss. The mistake happened,
   // and the model is a record of what your hands did, not of what you left
   // on screen.

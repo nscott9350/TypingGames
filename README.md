@@ -112,11 +112,19 @@ one unlucky miss cannot hijack the session.
 The end-of-run screen shows a heatmap of the whole keyboard, and the weakest
 keys with the finger each belongs to, the ms per press, and the miss rate.
 
+A wrong letter stops you where you are. The letter you needed turns red and the
+caret holds on it until you type it, so the correction is made against the key
+you actually missed rather than the next one along. Every wrong press while you
+are held counts as another miss on that key — being unable to find a key is a
+different failure from slipping on it, and the drill should hear about both. A
+word you had to correct still shows as fumbled once you move past it, even
+though what you left on screen is perfect.
+
 | Key | Action |
 | --- | --- |
 | letters | type the word |
 | `Space` | next word (letters you skipped count as misses) |
-| `Backspace` | rub out a letter within the current word |
+| `Backspace` | clear a held mistake, or rub out a letter already typed |
 | `Tab` | restart |
 | `Esc` | end the run and show the summary |
 

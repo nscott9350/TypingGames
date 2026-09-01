@@ -195,8 +195,13 @@ main {
   color: var(--text);
 }
 
+/* Now a stop rather than a mark on something you have already left behind:
+   the caret holds here until the right key lands, so the letter you need is
+   lit rather than merely tinted. */
 .char.bad {
   color: var(--red);
+  background: rgba(255, 51, 85, 0.16);
+  border-radius: 2px;
 }
 
 .char.cur::before {
