@@ -626,11 +626,16 @@ body.showing-shelf main {
 
 /* Corrected on the second try. The drill marks the whole word once you leave
    it; in a book there is no word boundary to wait for, so the character
-   itself keeps the mark. */
+   itself keeps the mark.
+
+   The letter reads as white like every other one you got right, because it is
+   one you got right — it is only the rule under it that says it took you two
+   goes. Dimming the glyph as well said something the mark already says, and
+   made a line of prose you had fumbled your way through fade out in patches. */
 .char.fixed {
-  color: var(--dim);
+  color: var(--text);
   text-decoration: underline;
-  text-decoration-color: rgba(255, 51, 85, 0.5);
+  text-decoration-color: rgba(255, 51, 85, 0.55);
   text-underline-offset: 0.2em;
 }
 
