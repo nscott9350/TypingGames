@@ -270,10 +270,20 @@ pieces as you approach them. Opening *Moby-Dick* does not download *Moby-Dick*.
 | `M` | return to the main menu (from the summary screen) |
 | `Enter` | play again (from the summary screen) |
 
-Once you lock onto a word you must finish it before you can target anything
+In most of the games you must finish a word before you can target anything
 else, so choosing what to shoot next is part of the game. Where two targets
 start with the same letter, the one closest to you wins. Chaining correct
 letters builds a score multiplier up to 5x; a mistake resets it.
+
+**Bug Parade is the exception**: a key that is not the letter your target
+wants will take you to whatever else is waiting on it. Your own target always
+gets first claim on the key, so a word can still be finished when something
+else on screen shares that letter, and what you typed on the one you left is
+kept — its tag still shows how far in you were, and going back means pressing
+the letter it is waiting on rather than starting it again. Spiders are the
+reason. They cross the beetle's own strip in a couple of seconds, so a rule
+that made you finish a nine-letter centipede first meant you could never
+answer one.
 
 In both Squadrons and in Bug Parade the difficulty setting changes the rules, not
 just the numbers. Up to Normal your craft steers itself around danger and each
@@ -322,9 +332,10 @@ Press the wrong key and it is struck out in red where it sits, right beside the
 key you actually wanted — so a mistake tells you which reach went astray rather
 than only costing you points.
 
-When you have no target locked, every key that would start a valid word lights
-up dimly, so choosing what to shoot next is a visible decision rather than a
-hunt across the screen.
+Every key that would take a lock lights up dimly, so choosing what to shoot
+next is a visible decision rather than a hunt across the screen. In Bug Parade
+they stay lit behind the letter you are on, since breaking off mid-word is
+allowed there and the choice is a live one the whole time.
 
 ## Practice word sets
 

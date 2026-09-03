@@ -840,21 +840,33 @@ window.addEventListener("keydown", (e) => {
   const letter = e.key.toLowerCase();
   if (lockTarget && lockTarget.dying) lockTarget = null;
 
+  // The letter you are on always belongs to the thing you are already typing.
+  // Only once it cannot be that does the key get offered to anything else, so
+  // a word can always be finished even when something else on screen wants the
+  // same letter.
   if (lockTarget) {
-    if (nextLetter(lockTarget) === letter) correctLetter(lockTarget);
-    else wrongLetter(letter);
+    if (nextLetter(lockTarget) === letter) {
+      correctLetter(lockTarget);
+      return;
+    }
+    const other = findTarget(letter, lockTarget);
+    if (!other) {
+      wrongLetter(letter);
+      return;
+    }
+    // Pivoting away is free and what you typed is kept: the tag over an
+    // abandoned bug still shows how far in you were, and coming back to it
+    // means pressing the letter it is waiting on rather than starting again.
+    // Spiders are the reason. They cross the beetle's own strip in a couple of
+    // seconds, so a rule that made you finish a nine-letter centipede first
+    // meant you could never answer one.
+    lockTarget = other;
+    sfx.lock();
+    correctLetter(other);
     return;
   }
 
-  let best = null, bestDist = Infinity;
-  for (const e2 of enemies) {
-    if (!targetable(e2) || nextLetter(e2) !== letter) continue;
-    const p = enemyHead(e2);
-    // Closest to the beetle wins, which naturally prioritises whatever is
-    // about to reach it.
-    const d = Math.hypot(p.x - player.x, p.y - player.y);
-    if (d < bestDist) { bestDist = d; best = e2; }
-  }
+  const best = findTarget(letter, null);
   if (best) {
     lockTarget = best;
     sfx.lock();
@@ -863,6 +875,20 @@ window.addEventListener("keydown", (e) => {
     wrongLetter(letter);
   }
 });
+
+// Whatever is waiting on this letter and is nearest the beetle, which
+// naturally prioritises the thing about to reach it. `except` keeps a target
+// from being offered its own key twice over.
+function findTarget(letter, except) {
+  let best = null, bestDist = Infinity;
+  for (const e of enemies) {
+    if (e === except || !targetable(e) || nextLetter(e) !== letter) continue;
+    const p = enemyHead(e);
+    const d = Math.hypot(p.x - player.x, p.y - player.y);
+    if (d < bestDist) { bestDist = d; best = e; }
+  }
+  return best;
+}
 
 function bumpStreak() {
   streak++;
@@ -1573,13 +1599,19 @@ function drawBanner() {
   ctx.textAlign = "left";
 }
 
-// The key the player must press now, plus every other key that would start a
-// valid lock. Showing the options while unlocked is half the teaching value:
-// it turns "what can I even do" into a visible choice.
+// The key the player must press now, plus every other key that would take a
+// lock. Showing the options is half the teaching value: it turns "what can I
+// even do" into a visible choice — and now that a lock can be broken mid-word
+// that choice is a live one while locked too, so the other targets stay lit
+// behind the letter you are on rather than going dark until you finish.
 function guideKeys() {
-  if (lockTarget && !lockTarget.dying) return { next: nextLetter(lockTarget), options: [] };
   const opts = [];
-  for (const e of enemies) if (targetable(e)) opts.push(nextLetter(e));
+  for (const e of enemies) {
+    if (targetable(e) && e !== lockTarget) opts.push(nextLetter(e));
+  }
+  if (lockTarget && !lockTarget.dying) {
+    return { next: nextLetter(lockTarget), options: opts };
+  }
   return { next: null, options: opts };
 }
 
