@@ -193,6 +193,87 @@ main {
   font-weight: 600;
 }
 
+/* The reps status line. Same slot and same weight as the drill's, because it
+   is doing the same job: saying what is being worked on without ever being
+   more interesting to look at than the line under it. */
+.repsbar {
+  align-self: flex-start;
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+  font-size: 0.8rem;
+  color: var(--dim);
+  margin-top: -1rem;
+}
+
+.reps-key {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.reps-finger {
+  font-style: normal;
+  color: var(--dimmer);
+}
+
+/* One pip per pass, filling left to right. A count you have to read is a
+   number that moves, and the whole point of a rep is not looking at it. */
+.reps-pips {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-left: 0.3rem;
+}
+
+.pip {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  border: 1px solid var(--dim);
+}
+
+.pip.done {
+  background: var(--dim);
+  border-color: var(--dim);
+}
+
+.pip.now {
+  background: var(--lime);
+  border-color: var(--lime);
+}
+
+.pip-endless {
+  color: var(--dim);
+  letter-spacing: 0.08em;
+}
+
+.reps-count {
+  display: flex;
+  gap: 0.15rem;
+  margin-left: 0.4rem;
+}
+
+.reps-count button {
+  font-family: inherit;
+  font-size: 0.75rem;
+  color: var(--dimmer);
+  background: none;
+  border: none;
+  border-radius: 3px;
+  padding: 0.1rem 0.35rem;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+
+.reps-count button:hover {
+  color: var(--text);
+}
+
+.reps-count button.on {
+  color: var(--bg);
+  background: var(--dim);
+}
+
 .typer {
   width: 100%;
   overflow: hidden;
@@ -207,6 +288,16 @@ main {
   color: var(--dim);
   transition: transform 0.12s ease-out;
   user-select: none;
+}
+
+/* Ends a pass. A zero-height block splits the inline flow, which puts the
+   next repetition on its own line and makes the repeating shape of the drill
+   something you can see rather than something you have to count. It carries
+   no height of its own, so the line measuring that holds the caret in place
+   goes on working off the words either side of it. */
+.brk {
+  display: block;
+  height: 0;
 }
 
 .word {
@@ -464,6 +555,7 @@ kbd {
    the header row stops competing with the summary for attention. */
 body.showing-results .hud,
 body.showing-results .focus,
+body.showing-results .repsbar,
 body.showing-results .hint,
 body.showing-results .bookbar,
 body.showing-shelf main {

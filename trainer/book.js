@@ -379,22 +379,8 @@ function bookNote() {
 // Wiring
 // ============================================================
 
-el.sources.addEventListener("click", (e) => {
-  const b = e.target.closest("button");
-  if (!b) return;
-  for (const other of el.sources.children) {
-    other.classList.toggle("on", other === b);
-  }
-  if (b.dataset.source === "library") {
-    showShelf();
-  } else {
-    if (book) leaveBook();
-    mode = "drill";
-    document.body.classList.remove("showing-shelf");
-    el.shelf.hidden = true;
-    restart();
-  }
-});
+// The source switch itself lives in trainer.js now that there are three of
+// them, and calls in here to open or close the library.
 
 el.shelfList.addEventListener("click", (e) => {
   const card = e.target.closest(".bookcard");

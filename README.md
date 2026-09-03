@@ -166,6 +166,57 @@ in five words and `z` in twelve, which is a loop rather than a drill once the
 trainer starts hunting for them, so `trainer/words.js` adds depth on the rare
 and awkward letters.
 
+## Reps — the same line, again
+
+Reached from **Reps** in the top bar. The drill exists to measure you, so it
+never shows you the same word twice in a row. That is exactly wrong for the
+other half of learning a key: a reach becomes automatic by being made over and
+over with nothing else in the way, which is what typing courses have always
+done and what neither the drill nor a book will do for you.
+
+So a drill here is one short line built around a single key, and you type that
+line several times. Three phrases, in the order the reach is actually learned:
+
+```
+zzz aza zaz   zpzp pzpz   zap zip zoo zeal
+```
+
+The first is the stroke on its own, out of home position and back to it. The
+second alternates it against the key in the same place on the other hand, so
+it stays a reach rather than a finger you are leaning on. The third puts it
+inside real words, which is where it has to work. The line is built once and
+then repeated verbatim — re-rolling the words each pass would make it a
+different exercise every time, which is the one thing a repetition drill
+cannot be.
+
+Each pass starts on its own line, so the shape of the repetition is something
+you see rather than something you count, and a row of pips beside the key
+shows how many are left. **3, 5, 8 or ∞** passes per drill; endless holds you
+on one key until you move yourself.
+
+Which key you get is the model's call — the ladder is ordered weakest key
+first, and falls back to the classical home-row-outward course until there is
+enough evidence to have an opinion. The whole alphabet is always on the ladder,
+so <kbd>←</kbd> and <kbd>→</kbd> walk to any key you want, and they move
+relative to the line under the caret rather than the one being generated ahead
+of it.
+
+| Key | Action |
+| --- | --- |
+| letters | type the line |
+| `Space` | next group |
+| `←` `→` | previous / next key on the ladder |
+| `Tab` | restart |
+| `Esc` | end the run and show the summary |
+
+What reps deliberately do *not* do is feed timings back into the per-key model.
+A line you have typed four times is a line you have memorised, and what it
+measures after that is recall rather than reach — count it and the trainer
+would be told you had fixed a key you had only just learned to anticipate.
+Misses still count, because missing a key on the fifth pass is a real signal.
+The practical consequence is that the ladder's ordering comes from your drill
+and library runs; reps spend what those found rather than adding to it.
+
 ## The library — type a whole book
 
 The other half of the trainer, reached from **Library** in the top bar. The
@@ -321,6 +372,7 @@ squadron3030/images/    its painted background and sprite sheets
 bugparade/              Bug Parade (index.html, game.js, sprites.js, style.css)
 bugparade/images/       its painted garden and sprite sheets
 trainer/                Trainer (index.html, trainer.js, words.js, style.css)
+trainer/reps.js         reps: one letter drill, repeated
 trainer/book.js         the library: typing a book rather than a word list
 library/                the book texts, in 32KB chunks, plus index.json
 tools/fetch-books.py    what prepared them (see below)
@@ -332,9 +384,12 @@ The trainer is DOM and CSS rather than canvas, since it is setting text rather
 than drawing a scene. It reads the finger map out of `shared/keyboard.js` rather
 than keeping a second copy that could drift.
 
-The drill and the library share that page and everything under the text — the
-caret, the clock, the per-key model, the summary. `book.js` only decides what
-is on the page and what a keystroke means against it.
+The drill, the reps and the library share that page and everything under the
+text — the caret, the clock, the per-key model, the summary. `reps.js` and
+`book.js` only decide what is on the page and what a keystroke means against
+it. Reps go further and reuse the drill's own word machinery: a group is a
+word as far as the caret is concerned, so all `reps.js` supplies is which
+group comes next.
 
 Each game keeps its own settings and high scores under its own `localStorage`
 keys, so they never interfere with one another.

@@ -10,7 +10,7 @@
   <meta name="description" content="An adaptive touch typing trainer that finds your weak keys and feeds you words that use them.">
   <!-- Bump ?v= on every deploy: GitHub Pages caches assets for 10 minutes, and
        a page that loads new HTML against a stale script would break. -->
-  <link rel="stylesheet" href="style.css?v=6">
+  <link rel="stylesheet" href="style.css?v=7">
   <script data-goatcounter="https://tippitype.goatcounter.com/count"
           async src="https://gc.zgo.at/count.js"></script>
 </head>
@@ -19,6 +19,7 @@
     <a class="back" href="../">&larr; Arcade</a>
     <nav class="sources" id="sources" aria-label="What to type">
       <button type="button" data-source="drill" class="on">Drill</button>
+      <button type="button" data-source="reps">Reps</button>
       <button type="button" data-source="library">Library</button>
     </nav>
     <nav class="modes" id="modes" aria-label="Session length">
@@ -44,6 +45,21 @@
     <div class="focus" id="focus" hidden>
       <span class="focus-label">working on</span>
       <span class="focus-keys" id="focusKeys"></span>
+    </div>
+
+    <!-- Shown only in reps: the key being drilled, whose finger it is, and
+         how many passes of the line are left. -->
+    <div class="repsbar" id="repsbar" hidden>
+      <span class="reps-label">drilling</span>
+      <b class="reps-key" id="repsKey"></b>
+      <i class="reps-finger" id="repsFinger"></i>
+      <span class="reps-pips" id="repsPips"></span>
+      <span class="reps-count" id="repsCount" title="Passes per drill">
+        <button type="button" data-reps="3">3</button>
+        <button type="button" data-reps="5">5</button>
+        <button type="button" data-reps="8">8</button>
+        <button type="button" data-reps="0">&infin;</button>
+      </span>
     </div>
 
     <!-- Shown only while a book is open: which book, and how far in. -->
@@ -83,6 +99,7 @@
     </div>
 
     <p class="bookdone" id="bookDone" hidden></p>
+    <p class="bookdone" id="repsDone" hidden></p>
 
     <div class="panel">
       <h2>Your keyboard right now</h2>
@@ -113,7 +130,8 @@
   <script src="../shared/keyboard.js?v=1"></script>
   <script src="../shared/words.js?v=1"></script>
   <script src="words.js?v=1"></script>
-  <script src="trainer.js?v=5"></script>
-  <script src="book.js?v=2"></script>
+  <script src="trainer.js?v=6"></script>
+  <script src="book.js?v=3"></script>
+  <script src="reps.js?v=1"></script>
 </body>
 </html>

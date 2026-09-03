@@ -252,13 +252,19 @@ const el = {
   bookFill: document.getElementById("bookFill"),
   bookDone: document.getElementById("bookDone"),
   clockToggle: document.getElementById("clockToggle"),
+  repsbar: document.getElementById("repsbar"),
+  repsKey: document.getElementById("repsKey"),
+  repsFinger: document.getElementById("repsFinger"),
+  repsPips: document.getElementById("repsPips"),
+  repsCount: document.getElementById("repsCount"),
+  repsDone: document.getElementById("repsDone"),
 };
 
-// Where the text comes from: the adaptive drill, a book out of the library,
-// or the shelf you pick that book from. Only this decides what fills the
-// words element and what a keystroke means against it — the caret, the clock,
-// the per-key model and the summary are the same whichever it is. Book mode
-// lives in book.js.
+// Where the text comes from: the adaptive drill, a line of letter drills
+// repeated, a book out of the library, or the shelf you pick that book from.
+// Only this decides what fills the words element and what a keystroke means
+// against it — the caret, the clock, the per-key model and the summary are
+// the same whichever it is. Reps live in reps.js and books in book.js.
 let mode = "drill";
 
 let seconds = 60;         // 0 means endless
@@ -300,7 +306,13 @@ function savePrefs() {
 // ============================================================
 
 function appendWord() {
-  const text = nextWord();
+  // The drill picks a word; reps hands back the next group of its line along
+  // with which drill and which pass it belongs to. Carrying that on the word
+  // rather than reading it back from reps.js is what keeps the status line
+  // about the group under the caret and not the one being generated thirty
+  // groups ahead of it.
+  const entry = mode === "reps" ? repsNext() : { text: nextWord() };
+  const text = entry.text;
   const node = document.createElement("span");
   node.className = "word";
   for (const ch of text) {
@@ -310,11 +322,27 @@ function appendWord() {
     node.appendChild(c);
   }
   el.words.appendChild(node);
+
+  // A repetition drill has to look like one, so each pass starts its own
+  // line. A zero-height block is enough to break the inline flow, and it
+  // stays out of the line-height measuring that holds the caret in place.
+  let brk = null;
+  if (entry.tail) {
+    brk = document.createElement("span");
+    brk.className = "brk";
+    el.words.appendChild(brk);
+  }
+
   // `missed` outlives `typed`: a letter you got wrong and then corrected reads
   // as typed correctly, but the word should still be marked as one you fumbled.
   words.push({
     text,
     node,
+    brk,
+    at: entry.at,
+    key: entry.key,
+    rep: entry.rep,
+    reps: entry.reps,
     typed: new Array(text.length).fill(null),
     missed: new Array(text.length).fill(false),
   });
@@ -330,7 +358,10 @@ function fill() {
 function prune() {
   if (wi < PRUNE_AT) return;
   const drop = wi - 50;
-  for (let i = 0; i < drop; i++) words[i].node.remove();
+  for (let i = 0; i < drop; i++) {
+    words[i].node.remove();
+    if (words[i].brk) words[i].brk.remove();
+  }
   words = words.slice(drop);
   wi -= drop;
 }
@@ -390,6 +421,13 @@ function updateFocus() {
   // has nothing to do with a text somebody else chose the words for.
   if (mode === "book") {
     el.focus.hidden = true;
+    return;
+  }
+  // Reps names the one key it is on, and how far through the passes you are,
+  // which is the same job done by its own status line.
+  if (mode === "reps") {
+    el.focus.hidden = true;
+    repsStatus();
     return;
   }
   const keys = weakestKeys(4);
@@ -480,7 +518,13 @@ function letter(ch) {
   // the second and third one in a row. Hunting for a key is exactly the thing
   // the drill is meant to find, and the alternative — counting only the first
   // fumble — would score a reach you cannot make the same as one you slipped on.
-  recordKey(target, ok, skipNextLatency ? null : dt);
+  // A reps line is one you have typed several times already, so its timings
+  // measure how well you remember what is coming rather than how well you
+  // make the reach — count them and the drill would be told you had fixed a
+  // key you had only learned to anticipate. A miss still counts: missing a
+  // key on the fifth pass is exactly the signal worth having.
+  const timed = mode !== "reps" && !skipNextLatency;
+  recordKey(target, ok, timed ? dt : null);
   skipNextLatency = !ok;
   lastKeyAt = now;
 
@@ -580,6 +624,7 @@ function onKey(e) {
     bookKey(e);
     return;
   }
+  if (mode === "reps" && repsKeyDown(e)) return;
 
   if (e.key === "Backspace") {
     e.preventDefault();
@@ -626,6 +671,7 @@ function restart() {
   if (mode === "book") {
     bookRender();
   } else {
+    if (mode === "reps") repsReset();
     fill();
     moveCaret();
   }
@@ -752,6 +798,7 @@ function showResults() {
   el.rAcc.textContent = accuracy() + "%";
   el.rChars.textContent = correctChars;
   bookNote();
+  repsNote();
   buildLede();
   buildKeyboard();
   buildWeakTable();
@@ -773,6 +820,30 @@ function setMode(s) {
 el.modes.addEventListener("click", (e) => {
   const b = e.target.closest("button");
   if (b) setMode(Number(b.dataset.seconds));
+});
+
+// Which of the three sources is feeding the page. The library has a shelf to
+// go through first, so it is the one case that does not start a run straight
+// away; the other two only differ in where the words come from.
+el.sources.addEventListener("click", (e) => {
+  const b = e.target.closest("button");
+  if (!b) return;
+  for (const other of el.sources.children) {
+    other.classList.toggle("on", other === b);
+  }
+
+  if (b.dataset.source === "library") {
+    showShelf();
+    enterReps(false);
+    return;
+  }
+
+  if (book) leaveBook();
+  document.body.classList.remove("showing-shelf");
+  el.shelf.hidden = true;
+  mode = b.dataset.source;
+  enterReps(mode === "reps");
+  restart();
 });
 
 el.clockToggle.addEventListener("click", () => setClockShown(!showClock));
