@@ -144,10 +144,17 @@ different failure from slipping on it, and the drill should hear about both. A
 word you had to correct still shows as fumbled once you move past it, even
 though what you left on screen is perfect.
 
+**Space is one of those wrong keys.** Pressed before the word is finished it
+does not carry you over the rest of it; it holds you exactly where a wrong
+letter would, and the miss lands on the letter you still needed. That leaves
+no way past a key you cannot find, which is the point — skipping the word was
+the one hole left in the rule that a mistake is made good where it happened,
+and a key you have to hunt for is the thing the drill most wants to hear about.
+
 | Key | Action |
 | --- | --- |
 | letters | type the word |
-| `Space` | next word (letters you skipped count as misses) |
+| `Space` | next word, once you have finished this one |
 | `Backspace` | clear a held mistake, or rub out a letter already typed |
 | `Tab` | restart |
 | `Esc` | end the run and show the summary |
@@ -204,7 +211,7 @@ of it.
 | Key | Action |
 | --- | --- |
 | letters | type the line |
-| `Space` | next group |
+| `Space` | next group, once you have finished this one |
 | `←` `→` | previous / next key on the ladder |
 | `Tab` | restart |
 | `Esc` | end the run and show the summary |

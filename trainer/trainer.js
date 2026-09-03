@@ -551,21 +551,29 @@ function space() {
   if (!running || done) return;
 
   const w = words[wi];
-  // Nothing wrong can be left on screen any more, so a word is clean when it
-  // was finished and nothing in it ever had to be corrected.
-  const clean = ci === w.text.length && !w.missed.some((v) => v);
+
+  // Before the word is finished, space is not a way out of it: it is simply
+  // the wrong key for where the caret is, and it takes the same path any other
+  // wrong key takes. The letter you still needed stays lit and the miss goes
+  // on that key, rather than being spread across every letter you jumped.
+  //
+  // That leaves no way past a letter you cannot find, which is deliberate.
+  // The caret already holds on a letter you got wrong, so skipping the word
+  // was the one hole left in that rule — and hunting for a key is the failure
+  // the model most wants to hear about, not one to let you walk away from.
+  if (ci < w.text.length) {
+    letter(" ");
+    return;
+  }
+
+  // The word is finished, so nothing wrong is left on screen: it is clean if
+  // nothing in it ever had to be corrected.
+  const clean = !w.missed.some((v) => v);
 
   keystrokes++;
   if (clean) {
     hits++;
     correctChars++;
-  }
-  // Letters you skipped by hitting space early are misses on those keys. The
-  // one under the caret is passed over if it is already showing red, since
-  // holding there has recorded that miss once already.
-  for (let i = ci; i < w.text.length; i++) {
-    if (w.typed[i] === false) continue;
-    recordKey(w.text[i], false, null);
   }
 
   w.node.classList.add(clean ? "clean" : "flawed");
