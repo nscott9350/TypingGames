@@ -151,6 +151,11 @@ body {
   --accent-2: #FF0090;
 }
 
+.card-bugparade {
+  --accent: #7CFF3D;
+  --accent-2: #FF0090;
+}
+
 .card:hover {
   transform: translateY(-5px);
   border-color: color-mix(in srgb, var(--accent) 55%, transparent);

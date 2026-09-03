@@ -48,6 +48,30 @@ while the whole roster gets an outing across a run. The HUD docks into the
 console printed across the foot of the background, which leaves the entire
 starfield above as playfield.
 
+### Bug Parade — fixed shooter
+
+A centipede is a word, one letter per segment, head first. Type the head's
+letter and the head bursts; the segment behind it becomes the new head and
+carries the next letter — so the key you need is always on the front of the
+thing crawling towards you, and the word unspools as you eat it.
+
+Every segment you burst leaves a **mushroom** where it died, and mushrooms are
+what turn a centipede down a row. So the garden gets more tangled the better you
+play, and the parade arrives sooner for it. Finishing a whole word blooms the
+last segment and clears the mushrooms around it, which makes seeing a word
+through worth more than the points: abandoning one halfway leaves its cover
+behind.
+
+Three loose bugs work the edges. **Spiders** bounce through the beetle's own
+strip and eat the cover there, which is the only thing that reliably opens it
+back up. **Fleas** drop straight down and seed a column of mushrooms on the way.
+**Scorpions** cross the upper rows poisoning whatever they walk past, and a
+centipede that meets poisoned cover plunges straight down at you instead of
+stepping around it — killing the scorpion clears the poison it laid.
+
+The playfield is a painted garden, so it is letterboxed to the painting and the
+HUD docks into the console printed across its foot.
+
 ### Gopher vs Ants — marble popper
 
 A column of ants marches down a garden trail toward a gopher's burrow. Typing an
@@ -182,7 +206,7 @@ pieces as you approach them. Opening *Moby-Dick* does not download *Moby-Dick*.
 | --- | --- |
 | any letter | start a run, or lock onto the word beginning with that letter |
 | letters | each correct letter fires a shot at your locked target |
-| `Space` | *(both Squadrons)* juke aside, burning any shots you roll through; two charges |
+| `Space` | *(both Squadrons, Bug Parade)* dart aside, burning any shots you roll through; two charges |
 | `Esc` | pause and open settings |
 | `Q` | quit the current run (from the pause screen, press twice to confirm) |
 | `M` | return to the main menu (from the summary screen) |
@@ -193,17 +217,23 @@ else, so choosing what to shoot next is part of the game. Where two targets
 start with the same letter, the one closest to you wins. Chaining correct
 letters builds a score multiplier up to 5x; a mistake resets it.
 
-In both Squadrons the difficulty setting changes the rules, not just the numbers. Up
-to Normal the ship steers itself around danger and each correct letter briefly
-shields you. From **Hard** upward both assists are switched off and survival is
-down to timing your own space-bar jukes. You carry two charges, since an attack
-run is usually two threats — the diving ship, and the shot trailing about a
-second behind it — and after a juke the ship holds its new position rather than
-sliding back into the shot's path.
+In both Squadrons and in Bug Parade the difficulty setting changes the rules, not
+just the numbers. Up to Normal your craft steers itself around danger and each
+correct letter briefly shields you. From **Hard** upward both assists are
+switched off and survival is down to timing your own space-bar jukes. You carry
+two charges, since an attack run is usually two threats — the diving ship, and
+the shot trailing about a second behind it — and after a juke the craft holds its
+new position rather than sliding back into the shot's path.
+
+Bug Parade's beetle keeps one habit at every difficulty: it will back away from
+something about to touch it. That is not the assist, it is a correction — the
+beetle lines itself up under whatever you are typing at, and without it a
+centipede that has reached the beetle's own strip would be something it walks
+into on purpose. Difficulty sets how early it flinches.
 
 ## Keyboard guide
 
-All five games can fade a keyboard across the play field and light up the key you
+Every game can fade a keyboard across the play field and light up the key you
 need next, so you never have to glance down. It is drawn large and faint,
 behind the action, and sits in the part of the screen you are already watching —
 a small keyboard tucked along the bottom edge would still cost you the glance
@@ -240,7 +270,7 @@ hunt across the screen.
 
 ## Practice word sets
 
-All five games share the same word sets, so you can drill one part of the
+Every game shares the same word sets, so you can drill one part of the
 keyboard and then take it into any of them. Choose in **Settings**:
 
 - **Home row** — words using only `a s d f g h j k l`
@@ -288,12 +318,14 @@ burrow/                 Gopher vs Ants (index.html, game.js, sprites.js, style.c
 burrow/images/          the painted background and sprite sheets it draws from
 squadron3030/           Squadron 3030 (index.html, game.js, sprites.js, style.css)
 squadron3030/images/    its painted background and sprite sheets
+bugparade/              Bug Parade (index.html, game.js, sprites.js, style.css)
+bugparade/images/       its painted garden and sprite sheets
 trainer/                Trainer (index.html, trainer.js, words.js, style.css)
 trainer/book.js         the library: typing a book rather than a word list
 library/                the book texts, in 32KB chunks, plus index.json
 tools/fetch-books.py    what prepared them (see below)
-shared/words.js         word sets, shared by all five games
-shared/keyboard.js      on-screen keyboard guide, shared by all five
+shared/words.js         word sets, shared by every game
+shared/keyboard.js      on-screen keyboard guide, shared by every game
 ```
 
 The trainer is DOM and CSS rather than canvas, since it is setting text rather
@@ -365,17 +397,22 @@ may serve you the cached page.
 These are original games, written from scratch, in genres established by the
 arcade era. Game mechanics are not protectable, but the titles of the games that
 inspired these are trademarks belonging to their owners, so they are not used
-here — the genre terms *multidirectional shooter*, *formation shooter*, *city defense*
-and *marble popper* are the accurate descriptions and are what you will find
-throughout.
+here — the genre terms *multidirectional shooter*, *formation shooter*, *city defense*,
+*marble popper* and *fixed shooter* are the accurate descriptions and are what
+you will find throughout.
 
 There are no dependencies, no bundled fonts and no sound files; every game draws
 to a canvas and sets type in whatever monospace font your system already has.
 Blaster, Squadron 1981 and Sentinel draw all of their graphics procedurally.
-Gopher vs Ants and Squadron 3030 are the exceptions: they render from the painted
-sheets in `burrow/images/` and `squadron3030/images/`.
+Gopher vs Ants, Squadron 3030 and Bug Parade are the exceptions: they render from
+the painted sheets in `burrow/images/`, `squadron3030/images/` and
+`bugparade/images/`.
 
-Squadron 3030's sheets arrive with real alpha and are simply sliced. Gopher vs
+Squadron 3030's and Bug Parade's sheets arrive with real alpha and are simply
+sliced — except that on Bug Parade's enemy sheet the four centipede heads and the
+three fleas were drawn overlapping one another's bounding boxes, so those two
+groups were cut out by connected component and re-laid into slots that do not
+overlap before the sheet was scaled down. Gopher vs
 Ants' arrive on a cream ground rather than with transparency, so `burrow/sprites.js`
 keys them at load — a flood fill inward from the sheet edge,
 which removes only background that is connected to the edge and therefore leaves
