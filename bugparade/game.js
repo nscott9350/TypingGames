@@ -375,7 +375,8 @@ function guideBox() {
 }
 
 function resetGame() {
-  player = { x: W / 2, y: playerBaseY(), wing: 0, muzzle: 0, tilt: 0 };
+  player = { x: W / 2, y: playerBaseY(), wing: 0, muzzle: 0, tilt: 0,
+             lean: 0, flinching: false, flinchSide: 1 };
   enemies = [];
   mushrooms = new Map();
   tracers = [];
@@ -1187,6 +1188,14 @@ function tryJuke() {
   shockwave(player.x, player.y, grid.cell * 1.9, NEON.lime, 2);
 }
 
+// How far the beetle has to be leaning before it is drawn leaning, and how
+// far back it has to come before it stands up again. Two numbers rather than
+// one because there are three separate drawings of the beetle: on a single
+// threshold, a lean hovering right on it swaps between them several times a
+// second, which is most of what looked like blur.
+const LEAN_ON = 0.35;
+const LEAN_OFF = 0.18;
+
 function updatePlayer(dt) {
   const L = currentLevel();
   const per = L.jukeRefill || JUKE_REFILL;
@@ -1198,6 +1207,10 @@ function updatePlayer(dt) {
   }
   juke.hold = Math.max(0, juke.hold - dt);
 
+  // One sweep of the field per frame, shared by the decision about where to
+  // stand and the decision about what to back away from.
+  const threat = nearestThreat();
+
   // Where the beetle wants to be: lined up under whatever it is shooting, so
   // its shot is short and the player can see what they are typing at. It only
   // chases things that are still above its own patrol strip — following the x
@@ -1208,25 +1221,68 @@ function updatePlayer(dt) {
   if (lockPos) {
     if (lockPos.y < bandY) want = lockPos.x;
   } else {
-    const t = nearestThreat();
-    want = (t && t.p.y < bandY) ? t.p.x : W / 2;
+    want = (threat && threat.p.y < bandY) ? threat.p.x : W / 2;
   }
 
   // Backing away from something about to touch it is not the assist — the
   // beetle steers itself and would otherwise happily walk into a centipede it
   // is shooting at. What difficulty buys is how early it starts to flinch.
-  const t = nearestThreat();
-  const avoid = grid.cell * (L.autoEvade ? 2.6 : 1.35);
-  if (t && t.d < avoid) want = player.x + (player.x < t.p.x ? -1 : 1) * grid.cell * 2.5;
+  //
+  // This is a limit on where it may stand, not a second thing telling it where
+  // to go. Somewhere to flee to is a goal the beetle reaches, at which point
+  // the danger has passed and the original goal takes over and walks it back
+  // in — which is a loop, and the loop is what the jitter was. A goal that is
+  // simply pushed out of the keep-out zone has no such cycle: outside the zone
+  // it is left alone, inside it is moved to the edge, and at the edge the two
+  // agree, so nothing jumps as it crosses.
+  //
+  // The gate is how far the threat has come down rather than how far it is
+  // from the beetle. A threat's descent is steady, so the gate opens once and
+  // stays open; gating on the distance to the beetle means the beetle's own
+  // movement opens and shuts it, which is the same loop by another route.
+  const reach = grid.cell * (L.autoEvade ? 3.2 : 1.6);
+  const keepOut = grid.cell * (L.autoEvade ? 3 : 1.8);
+  if (threat && threat.p.y > bandY - reach) {
+    const dx = want - threat.p.x;
+    if (Math.abs(dx) < keepOut) {
+      // Which side to break for is the one genuinely either-or choice here, so
+      // it is committed while the threat stays close rather than recomputed
+      // every frame — otherwise drifting past the threat's own x flips it.
+      if (!player.flinching) {
+        player.flinchSide = dx < 0 ? -1 : dx > 0 ? 1 : player.x < threat.p.x ? -1 : 1;
+        player.flinching = true;
+      }
+      want = threat.p.x + player.flinchSide * keepOut;
+    } else {
+      player.flinching = false;
+    }
+  } else {
+    player.flinching = false;
+  }
 
+  const wasX = player.x;
   if (juke.t > 0) {
     juke.t -= dt;
     player.x += juke.dir * (jukeDist() / JUKE_TIME) * dt;
   } else if (juke.hold <= 0) {
-    player.x += (want - player.x) * Math.min(1, dt * 7);
+    // Exponential rather than `dt * 7`, which is only the same thing while the
+    // frames are even. One long frame makes the linear form clamp to 1 and
+    // teleport the beetle the whole remaining distance, which is what a
+    // dropped frame looked like.
+    player.x += (want - player.x) * (1 - Math.exp(-7 * dt));
   }
   player.x = Math.max(playerR(), Math.min(W - playerR(), player.x));
-  player.tilt = Math.max(-1, Math.min(1, (want - player.x) / (grid.cell * 2)));
+
+  // The lean follows how fast the beetle is actually travelling rather than
+  // how far it still wants to go. A distance to a goal jumps the instant the
+  // goal changes; a speed cannot, so the beetle leans into a move and comes
+  // back up out of it instead of snapping between poses.
+  const vx = (player.x - wasX) / Math.max(dt, 1 / 240);
+  const leanTo = Math.max(-1, Math.min(1, vx / (grid.cell * 14)));
+  player.tilt += (leanTo - player.tilt) * (1 - Math.exp(-12 * dt));
+  if (Math.abs(player.tilt) < LEAN_OFF) player.lean = 0;
+  else if (Math.abs(player.tilt) > LEAN_ON) player.lean = player.tilt < 0 ? -1 : 1;
+
   player.y = playerBaseY();
 }
 
@@ -1513,8 +1569,8 @@ function roundRect(x, y, w, h, r) {
 function drawPlayer(t) {
   if (invuln > 0 && Math.floor(t * 14) % 2 === 0 && juke.t <= 0) return;
   const h = playerR() * 3.4;
-  const key = player.tilt < -0.35 ? "shipLeft"
-            : player.tilt > 0.35 ? "shipRight"
+  const key = player.lean < 0 ? "shipLeft"
+            : player.lean > 0 ? "shipRight"
             : (Math.floor(player.wing) % 2 ? "shipB" : "shipA");
   // The garden floor the beetle patrols is the busiest part of the painting,
   // so it carries its own pool of light to stay findable.
