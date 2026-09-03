@@ -8,7 +8,7 @@
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <title>Type Arcade</title>
   <meta name="description" content="Arcade games that teach you to touch type.">
-  <link rel="stylesheet" href="hub.css?v=19">
+  <link rel="stylesheet" href="hub.css?v=20">
   <script data-goatcounter="https://tippitype.goatcounter.com/count"
           async src="https://gc.zgo.at/count.js"></script>
 </head>
@@ -327,5 +327,42 @@
       Visits are counted anonymously; nothing you type ever leaves your browser.</p>
     <p><a href="https://github.com/nscott9350/TypingGames">Source on GitHub</a></p>
   </footer>
+<!-- The front door of a typing site ought to type. Small enough to live in
+     the page: it has no state to share, nothing else needs it, and a file of
+     its own would only be one more thing to remember to bump on a deploy.
+
+     The characters are already in the markup — the script wraps them and then
+     reveals them in turn, so the line is laid out once and the text is there
+     in full for anyone arriving without scripts. -->
+<script>
+  (function () {
+    const sub = document.querySelector(".hero .sub");
+    if (!sub) return;
+    // Asked for less motion: leave the line exactly as it was written.
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const text = sub.textContent.trim();
+    sub.textContent = "";
+    const chars = [];
+    for (const ch of text) {
+      const span = document.createElement("span");
+      span.className = "ch";
+      span.textContent = ch;
+      sub.appendChild(span);
+      chars.push(span);
+    }
+
+    let i = 0;
+    (function step() {
+      if (i > 0) chars[i - 1].classList.remove("cur");
+      if (i >= chars.length) return;
+      chars[i].classList.add("on", "cur");
+      i++;
+      // Spaces come free: pausing on them reads as a stall rather than as
+      // someone typing, since a real space is the fastest key on the board.
+      setTimeout(step, chars[i - 1].textContent === " " ? 12 : 32);
+    })();
+  })();
+</script>
 </body>
 </html>

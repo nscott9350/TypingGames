@@ -321,3 +321,145 @@ footer a {
 }
 
 footer a:hover { color: var(--lime); }
+
+/* ============================================================
+   Motion.
+
+   Everything above this line is still, which is an odd thing for the front
+   door of an arcade to be. The rule for what goes in here: it runs once on
+   arrival or it runs slowly forever, and none of it moves while you are
+   reading. A page that fidgets under a paragraph is worse than a page that
+   sits there.
+
+   All of it is switched off wholesale at the bottom for anyone who has asked
+   their system for less motion.
+   ============================================================ */
+
+/* The title already runs the arcade spectrum; this walks the spectrum across
+   it slowly enough that you notice it only if you stop and look. */
+.hero h1 {
+  background-size: 220% auto;
+  animation: hue-drift 14s linear infinite;
+}
+
+@keyframes hue-drift {
+  to { background-position: 220% center; }
+}
+
+/* The starfield was a fixed sheet of dots. Two layers breathing out of phase
+   read as stars; one layer fading in and out together reads as the whole page
+   dimming, which is why the second set lives on ::after rather than being
+   more gradients on the same element. */
+.stars {
+  animation: twinkle-a 7s ease-in-out infinite;
+}
+
+.stars::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(1.4px 1.4px at 40% 22%, rgba(255,255,255,0.7), transparent),
+    radial-gradient(1.2px 1.2px at 86% 58%, rgba(0,208,255,0.6), transparent),
+    radial-gradient(1.3px 1.3px at 16% 34%, rgba(255,212,0,0.5), transparent),
+    radial-gradient(1.1px 1.1px at 62% 78%, rgba(255,255,255,0.55), transparent),
+    radial-gradient(1.2px 1.2px at 30% 70%, rgba(157,0,255,0.5), transparent),
+    radial-gradient(1.3px 1.3px at 78% 28%, rgba(124,255,61,0.45), transparent);
+  animation: twinkle-b 11s ease-in-out infinite;
+}
+
+@keyframes twinkle-a {
+  0%, 100% { opacity: 0.62; }
+  50%      { opacity: 1; }
+}
+
+@keyframes twinkle-b {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.5; }
+}
+
+/* The cards deal themselves in. `backwards` rather than `both` on purpose:
+   `both` would leave the animation's own `transform: none` sitting on the
+   card for good, and an animation outranks a normal rule, so the lift on
+   hover would stop working the moment the entrance finished. */
+.card {
+  animation: deal-in 0.5s cubic-bezier(0.2, 0.7, 0.3, 1) backwards;
+}
+
+.card:nth-child(1) { animation-delay: 0.04s; }
+.card:nth-child(2) { animation-delay: 0.10s; }
+.card:nth-child(3) { animation-delay: 0.16s; }
+.card:nth-child(4) { animation-delay: 0.22s; }
+.card:nth-child(5) { animation-delay: 0.28s; }
+.card:nth-child(6) { animation-delay: 0.34s; }
+.card:nth-child(7) { animation-delay: 0.40s; }
+
+@keyframes deal-in {
+  from { opacity: 0; transform: translateY(16px); }
+}
+
+/* Hover had the card lift but everything inside it stayed put, which made it
+   feel like a sheet of paper rather than a thing with a picture in it. */
+.art img,
+.art svg {
+  transition: transform 0.25s ease;
+}
+
+.card:hover .art img,
+.card:hover .art svg {
+  transform: scale(1.035);
+}
+
+.play {
+  display: inline-block;
+  transition: transform 0.18s ease;
+}
+
+.card:hover .play {
+  transform: translateX(5px);
+}
+
+/* ---- The typed tagline ----
+   Every character is in the page from the start and only revealed in turn, so
+   the line is laid out once and nothing below it moves while it runs. Typing
+   into an empty element instead would reflow the paragraph on the character
+   that wraps and jolt the line under it. */
+.hero .sub .ch {
+  position: relative;
+  opacity: 0;
+}
+
+.hero .sub .ch.on {
+  opacity: 1;
+}
+
+/* The caret rides the character being revealed, so it walks the line the way
+   the trainer's does rather than sitting at a fixed point. */
+.hero .sub .ch.cur::after {
+  content: "";
+  position: absolute;
+  right: -0.09em;
+  top: 0.08em;
+  bottom: 0.08em;
+  width: 2px;
+  background: var(--cyan);
+  box-shadow: 0 0 8px var(--cyan);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero h1,
+  .stars,
+  .stars::after,
+  .card {
+    animation: none;
+  }
+  .art img,
+  .art svg,
+  .play {
+    transition: none;
+  }
+  /* The script leaves the line alone under reduced motion, but if it has
+     already run this keeps every character visible regardless. */
+  .hero .sub .ch { opacity: 1; }
+  .hero .sub .ch.cur::after { display: none; }
+}
