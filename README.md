@@ -394,6 +394,7 @@ trainer/reps.js         reps: one letter drill, repeated
 trainer/book.js         the library: typing a book rather than a word list
 library/                the book texts, in 32KB chunks, plus index.json
 tools/fetch-books.py    what prepared them (see below)
+tools/check-versions.py checks the ?v= numbers before a deploy
 shared/words.js         word sets, shared by every game
 shared/keyboard.js      on-screen keyboard guide, shared by every game
 ```
@@ -464,6 +465,33 @@ string — **bump `N` whenever you change a `.js` or `.css` file**, or returning
 players can load new HTML against a stale script. To check a deploy in a browser
 straight away, add a cache-buster to the page URL (`/?fresh=1`); a plain reload
 may serve you the cached page.
+
+The query string is only a cache key. The server ignores it and always hands
+back the current file, so the whole scheme rests on nobody forgetting to bump —
+which is worth knowing, because one file is easy to forget:
+
+**`shared/words.js` and `shared/keyboard.js` carry one number across the whole
+site.** They are loaded by all seven pages, so changing either means bumping
+seven files, six of which belong to games you were not working on. Held at a
+single number, a page left behind is a number that no longer matches its
+neighbours — visible to a grep, rather than invisible. Most pages carry one
+number for everything on them, which makes a bump all-or-nothing; the trainer
+and Bug Parade number each file separately, which reads better but allows the
+one mistake that actually breaks a page: bumping the script you edited and
+leaving the shared file it depends on behind. That pairing is real rather than
+theoretical — the trainer reads its finger map out of `shared/keyboard.js`.
+
+So before deploying:
+
+```bash
+python3 tools/check-versions.py
+```
+
+It reads every versioned reference on every page and fails if a file has
+changed more recently than its number was last set, if a local `.js` or `.css`
+is loaded with no number at all, if a reference points at nothing, or if the
+shared files have drifted apart. Uncommitted edits count as changed just now,
+so it is useful before the commit rather than only after it.
 
 ## About the designs
 
