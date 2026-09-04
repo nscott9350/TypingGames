@@ -102,6 +102,58 @@ The playfield is a painted garden rather than a drawn one, so the route is
 letterboxed to the painting's aspect ratio and the ants walk the trail the
 picture actually shows.
 
+### Grand Finale — single-letter reaction
+
+The one game here that is not made of words. Shells drift down out of the dark,
+each wearing a single letter; type it and the shell goes off exactly where it
+is. It drills the thing a word cannot isolate — where a key *is*, found at
+speed, with nothing around it to guess from.
+
+**Altitude is the reward**, and it is the whole design. The higher a shell
+still is when you light it, the wider and brighter the burst, the more it
+scores, and the more the crowd likes it. Speed is therefore not a deadline you
+either beat or miss but a dial: every fraction of a second you save is
+literally a taller firework. Take one late and you still get your burst, but it
+is a damp little pop at head height.
+
+That only works if a shell crosses the sky fast enough for the difference to
+show, which the first tuning got wrong. With a fifteen-second fall, a simulated
+player reacting in **1.8 seconds** finished with no duds and a score within
+eight percent of one reacting in 0.25 — the one idea in the game had quietly
+stopped existing. At about a four-second fall the gap opens properly: a
+two-second reaction averages 0.66 altitude against 1.00 and scores a third
+less, and three seconds loses the crowd inside a minute.
+
+Nothing is defended and there are no lives. The crowd's interest is the entire
+health bar, it ebbs on its own, and a show that stops being a show ends even if
+you never miss a letter — so standing still costs something. Let a shell reach
+the grass and it is a dud, which is the one sharp punishment. The audience is a
+row of silhouettes who put their arms up when something good has just gone off,
+so you can read how the show is going without looking at the meter.
+
+It is painted rather than drawn, so the playfield is letterboxed to the
+painting and the HUD docks into the console printed across its foot, as in Bug
+Parade and Gopher vs Ants. Two pieces of the artwork fit the mechanics so
+exactly that the game reads its numbers off them: the sheet arrived carrying a
+**HAPPINESS** meter five hearts wide and an **ALTITUDE** bar, which are the
+game's only two numbers. Neither is drawn as a bar — the hearts are painted, so
+the meter is shown by masking them off from the right.
+
+The audience is painted into the background, and the excitement is a layer over
+the top: five ranks of crowd, from standing about to arms up and flags out,
+crossfaded by the meter so they swell and settle rather than snapping between
+poses. What they answer is not quite the meter, though. A burst spikes their
+cheer and it decays on its own, so the crowd reacts to the last firework rather
+than tracking your health bar — which is what a crowd actually does.
+
+The practice-set setting does more work here than anywhere else on the site.
+With no vocabulary to filter, it narrows **the alphabet falling on you** —
+choose Home row and only `asdfghjkl` ever appears, which makes the setting the
+drill rather than a flavour on it. Every shell in the air wears a different
+letter, so a keypress is never ambiguous; with one character per target there
+is no second letter to disambiguate with, so that promise is kept when the
+shell is created rather than resolved when you press a key.
+
 ## The trainer — adaptive drill
 
 Not a game. No score, no lives, no combo: a line of words, a caret, and a
@@ -383,6 +435,8 @@ favicon.svg             the site icon; favicon.ico and apple-touch-icon.png
 blaster/                Blaster (index.html, game.js, style.css)
 squadron/               Squadron 1981 (index.html, game.js, style.css)
 sentinel/               Sentinel (index.html, game.js, style.css)
+finale/                 Grand Finale (index.html, game.js, sprites.js, style.css)
+finale/images/          its painted stage and sprite sheets
 burrow/                 Gopher vs Ants (index.html, game.js, sprites.js, style.css)
 burrow/images/          the painted background and sprite sheets it draws from
 squadron3030/           Squadron 3030 (index.html, game.js, sprites.js, style.css)
@@ -505,9 +559,19 @@ you will find throughout.
 There are no dependencies, no bundled fonts and no sound files; every game draws
 to a canvas and sets type in whatever monospace font your system already has.
 Blaster, Squadron 1981 and Sentinel draw all of their graphics procedurally.
-Gopher vs Ants, Squadron 3030 and Bug Parade are the exceptions: they render from
-the painted sheets in `burrow/images/`, `squadron3030/images/` and
-`bugparade/images/`.
+Gopher vs Ants, Squadron 3030, Bug Parade and Grand Finale are the exceptions:
+they render from the painted sheets in `burrow/images/`,
+`squadron3030/images/`, `bugparade/images/` and `finale/images/`.
+
+Grand Finale's sheets were not sliced by eye. They arrive with real alpha, so
+every sprite was found by flooding the non-transparent pixels and taking the
+bounding box of each island — which works cleanly for the rockets and the five
+crowd strips, since those stand apart on the sheet. The bursts do not: they are
+drawn with soft halos that touch, and at a low alpha threshold the whole
+right-hand half of the fireworks sheet floods as a single 537x748 blob. Cutting
+at alpha > 140 finds the bright core of each burst instead and separates them
+into thirty-odd usable frames. A little of a neighbour's halo lands inside each
+box as a result, which against a night sky cannot be seen.
 
 Squadron 3030's and Bug Parade's sheets arrive with real alpha and are simply
 sliced — except that on Bug Parade's enemy sheet the four centipede heads and the

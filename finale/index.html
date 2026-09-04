@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="/favicon.ico" sizes="32x32">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <title>Grand Finale!</title>
+  <meta name="description" content="A fireworks show for touch typists. Single letters fall out of the dark, and the higher you light them the more the crowd loves it.">
+  <!-- Bump ?v= on every deploy: GitHub Pages caches assets for 10 minutes, and
+       a page that loads new HTML against a stale script would break.
+       tools/check-versions.py checks this before you deploy. -->
+  <link rel="stylesheet" href="style.css?v=1">
+  <script data-goatcounter="https://tippitype.goatcounter.com/count"
+          async src="https://gc.zgo.at/count.js"></script>
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <div id="menu" class="overlay">
+    <h1>GRAND FINALE!</h1>
+    <p class="tagline">You are running the fireworks &mdash; keep the crowd on their feet</p>
+    <ul class="howto">
+      <li>Shells drift down out of the dark, each one wearing a <strong>single letter</strong></li>
+      <li>Type it and the shell goes off right where it is</li>
+      <li>The <strong>higher</strong> it still is, the bigger the burst and the more
+        the crowd loves it &mdash; so quick is not just safe, it is worth more</li>
+      <li>Let one reach the grass and it is a <strong>dud</strong>, and the crowd lets you know</li>
+      <li>Interest fades on its own, so a quiet sky empties the field even if you
+        never miss</li>
+    </ul>
+    <p id="menu-diff" class="menu-diff"></p>
+    <p id="menu-best" class="menu-best"></p>
+    <p class="start-hint">Press any letter to start</p>
+    <div class="btn-row">
+      <a class="btn" href="../">&larr; Arcade</a>
+      <button id="menu-settings" class="btn">Settings (Esc)</button>
+    </div>
+  </div>
+
+  <div id="gameover" class="overlay hidden">
+    <h1 id="gameover-title">THE CROWD WENT HOME</h1>
+    <div id="new-best" class="new-best hidden">NEW PERSONAL BEST</div>
+    <div id="final-stats"></div>
+    <div id="score-list" class="score-list"></div>
+    <p class="start-hint">Press Enter to play again</p>
+    <div class="btn-row">
+      <a class="btn" href="../">&larr; Arcade</a>
+      <button id="gameover-menu" class="btn">Main menu (M)</button>
+      <button id="gameover-settings" class="btn">Settings (Esc)</button>
+    </div>
+  </div>
+
+  <div id="settings" class="overlay hidden">
+    <h1 id="settings-title">SETTINGS</h1>
+    <div class="settings-body">
+      <div class="setting-group">
+        <div class="setting-label">Difficulty</div>
+        <div class="chip-row">
+          <button class="diff-btn chip" data-diff="beginner">Beginner</button>
+          <button class="diff-btn chip" data-diff="easy">Easy</button>
+          <button class="diff-btn chip" data-diff="normal">Normal</button>
+          <button class="diff-btn chip" data-diff="hard">Hard</button>
+          <button class="diff-btn chip" data-diff="master">Master</button>
+        </div>
+        <p class="hint">Sets how fast the shells fall, how many are in the air at
+          once, and how quickly the crowd's interest fades with nothing to look at.</p>
+      </div>
+      <div class="setting-group">
+        <div class="setting-label">Letter set</div>
+        <div class="chip-row">
+          <button class="set-btn chip" data-set="all">All letters</button>
+          <button class="set-btn chip" data-set="common">Common</button>
+          <button class="set-btn chip" data-set="homerow">Home row</button>
+          <button class="set-btn chip" data-set="left">Left hand</button>
+          <button class="set-btn chip" data-set="right">Right hand</button>
+        </div>
+        <p class="hint">In the other games this narrows the vocabulary. Here there
+          is no vocabulary &mdash; it narrows <strong>the alphabet falling on
+          you</strong>, so the setting is the drill rather than a filter on it.
+          Every shell in the air wears a different letter, so a keypress is never
+          ambiguous.</p>
+      </div>
+      <div class="setting-group">
+        <div class="setting-label">Keyboard guide</div>
+        <div class="chip-row">
+          <button class="kbd-btn chip" data-kbd="off">Off</button>
+          <button class="kbd-btn chip" data-kbd="assist">When stuck</button>
+          <button class="kbd-btn chip" data-kbd="always">Always</button>
+        </div>
+        <p class="hint">Fades a keyboard across the sky and lights up every letter
+          currently in the air, color-coded by the finger that should press it.
+          <strong>When stuck</strong> keeps it hidden until you miss three keys in
+          a row, then shows it until you get one right.</p>
+      </div>
+      <div class="setting-group">
+        <div class="setting-label">
+          <span>Music</span>
+          <button id="music-toggle" class="toggle">ON</button>
+        </div>
+        <div class="slider-row">
+          <input type="range" id="music-vol" min="0" max="100" step="1">
+          <span id="music-vol-num" class="vol-num"></span>
+        </div>
+      </div>
+      <div class="setting-group">
+        <div class="setting-label"><span>Effects volume</span></div>
+        <div class="slider-row">
+          <input type="range" id="sfx-vol" min="0" max="100" step="1">
+          <span id="sfx-vol-num" class="vol-num"></span>
+        </div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button id="quit-btn" class="btn btn-danger hidden">Quit run (Q)</button>
+      <button id="settings-back" class="btn">Back (Esc)</button>
+    </div>
+  </div>
+
+  <!-- No word list: a game made of single letters keeps its own alphabets, so
+       the keyboard guide is the only shared script it needs. -->
+  <script src="../shared/keyboard.js?v=30"></script>
+  <script src="sprites.js?v=1"></script>
+  <script src="game.js?v=2"></script>
+</body>
+</html>

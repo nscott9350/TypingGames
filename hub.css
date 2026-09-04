@@ -156,6 +156,11 @@ body {
   --accent-2: #FF0090;
 }
 
+.card-finale {
+  --accent: #FFD400;
+  --accent-2: #FF6A00;
+}
+
 .card:hover {
   transform: translateY(-5px);
   border-color: color-mix(in srgb, var(--accent) 55%, transparent);
@@ -393,6 +398,8 @@ footer a:hover { color: var(--lime); }
 .card:nth-child(5) { animation-delay: 0.28s; }
 .card:nth-child(6) { animation-delay: 0.34s; }
 .card:nth-child(7) { animation-delay: 0.40s; }
+.card:nth-child(8) { animation-delay: 0.46s; }
+.card:nth-child(9) { animation-delay: 0.52s; }
 
 @keyframes deal-in {
   from { opacity: 0; transform: translateY(16px); }
