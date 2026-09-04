@@ -286,62 +286,8 @@
 
     <a class="card card-finale" href="finale/">
       <div class="art" aria-hidden="true">
-        <!-- One burst high, one low, and the shells still on their way down -->
-        <svg viewBox="0 0 200 120" role="img">
-          <defs>
-            <filter id="fglow" x="-70%" y="-70%" width="240%" height="240%">
-              <feGaussianBlur stdDeviation="2.2" result="b"/>
-              <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-            </filter>
-          </defs>
-          <g filter="url(#fglow)">
-            <!-- the big one, caught high -->
-            <g stroke="#FFD400" stroke-width="1.5" stroke-linecap="round" opacity=".95">
-              <path d="M52 30 L52 12"/><path d="M52 30 L66 16"/><path d="M52 30 L70 30"/>
-              <path d="M52 30 L66 44"/><path d="M52 30 L52 48"/><path d="M52 30 L38 44"/>
-              <path d="M52 30 L34 30"/><path d="M52 30 L38 16"/>
-            </g>
-            <circle cx="52" cy="30" r="15" fill="none" stroke="#FF6A00" stroke-width="1.3" opacity=".7"/>
-            <circle cx="52" cy="30" r="3" fill="#FFFFFF"/>
-
-            <!-- and a smaller one, taken late and low -->
-            <g stroke="#FF0090" stroke-width="1.2" stroke-linecap="round" opacity=".85">
-              <path d="M146 66 L146 57"/><path d="M146 66 L153 59"/><path d="M146 66 L155 66"/>
-              <path d="M146 66 L153 73"/><path d="M146 66 L146 75"/><path d="M146 66 L139 73"/>
-              <path d="M146 66 L137 66"/><path d="M146 66 L139 59"/>
-            </g>
-            <circle cx="146" cy="66" r="2.2" fill="#FFFFFF"/>
-
-            <!-- shells still falling, each wearing its letter -->
-            <g opacity=".9">
-              <circle cx="100" cy="22" r="2.4" fill="#FFFFFF"/>
-              <path d="M100 8 L100 18" stroke="#00D0FF" stroke-width="1.1" opacity=".55"/>
-              <circle cx="176" cy="34" r="2.4" fill="#FFFFFF"/>
-              <path d="M176 20 L176 30" stroke="#7CFF3D" stroke-width="1.1" opacity=".55"/>
-            </g>
-          </g>
-          <g font-family="ui-monospace, Menlo, monospace" font-size="9" font-weight="bold"
-             text-anchor="middle" fill="#F2ECFF">
-            <rect x="93" y="27" width="14" height="13" rx="4" fill="#0A0518" stroke="#00D0FF" stroke-width="1"/>
-            <text x="100" y="37">K</text>
-            <rect x="169" y="39" width="14" height="13" rx="4" fill="#0A0518" stroke="#7CFF3D" stroke-width="1"/>
-            <text x="176" y="49">R</text>
-          </g>
-          <!-- the crowd, watching -->
-          <g fill="#191033">
-            <circle cx="14" cy="104" r="4"/><rect x="10" y="106" width="8" height="12"/>
-            <circle cx="30" cy="106" r="3.4"/><rect x="26.6" y="108" width="7" height="10"/>
-            <circle cx="46" cy="103" r="4.2"/><rect x="41.8" y="105" width="8.4" height="13"/>
-            <circle cx="63" cy="106" r="3.6"/><rect x="59.4" y="108" width="7.2" height="10"/>
-            <circle cx="80" cy="104" r="4"/><rect x="76" y="106" width="8" height="12"/>
-            <circle cx="97" cy="106" r="3.4"/><rect x="93.6" y="108" width="7" height="10"/>
-            <circle cx="114" cy="103" r="4.2"/><rect x="109.8" y="105" width="8.4" height="13"/>
-            <circle cx="131" cy="106" r="3.6"/><rect x="127.4" y="108" width="7.2" height="10"/>
-            <circle cx="148" cy="104" r="4"/><rect x="144" y="106" width="8" height="12"/>
-            <circle cx="165" cy="106" r="3.4"/><rect x="161.6" y="108" width="7" height="10"/>
-            <circle cx="182" cy="103" r="4.2"/><rect x="177.8" y="105" width="8.4" height="13"/>
-          </g>
-        </svg>
+        <!-- A frame of play, rather than a drawing of it -->
+        <img src="finale/images/card.jpg" alt="" width="960" height="540" loading="lazy">
       </div>
       <div class="body">
         <h2>Grand Finale! <span class="badge">NEW</span></h2>

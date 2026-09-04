@@ -494,7 +494,7 @@ blaster/                Blaster (index.html, game.js, style.css)
 squadron/               Squadron 1981 (index.html, game.js, style.css)
 sentinel/               Sentinel (index.html, game.js, style.css)
 finale/                 Grand Finale (index.html, game.js, sprites.js, style.css)
-finale/images/          its painted stage and sprite sheets
+finale/images/          its painted stage, sprite sheets and shelf card
 coconut/                Coconut Coast (index.html, game.js, sprites.js, style.css)
 coconut/images/         its painted beach, sprite sheets, beachgoer moods
                         and the shelf card composited from them
