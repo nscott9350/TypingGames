@@ -35,13 +35,8 @@ const FRAMES = {
   uiGameOver: ["ui",   15, 787, 481, 280],
 
   // ---- crabscoconuts.png ----
-  // The coconut wearing a blank disc is the one that matters: the disc is a
-  // label the artist left empty, which is exactly where a letter goes. The
-  // plain ones are for coconuts nobody is being asked to deal with yet.
-  nutLabel0: ["props",  10, 930, 137, 136],
-  nutLabel1: ["props", 146, 934, 144, 132],
-  nutLabel2: ["props", 287, 953, 108, 113],
-
+  // The plain ones are for coconuts nobody is being asked to deal with yet.
+  // The lettered ones are built below, because a box is not enough for them.
   nutPlain0: ["props",  77,  38,  59,  63],
   nutPlain1: ["props", 155,  23,  79,  80],
   nutPlain2: ["props", 276,  13, 106, 107],
@@ -51,6 +46,28 @@ const FRAMES = {
 // Four colours of crab, each with three walking frames, an alarmed pose and a
 // pleased one. A crew member keeps its colour for the whole run, so you come
 // to know them apart — which matters when the crew is small enough to count.
+// The coconuts wearing a blank disc are the ones that carry a letter — the
+// disc is a label the artist left empty, and that is where the letter goes.
+//
+// A bounding box alone will not put it there. Some of these coconuts have a
+// leaf or a flower attached, which stretches the box to one side, so the disc
+// is nowhere near the middle of the frame: on the third one it sits a tenth of
+// the frame's width to the left and a twelfth of its height down. And the disc
+// is a different fraction of each sprite, so a letter sized off the frame is
+// too big on some and too small on others.
+//
+// `anchor` is where the disc's centre is, as a fraction of the frame from its
+// middle, and `disc` is the disc's height as a fraction of the frame's. Both
+// were measured off the sheet by finding the largest cream-coloured blob
+// inside each frame rather than by eye.
+const NUT_LABELS = {
+  nutLabel0: { box: [ 10, 930, 137, 136], anchor: [-0.0255, -0.0404], disc: 0.544 },
+  nutLabel1: { box: [146, 934, 144, 132], anchor: [-0.0451,  0.0530], disc: 0.477 },
+  nutLabel2: { box: [287, 953, 108, 113], anchor: [-0.1065,  0.0841], disc: 0.469 },
+};
+for (const [key, v] of Object.entries(NUT_LABELS)) FRAMES[key] = ["props", ...v.box];
+const NUT_LABEL_KEYS = Object.keys(NUT_LABELS);
+
 const CRAB_ROWS = {
   red:    { walk: [[14, 289, 134, 98], [180, 293, 169, 89], [368, 288, 182, 97]],
             alarmed: [780, 295, 122, 92], happy: [1304, 299, 127, 95] },

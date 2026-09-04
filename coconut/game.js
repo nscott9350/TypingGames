@@ -380,9 +380,12 @@ function spawnNut() {
     airborne: true,
     claimed: false,
     letter: null,
-    art: (Math.random() * 3) | 0,
+    art: (Math.random() * NUT_LABEL_KEYS.length) | 0,
     plain: (Math.random() * 4) | 0,
-    spin: (Math.random() - 0.5) * 2,
+    // A wobble rather than a tumble. This used to reach seventy degrees on the
+    // way down, which spun the label right out from under a letter that was
+    // being drawn bolt upright — most of why they were hard to read.
+    spin: (Math.random() - 0.5) * 0.55,
     born: elapsed,
     settle: 0,
     escorted: false,   // a crab got into position before this one landed
@@ -809,24 +812,43 @@ function drawNuts(t) {
     // Sitting coconuts squash a little as they settle, so a landing reads even
     // when you were looking somewhere else.
     const squash = n.airborne ? 1 : 1 - 0.18 * Math.sin(n.settle * Math.PI) * (1 - n.settle);
-    const key = n.letter ? "nutLabel" + n.art : "nutPlain" + n.plain;
-    const rot = n.airborne ? n.spin * (n.y / H) * 1.6 : 0;
-    Sprites.draw(ctx, key, n.x, n.y, size * squash, 1, false, rot);
+    const key = n.letter ? NUT_LABEL_KEYS[n.art] : "nutPlain" + n.plain;
+    const rot = n.airborne ? n.spin * (n.y / H) * 0.9 : 0;
+    const drawnH = size * squash;
+    Sprites.draw(ctx, key, n.x, n.y, drawnH, 1, false, rot);
 
-    if (n.letter) drawLetter(n, size);
+    if (n.letter) drawLetter(n, key, drawnH, rot);
   }
 }
 
-// The letter goes on the blank disc the artist painted onto the coconut,
-// which is why those frames exist at all.
-function drawLetter(n, size) {
-  const fs = Math.round(size * 0.5);
+/**
+ * The letter, on the blank disc the artist painted onto the coconut.
+ *
+ * Three things have to line up for it to be readable, and none of them is the
+ * middle of the sprite. It is placed at the disc rather than at the frame's
+ * centre, because foliage pushes the disc off-centre by as much as a tenth of
+ * the frame. It is sized from the disc rather than from the frame, because the
+ * disc is a different fraction of each of the three coconuts. And it turns with
+ * the coconut, so it stays on the label instead of sliding off it as the thing
+ * rotates on the way down.
+ */
+function drawLetter(n, key, drawnH, rot) {
+  const f = Sprites.frames[key];
+  const info = NUT_LABELS[key];
+  if (!f || !info) return;
+  const drawnW = f.w / f.h * drawnH;
+  const discH = info.disc * drawnH;
+
   ctx.save();
-  ctx.font = `bold ${fs}px ${MONO}`;
+  ctx.translate(n.x, n.y);
+  if (rot) ctx.rotate(rot);
+  ctx.font = `bold ${Math.round(discH * 0.74)}px ${MONO}`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillStyle = "#5A3418";
-  ctx.fillText(n.letter.toUpperCase(), n.x, n.y + size * 0.02);
+  ctx.fillText(n.letter.toUpperCase(),
+               info.anchor[0] * drawnW,
+               info.anchor[1] * drawnH);
   ctx.restore();
 }
 
