@@ -90,7 +90,18 @@ def version_set_at(page, ref, version):
 
 
 def pages():
-    return sorted(git("ls-files", "*index.html").splitlines())
+    """
+    Every page that is or could be part of the site.
+
+    Tracked files are not enough. A game that has just been written is not
+    committed yet, and that is precisely the moment its numbers are worth
+    looking at — checking only what git already knows about would have waved
+    a whole new game through in silence. So untracked pages count too, with
+    anything gitignored left out.
+    """
+    tracked = set(git("ls-files", "*index.html").splitlines())
+    loose = set(git("ls-files", "--others", "--exclude-standard", "*index.html").splitlines())
+    return sorted(tracked | loose), tracked
 
 
 def main():
@@ -98,7 +109,10 @@ def main():
     shared_seen = {}
     checked = 0
 
-    for page in pages():
+    all_pages, tracked = pages()
+    untracked = [p for p in all_pages if p not in tracked]
+
+    for page in all_pages:
         with open(os.path.join(ROOT, page), encoding="utf-8") as fh:
             src = fh.read()
         page_dir = os.path.dirname(page)
@@ -114,7 +128,11 @@ def main():
                 problems.append(f"{page}: {ref} does not exist")
                 continue
 
-            if asset.replace(os.sep, "/") in SHARED:
+            # Only pages that actually ship are held to the shared number.
+            # An untracked page is not on the site yet, so it cannot leave one
+            # behind — and a stale copy of an old game sitting in the working
+            # tree should not be able to fail the check for the live ones.
+            if asset.replace(os.sep, "/") in SHARED and page in tracked:
                 shared_seen.setdefault(asset.replace(os.sep, "/"), {}) \
                            .setdefault(version, []).append(page)
 
@@ -143,8 +161,10 @@ def main():
     shared_note = ", ".join(
         f"{a} at v={next(iter(v))}" for a, v in sorted(shared_seen.items())
     )
-    print(f"{checked} versioned references, all current.")
+    print(f"{checked} versioned references across {len(all_pages)} pages, all current.")
     print(f"Shared: {shared_note}.")
+    if untracked:
+        print(f"Not committed yet (checked, but not deployed): {', '.join(untracked)}")
     return 0
 
 
