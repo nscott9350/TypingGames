@@ -154,6 +154,64 @@ letter, so a keypress is never ambiguous; with one character per target there
 is no second letter to disambiguate with, so that promise is kept when the
 shell is created rather than resolved when you press a key.
 
+### Coconut Coast — single-letter dispatch
+
+A beach that will not stop dropping coconuts. It looks like the same shape as
+Grand Finale — letters come down, you type them — and it plays nothing like it,
+because of the crabs.
+
+Typing a letter does not remove a coconut. It **sends a crab**, and the crab has
+to run out there, pick the thing up and carry it off. The crew is small — five
+on Beginner down to three on Master — so while they are all out you can type
+nothing useful at all and simply watch the sand fill. That is the whole
+difference: the bottleneck is the crew rather than your fingers, so the question
+stops being how fast you can react and becomes which coconut is worth the next
+free crab.
+
+Speed still pays, and it pays in a way worth understanding. A crab sent early
+arrives before the coconut does and stands waiting on the spot, so the coconut
+is caught in the air and never counts against the beach at all. Sent late, the
+crab walks over to something already sitting in the sand. Same crab, same
+journey — but one of them cost you nothing.
+
+That reward was broken for the whole of the first build, and invisibly. The
+coconut always registered as landed a frame before the waiting crab could take
+it, because the coconuts are updated before the crabs are, so **not one catch in
+any simulated run ever counted as clean** and a 0.3-second player scored within
+three percent of a 2.2-second one. Nothing looked wrong on screen. Marking a
+coconut as escorted the moment a crab is in position is what fixed it, and the
+gap opened immediately: half a second now catches fifty in a run, two and a half
+seconds catches none.
+
+Nothing kills you outright. Coconuts on the sand keep their letters, so a bad
+patch can be dug back out rather than being a slow death. What ends a run is the
+beach filling: the beachgoer picks up her towel and settles somewhere less
+comfortable, the sand is swept, and she does that four times before going home
+for good.
+
+She is the health bar, and she is the only part of the screen that says so
+without a number: reclining with a cocktail while the sand is clear, up on her
+feet, then cross, then shouting with both hands in the air on the last life.
+Her sheet is the one piece of art in the project that did not arrive with an
+alpha channel — it is fully opaque on a black ground — so it is keyed at load
+by flooding inward from the edges, which clears only the background that
+touches an edge and leaves the black *inside* her alone, pupils and hat shadow
+included. Slicing it by rectangle afterwards would not have worked either: the
+four figures lean into one another and their bounding boxes overlap by a
+hundred pixels, so each is cut out by its own connected component and given a
+canvas of its own, the same treatment Bug Parade's overlapping heads needed.
+
+The difficulty numbers were swept rather than guessed, because survival turns on
+the spawn rate against what the crew can physically get through and the two sit
+close enough that small changes flip a run. At a gap of one second every
+reaction time coasts; at 0.75 none of them does. Normal is set where a
+half-second player holds on with the crew busy most of the time and a
+two-second player loses the beach. Master keeps a *gentler* spawn than Hard,
+because it has one crab fewer and the crew is the ceiling — and at its
+saturation a quick reaction and an average one finish within seconds of each
+other, since when you are always waiting on a crab the game has stopped being
+about your hands.
+
 ## The trainer — adaptive drill
 
 Not a game. No score, no lives, no combo: a line of words, a caret, and a
@@ -437,6 +495,8 @@ squadron/               Squadron 1981 (index.html, game.js, style.css)
 sentinel/               Sentinel (index.html, game.js, style.css)
 finale/                 Grand Finale (index.html, game.js, sprites.js, style.css)
 finale/images/          its painted stage and sprite sheets
+coconut/                Coconut Coast (index.html, game.js, sprites.js, style.css)
+coconut/images/         its painted beach, sprite sheets and beachgoer moods
 burrow/                 Gopher vs Ants (index.html, game.js, sprites.js, style.css)
 burrow/images/          the painted background and sprite sheets it draws from
 squadron3030/           Squadron 3030 (index.html, game.js, sprites.js, style.css)
@@ -559,9 +619,10 @@ you will find throughout.
 There are no dependencies, no bundled fonts and no sound files; every game draws
 to a canvas and sets type in whatever monospace font your system already has.
 Blaster, Squadron 1981 and Sentinel draw all of their graphics procedurally.
-Gopher vs Ants, Squadron 3030, Bug Parade and Grand Finale are the exceptions:
-they render from the painted sheets in `burrow/images/`,
-`squadron3030/images/`, `bugparade/images/` and `finale/images/`.
+Gopher vs Ants, Squadron 3030, Bug Parade, Grand Finale and Coconut Coast are
+the exceptions: they render from the painted sheets in `burrow/images/`,
+`squadron3030/images/`, `bugparade/images/`, `finale/images/` and
+`coconut/images/`.
 
 Grand Finale's sheets were not sliced by eye. They arrive with real alpha, so
 every sprite was found by flooding the non-transparent pixels and taking the
