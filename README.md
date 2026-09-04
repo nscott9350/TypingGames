@@ -496,7 +496,8 @@ sentinel/               Sentinel (index.html, game.js, style.css)
 finale/                 Grand Finale (index.html, game.js, sprites.js, style.css)
 finale/images/          its painted stage and sprite sheets
 coconut/                Coconut Coast (index.html, game.js, sprites.js, style.css)
-coconut/images/         its painted beach, sprite sheets and beachgoer moods
+coconut/images/         its painted beach, sprite sheets, beachgoer moods
+                        and the shelf card composited from them
 burrow/                 Gopher vs Ants (index.html, game.js, sprites.js, style.css)
 burrow/images/          the painted background and sprite sheets it draws from
 squadron3030/           Squadron 3030 (index.html, game.js, sprites.js, style.css)
@@ -540,6 +541,17 @@ sed 's|viewBox="0 0 64 64"|& width="512" height="512"|' favicon.svg > /tmp/big.s
 qlmanage -t -s 512 -o /tmp /tmp/big.svg
 sips -z 180 180 /tmp/big.svg.png --out apple-touch-icon.png
 ```
+
+Coconut Coast's shelf card was made the same way, since there is no image
+editor here either. The beach, the beachgoer and a crab cropped out of the
+sprite sheet are base64'd into an SVG, which Quick Look renders and `sips`
+crops and converts. Two things about that are worth writing down. Quick Look
+renders into a square whatever shape the document is, and it *scales* a
+non-square one to fit, so the card is authored as a 960x960 document with the
+artwork in a 540-tall band down the middle — then the render maps one to one
+and the crop is exact rather than guessed. And `sips -c` only crops from the
+centre, so pulling the crab out of the sheet needs `--cropOffset y x`, which is
+the one flag that makes `sips` able to take an arbitrary rectangle.
 
 `favicon.ico` bundles 16, 32 and 48px PNGs in an ICO container, which `sips`
 cannot write — it is packed by hand with `struct`. The touch icon is exported
